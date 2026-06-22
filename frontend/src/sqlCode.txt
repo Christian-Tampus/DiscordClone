@@ -4,5 +4,13 @@ CREATE TABLE users (
     username VARCHAR(99) UNIQUE NOT NULL,
     password VARCHAR(99) NOT NULL
 );
+docker exec -it pg psql -U postgres -d mydb
 
-docker exec -it pg psql -U postgres
+Users:
+Builder
+Builder_Elite
+chemtampus555
+
+testuser1
+test_user1
+test_user1password

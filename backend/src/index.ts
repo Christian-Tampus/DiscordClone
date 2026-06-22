@@ -58,6 +58,7 @@ App.post("/login", async (request, response) => {
     "SELECT * FROM users WHERE username = $1",
     [username]
   );
+  console.log("checkIfUsernameExists:",checkIfUsernameExists.rows);
   if (checkIfUsernameExists.rows.length > 0) {
     console.log("[SERVER] Username:",username,"Exists!");
     const checkIfPasswordIsCorrect = await PostgreSQLPool.query(
@@ -70,7 +71,7 @@ App.post("/login", async (request, response) => {
     } else {
       console.log("[SERVER] Password:",password,"Is Incorrect!");
       response.status(401).json({
-        error: "[ERROR] Username Is Incorrect!"
+        error: "[ERROR] Password Is Incorrect!"
       });
     };
   } else {
@@ -88,20 +89,23 @@ Create Account API
 */
 App.post("/createAccount", async (request, response) => {
   console.log("[SERVER] API: /createAccount");
-  console.log("[SERVER] Request:",request.body);
   const displayName = request.body.displayName;
   const username = request.body.username;
   const password = request.body.password;
+  console.log("[SERVER] Request:",request.body.displayName);
+  console.log("[SERVER] Request:",request.body.username);
+  console.log("[SERVER] Request:",request.body.password);
   const checkIfUsernameExists = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [username]
   );
   if (checkIfUsernameExists.rows.length == 0) {
     const createNewAccount = await PostgreSQLPool.query(
-      "INSERT INTO users (displayName, username, password) VALUES ($1, $2, $3) RETURNING *",
+      "INSERT INTO users (displayname, username, password) VALUES ($1, $2, $3) RETURNING *",
       [displayName, username, password]
     );
     response.json(createNewAccount.rows[0]);
+    console.log("[SERVER] Created New Account Successfully!");
   } else {
     console.log("[SERVER] Username:",username,"Already Exists!");
     response.status(401).json({

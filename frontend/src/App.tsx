@@ -75,8 +75,7 @@ function Main() {
         })
       });
       if (response.ok) {
-        const data = await response.json();
-        setUserData(data);
+        alert("[CLIENT] New Account Created Successfully!");
       } else {
         const errorCode = await response.json();
         alert(errorCode.error);
