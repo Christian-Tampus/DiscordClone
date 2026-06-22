@@ -1,0 +1,180 @@
+html, body, #root {
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+}
+
+h1 {
+    margin:0;
+}
+
+#LoginScreenDiv, #CreateNewAccountDiv {
+    width:100vw;
+    height:100vh;
+    background-image:url("./assets/LoginBackgroundImage.jpg");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    display:flex;
+    flex-direction:column;
+}
+
+#LoginScreenDiscordLogo, #CreateNewAccountDiscordLogo {
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    top:50px;
+    left:50px;
+    position:absolute;
+}
+
+#LoginMainDiv {
+    background-color:#42434a;
+    height:550px;
+    width:800px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px black;
+    margin:auto;
+    display:block;
+}
+
+.LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv {
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    color:white;
+    font-weight:bold;
+}
+
+.CreateNewAccountErrorDiv {
+    font-size:15px;
+    text-align:center;
+    width:90%;
+    display:block;
+    margin:15px auto 15px auto;
+}
+
+#LoginTextDiv1 {
+    font-size:25px;
+    margin:auto;
+    display:block;
+    text-align:center;
+    padding-top:15px;
+}
+
+#LoginTextDiv2 {
+    font-size:15px;
+    margin:auto;
+    display:block;
+    text-align:center;
+    padding-top:15px;
+}
+
+#LoginTextDiv3, #LoginTextDiv4, #CreateNewAcountTextDiv2, #CreateNewAcountTextDiv3, #CreateNewAcountTextDiv4 {
+    width:90%;
+    margin:auto;
+    font-size:15px;
+    display:block;
+    text-align:left;
+    padding-top:15px;
+    padding-bottom:15px;
+}
+
+.LoginDivInputClass, .CreateNewAccountInputClass{
+    background-color:#3f3f46;
+    border:1px solid white;
+    border-radius:10px;
+    width:90%;
+    margin:auto;
+    display:block;
+    height:35px;
+    color:white;
+}
+
+.InvalidInput {
+    background-color:#3f3f46;
+    border:1px solid red;
+    border-radius:10px;
+    width:90%;
+    margin:auto;
+    display:block;
+    height:35px;
+    color:white;
+}
+
+#LoginTextDiv5 {
+    font-size:15px;
+    margin:auto;
+    display:block;
+    text-align:center;
+    padding-top:15px;
+}
+
+.LoginDivInputClass:focus, .CreateNewAccountInputClass:focus {
+    border-color:#2684FF;
+    outline:none;
+    box-shadow:0px 0px 10px #2684FF;
+}
+
+.InvalidInput:focus {
+    border-color:red;
+    outline:none;
+    box-shadow:0px 0px 10px red;
+}
+
+.LoginScreenDivButtonClass, .CreateNewAccountButtonClass {
+    background-color:#616fff;
+    border:none;
+    width:90%;
+    display:block;
+    margin:25px auto 25px auto;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    font-size:15px;
+    border-radius:10px;
+    height:50px;
+}
+
+.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover {
+    cursor:pointer;
+    background-color:#4f56c2;
+    transition:background-color 0.5s ease;
+}
+
+.InvalidInputButton {
+    background-color:red;
+    border:none;
+    width:90%;
+    display:block;
+    margin:25px auto 25px auto;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    font-size:15px;
+    border-radius:10px;
+    height:50px;
+}
+
+.InvalidInputButton:hover {
+    cursor:pointer;
+    background-color:darkred;
+    transition:background-color 0.5s ease;
+}
+
+#CreateNewAccountMainDiv {
+    background-color:#42434a;
+    height:600px;
+    width:500px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px black;
+    margin:auto;
+    display:block;
+}
+
+#CreateNewAcountTextDiv1 {
+    font-size:25px;
+    margin:auto;
+    display:block;
+    text-align:center;
+    padding-top:15px;
+}

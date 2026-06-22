@@ -1,0 +1,8 @@
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    displayName VARCHAR(99) NOT NULL,
+    username VARCHAR(99) UNIQUE NOT NULL,
+    password VARCHAR(99) NOT NULL
+);
+
+docker exec -it pg psql -U postgres
