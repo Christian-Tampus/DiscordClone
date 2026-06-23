@@ -12,6 +12,9 @@ Dependencies
 */
 import {useEffect, useState} from "react";
 import DiscordLogo from "./assets/DiscordLogo.jpg";
+import WhiteDiscordLogo from "./assets/DiscordWhiteLogo.png";
+import GearsIcon from "./assets/GearsIcon.png";
+import ExitIcon from "./assets/ExitIcon.png";
 import "./App.css";
 
 /*
@@ -37,6 +40,7 @@ function Main() {
   const [isCreateNewAccountDisplayNameValid, setIsCreateNewAccountDisplayNameValid] = useState(true);
   const [isCreateNewAccountUserNameValid, setIsCreateNewAccountUserNameValid] = useState(true);
   const [isCreateNewAccountPasswordNameValid, setIsCreateNewAccountPasswordNameValid] = useState(true);
+  const [displayUserSettings, setDisplayUserSettings] = useState(false);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -93,9 +97,46 @@ function Main() {
     setLoginScreen(true);
     setCreateNewAccountScreen(false);
   };
+  function DirectMessagesButton() {
+    console.log("DIRECT MESSAGES BUTTON!");
+  };
+  function UserSettingsButton() {
+    setDisplayUserSettings(true);
+  };
+  function ExitUserSettingsButton() {
+    setDisplayUserSettings(false);
+  };
   if (userData) {
     return (
-      <div>MAIN PAGE!!!</div>
+      <div id="MainPageDiv">
+        <div id="HeaderBar">Server Name</div>
+        <div id="MainContainerDiv">
+          <div id="ServersContainerDiv">
+            <div id="DirectMessageButtonDivContainer" className="toolTipWrapper" onClick={DirectMessagesButton}>
+              <img id="DirectMessageButton" src={WhiteDiscordLogo} alt="Direct Messages"></img>
+              <div className="toolTip">Direct Messages</div>
+            </div>
+            <div className="ServerListDivider"></div>
+            <div id="ServersDiv"></div>
+            <div className="ServerListDivider"></div>
+            <div id="UserSettingsDiv" className="toolTipWrapper" onClick={UserSettingsButton}>
+              <img id="UserSettingsButton" src={GearsIcon} alt="User Settings"></img>
+              <div className="toolTip">User Settings</div>
+            </div>
+          </div>
+          <div id="ChatContainerDiv"></div>
+          {displayUserSettings == true && (
+            <div id="UserSettingsScreenDiv">
+              <div id="UserSettingsMainContainerDiv">
+                <div id="UserSettingsHeaderDiv">
+                  User Settings
+                  <img id="UserSettingsExitButton" src={ExitIcon} onClick={ExitUserSettingsButton} alt="Exit User Settings"></img>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     );
   };
   if (createNewAccountScreen == true) {

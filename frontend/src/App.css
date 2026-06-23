@@ -178,3 +178,174 @@ h1 {
     text-align:center;
     padding-top:15px;
 }
+
+#MainPageDiv {
+    background-color:#232325;
+    width:100vw;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+#HeaderBar {
+    width:100%;
+    background-color:black;
+    height:25px;
+    text-align:center;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    color:white;
+    line-height:25px;
+    font-size:20px;
+}
+
+#MainContainerDiv {
+    flex:1;
+    width:100%;
+    display:flex;
+}
+
+#ServersContainerDiv {
+    width:75px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:12.5px 0;
+    gap:10px;
+}
+
+#ChatContainerDiv {
+    background-color:green;
+    flex:1;
+}
+
+#DirectMessageButtonDivContainer, #UserSettingsDiv {
+    width:50px;
+    height:50px;
+    background-color:#3a3b3c;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius:15px;
+}
+
+#DirectMessageButton, #UserSettingsButton {
+    width:75%;
+    height:75%;
+    object-fit:contain;
+}
+
+#DirectMessageButtonDivContainer:hover, #UserSettingsDiv:hover {
+    cursor:pointer;
+    background-color:#2684FF;
+    transition:background-color 0.5s ease;
+}
+
+#UserSettingsDiv:hover #UserSettingsButton, #DirectMessageButtonDivContainer:hover #DirectMessageButton {
+    animation:rotateOnHover 1s ease-in-out;
+}
+
+.ServerListDivider {
+    background-color:#3a3b3c;
+    width:50px;
+    height:2px;
+}
+#ServersDiv {
+    flex:1;
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+@keyframes rotateOnHover {
+    from {
+        transform:rotate(0deg);
+    }
+    to {
+        transform:rotate(360deg);
+    }
+}
+
+.toolTipWrapper {
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.toolTip {
+    position:absolute;
+    left:55px;
+    top: 50%;
+    transform:translate(-10px, -50%);
+    background:#3a3b3c;
+    color:white;
+    padding:10px;
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    border-radius: 10px;
+    white-space:nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+
+.toolTipWrapper:hover .toolTip {
+    opacity: 1;
+    transform: translate(0px, -50%);
+}
+
+#UserSettingsScreenDiv {
+    position:fixed;
+    top:25px;
+    left:0;
+    width:100vw;
+    height:100vh;
+    background-color:rgba(0,0,0,0.75);
+    z-index:999;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+#UserSettingsMainContainerDiv {
+    background-color:#232325;
+    height:80%;
+    width:80%;
+    margin:auto;
+    display:block;
+    border-radius:10px;
+}
+
+#UserSettingsHeaderDiv {
+    width:100%;
+    height:50px;
+    border-bottom:1px solid #3a3b3c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-size:25px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    position:relative;
+}
+
+#UserSettingsExitButton {
+    position:absolute;
+    right:0px;
+    width:20px;
+    height:20px;
+    margin-right:10px;
+    padding:5px;
+    border-radius:10px;
+    background-color:#3a3b3c;
+}
+
+#UserSettingsExitButton:hover {
+    cursor:pointer;
+    background-color:#2684FF;
+    transition:background-color 0.5s ease;
+}
