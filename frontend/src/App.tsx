@@ -10,11 +10,12 @@ console.log("[SYSTEM MESSAGE] App.tsx Program Start!");
 Dependencies
 ==================================================
 */
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import DiscordLogo from "./assets/DiscordLogo.jpg";
 import WhiteDiscordLogo from "./assets/DiscordWhiteLogo.png";
 import GearsIcon from "./assets/GearsIcon.png";
 import ExitIcon from "./assets/ExitIcon.png";
+import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
 import "./App.css";
 
 /*
@@ -41,6 +42,13 @@ function Main() {
   const [isCreateNewAccountUserNameValid, setIsCreateNewAccountUserNameValid] = useState(true);
   const [isCreateNewAccountPasswordNameValid, setIsCreateNewAccountPasswordNameValid] = useState(true);
   const [displayUserSettings, setDisplayUserSettings] = useState(false);
+  const [currentPFP, setCurrentPFP] = useState(PlaceHolderPFP);
+  const [updatedDisplayName, setUpdatedDisplayName] = useState("");
+  const [updatedBiography, setUpdatedBiography] = useState("");
+  const [updatedPassword, setUpdatedPassword] = useState("");
+  const [isUpdatedDisplayNameValid, setIsUpdatedDisplayNameValid] = useState(true);
+  const [isUPdatedBiographyValid, setIsUpdatedBiographyValid] = useState(true);
+  const [isUpdatedPasswordValid, setIsUpdatedPasswordValid] = useState(true);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -132,6 +140,36 @@ function Main() {
                   User Settings
                   <img id="UserSettingsExitButton" src={ExitIcon} onClick={ExitUserSettingsButton} alt="Exit User Settings"></img>
                 </div>
+                <div className="UserSettingsLabelClass" id="ProfilePictureLabel">Profile Picture</div>
+                <img id="UserSettingsPFP" src={currentPFP}></img>
+                <div className="UserSettingsLabelClass">Username</div>
+                <div id="UserSettingsUsernameLabel" className="UserSettingsLabelClass">{userData.username}</div>
+                <div className="UserSettingsLabelClass">Display Name</div>
+                <input className={`UserSettingsInputClass ${isUpdatedDisplayNameValid == true ? "" : "InvalidInput2"}`} placeholder={userData.displayname} type="text" value={updatedDisplayName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setUpdatedDisplayName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsUpdatedDisplayNameValid(true);
+                  } else {
+                    setIsUpdatedDisplayNameValid(false);
+                  };
+                  console.log("isUpdatedDisplayNameValid:",isUpdatedDisplayNameValid);
+                }}/>
+                {isUpdatedDisplayNameValid == false && (<div className="UpdateAccountErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <div className="UserSettingsLabelClass">Biography</div>
+                <textarea placeholder="Biography" id="UserSettingsBiographyTextArea"></textarea>
+                <div className="UserSettingsLabelClass">Change Password</div>
+                <input placeholder="Change Password Here..." className={`UserSettingsInputClass ${isUpdatedPasswordValid == true ? "" : "InvalidInput2"}`} value={updatedPassword} type="password" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  setUpdatedPassword(event.target.value);
+                  if (event.target.value.length >= 8 && event.target.value.length <= 99) {
+                    setIsUpdatedPasswordValid(true);
+                  } else {
+                    setIsUpdatedPasswordValid(false);
+                  };
+                }}/>
+                {isUpdatedPasswordValid == false && (<div className="UpdateAccountErrorDiv">8 Minimum Characters Up To 99 Maximum Characters Only!</div>)}
+                <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton">Save Changes</button>
               </div>
             </div>
           )}
@@ -150,7 +188,7 @@ function Main() {
             let initialString = event.target.value;
             let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
             setNewDisplayName(event.target.value);
-            if (initialString.length <= 99 && initialString == sanitizedString) {
+            if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
               setIsCreateNewAccountDisplayNameValid(true);
             } else {
               setIsCreateNewAccountDisplayNameValid(false);
@@ -162,7 +200,7 @@ function Main() {
             let initialString = event.target.value;
             let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
             setNewUserName(event.target.value);
-            if (initialString.length <= 99 && initialString == sanitizedString) {
+            if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
               setIsCreateNewAccountUserNameValid(true);
             } else {
               setIsCreateNewAccountUserNameValid(false);
@@ -198,7 +236,7 @@ function Main() {
             let initialString = event.target.value;
             let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
             setUsername(event.target.value);
-            if (initialString.length <= 99 && initialString == sanitizedString) {
+            if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
               setUserNameValid(true);
             } else {
               setUserNameValid(false);
@@ -207,7 +245,7 @@ function Main() {
           {userNameValid == false && (<div className="CreateNewAccountErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
           <div id="LoginTextDiv4" className="LoginTextDivClass">Password</div>
           <input required className={`LoginDivInputClass ${passwordValid == true ? "" : "InvalidInput"}`} placeholder="Enter Your Password Here..." type="password" value={password} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setPassword(event.target.value)
+            setPassword(event.target.value);
             if (event.target.value.length >= 8 && event.target.value.length <= 99) {
               setPasswordValid(true);
             } else {
