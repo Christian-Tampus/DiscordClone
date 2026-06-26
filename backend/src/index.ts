@@ -92,9 +92,7 @@ App.post("/createAccount", async (request, response) => {
   const displayName = request.body.displayName;
   const username = request.body.username;
   const password = request.body.password;
-  console.log("[SERVER] Request:",request.body.displayName);
-  console.log("[SERVER] Request:",request.body.username);
-  console.log("[SERVER] Request:",request.body.password);
+  console.log("[SERVER] Request:",request.body);
   const checkIfUsernameExists = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [username]
@@ -112,6 +110,52 @@ App.post("/createAccount", async (request, response) => {
       error: "[ERROR] Username Already Exists!"
     });
   };
+});
+
+/*
+==================================================
+Update User Settings API
+==================================================
+*/
+App.post("/updateUserSettings", async (request, response) => {
+  console.log("[SERVER] API: /updateUserSettings");
+  const UserSettingsToUpdate = request.body;
+  console.log("[SERVER] Request:",request.body);
+  if (UserSettingsToUpdate.canUpdateDisplayName == true) {
+    await PostgreSQLPool.query(
+      "UPDATE users SET displayname = $1 WHERE username = $2",
+      [UserSettingsToUpdate.displayName, UserSettingsToUpdate.username]
+    );
+    console.log("[SERVER] Update Display Name!");
+  };
+  if (UserSettingsToUpdate.canUpdateBiography == true) {
+    await PostgreSQLPool.query(
+      "UPDATE users SET biography = $1 WHERE username = $2",
+      [UserSettingsToUpdate.biography, UserSettingsToUpdate.username]
+    );
+    console.log("[SERVER] Update Biography!");
+  };
+  if (UserSettingsToUpdate.canUpdatePassword == true) {
+    await PostgreSQLPool.query(
+      "UPDATE users SET password = $1 WHERE username = $2",
+      [UserSettingsToUpdate.password, UserSettingsToUpdate.username]
+    );
+    console.log("[SERVER] Update Password!");
+  };
+  if (UserSettingsToUpdate.canUpdateStatus == true) {
+    await PostgreSQLPool.query(
+      "UPDATE users SET status = $1 WHERE username = $2",
+      [UserSettingsToUpdate.status, UserSettingsToUpdate.username]
+    );
+    console.log("[SERVER] Update Status!");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [UserSettingsToUpdate.username]
+  );
+  response.json(returnUserData.rows[0]);
+  console.log(returnUserData.rows[0]);
+  console.log("[SERVER] Updated User Settings Successfully!");
 });
 
 /*

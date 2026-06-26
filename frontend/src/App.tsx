@@ -47,8 +47,12 @@ function Main() {
   const [updatedBiography, setUpdatedBiography] = useState("");
   const [updatedPassword, setUpdatedPassword] = useState("");
   const [isUpdatedDisplayNameValid, setIsUpdatedDisplayNameValid] = useState(true);
-  const [isUPdatedBiographyValid, setIsUpdatedBiographyValid] = useState(true);
+  const [isUpdatedBiographyValid, setIsUpdatedBiographyValid] = useState(true);
   const [isUpdatedPasswordValid, setIsUpdatedPasswordValid] = useState(true);
+  const [updatedStatus, setUpdatedStatus] = useState("Null");
+  const [hasUpdatedDisplayName, setHasUpdatedDisplayName] = useState(false);
+  const [hasUpdatedBiography, setHasUpdatedBiography] = useState(false);
+  const [hasUpdatedPassword, setHasUpdatedPassword] = useState(false);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -64,6 +68,7 @@ function Main() {
       if (response.ok) {
         const data = await response.json();
         setUserData(data);
+        console.log("[CLIENT] Log In!");
       } else {
         const errorCode = await response.json();
         alert(errorCode.error);
@@ -97,6 +102,90 @@ function Main() {
       alert("[CLIENT] Cannot Create New Account!");
     };
   };
+  async function UpdateUserSettings() {
+    /*
+    NEED TO UPDATE PROFILE PICTURE METHOD!
+    NEED TO UPDATE PROFILE PICTURE METHOD!
+    NEED TO UPDATE PROFILE PICTURE METHOD!
+    NEED TO UPDATE PROFILE PICTURE METHOD!
+    NEED TO UPDATE PROFILE PICTURE METHOD!
+    */
+    let preventUpdatingUserSettings = false;
+    let canUpdateUserSettings = false;
+    let UserSettingsToUpdate = {
+      username: userData.username,
+      displayName: "",
+      canUpdateDisplayName: false,
+      biography: "",
+      canUpdateBiography: false,
+      password: "",
+      canUpdatePassword: false,
+      status: "",
+      canUpdateStatus: false,
+    };
+    if (isUpdatedDisplayNameValid == true && hasUpdatedDisplayName == true) {
+      let sanitizedString = updatedDisplayName.replace(/[^a-zA-Z0-9_]/g, "");
+      if (sanitizedString.length <= 99 && sanitizedString.length > 0) {
+        UserSettingsToUpdate.displayName = updatedDisplayName;
+        UserSettingsToUpdate.canUpdateDisplayName = true;
+        canUpdateUserSettings = true;
+      } else {
+        preventUpdatingUserSettings = true;
+      };
+    } else if (isUpdatedDisplayNameValid == false && hasUpdatedDisplayName == true) {
+      preventUpdatingUserSettings = true;
+    };
+    if (isUpdatedBiographyValid == true && hasUpdatedBiography == true) {
+      if (updatedBiography.length <= 500) {
+        UserSettingsToUpdate.biography = updatedBiography;
+        UserSettingsToUpdate.canUpdateBiography = true;
+        canUpdateUserSettings = true;
+      } else {
+        preventUpdatingUserSettings = true;
+      };
+    } else if (isUpdatedBiographyValid == false && hasUpdatedBiography == true) {
+      preventUpdatingUserSettings = true;
+    };
+    if (isUpdatedPasswordValid == true && hasUpdatedPassword == true) {
+      if (updatedPassword.length >= 8 && updatedPassword.length <= 99) {
+        UserSettingsToUpdate.password = updatedPassword;
+        UserSettingsToUpdate.canUpdatePassword = true;
+        canUpdateUserSettings = true;
+      } else {
+        preventUpdatingUserSettings = true;
+      };
+    } else if (isUpdatedPasswordValid == false && hasUpdatedPassword == true) {
+      preventUpdatingUserSettings = true;
+    };
+    if (updatedStatus != "Null") {
+      UserSettingsToUpdate.status = updatedStatus;
+      UserSettingsToUpdate.canUpdateStatus = true;
+      canUpdateUserSettings = true;
+    };
+    if (canUpdateUserSettings == true && preventUpdatingUserSettings == false) {
+      const response = await fetch("http://localhost:5000/updateUserSettings", {
+        method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(UserSettingsToUpdate)
+      });
+      if (response.ok) {
+        alert("[CLIENT] Updated User Settings Successfully!");
+        const data = await response.json();
+        setUserData(data);
+      } else {
+        const errorCode = await response.json();
+        alert(errorCode.error);
+      };
+    } else if (preventUpdatingUserSettings == true) {
+      console.log("[CLIENT] Cannot Update User Settings Due To Invalid Changes!");
+      alert("[CLIENT] Cannot Update User Settings Due To Invalid Changes!");
+    } else {
+      console.log("[CLIENT] There Are No User Settings To Update!");
+      alert("[CLIENT] There Are No User Settings To Update!");
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -110,9 +199,28 @@ function Main() {
   };
   function UserSettingsButton() {
     setDisplayUserSettings(true);
+    setUpdatedDisplayName(userData.displayname);
+    setUpdatedBiography(userData.biography);
+    setUpdatedPassword(userData.password);
+    setUpdatedStatus(userData.status);
   };
   function ExitUserSettingsButton() {
     setDisplayUserSettings(false);
+  };
+  function UpdateBiography(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    let currentBiography = event.target.value;
+    setUpdatedBiography(currentBiography);
+    if (currentBiography.length <= 500) {
+      setIsUpdatedBiographyValid(true);
+    } else {
+      setIsUpdatedBiographyValid(false);
+    };
+    setHasUpdatedBiography(true);
+  };
+  function LogoutButton() {
+    setDisplayUserSettings(false);
+    setUserData(null);
+    console.log("[CLIENT] Log Out!");
   };
   if (userData) {
     return (
@@ -145,7 +253,7 @@ function Main() {
                 <div className="UserSettingsLabelClass">Username</div>
                 <div id="UserSettingsUsernameLabel" className="UserSettingsLabelClass">{userData.username}</div>
                 <div className="UserSettingsLabelClass">Display Name</div>
-                <input className={`UserSettingsInputClass ${isUpdatedDisplayNameValid == true ? "" : "InvalidInput2"}`} placeholder={userData.displayname} type="text" value={updatedDisplayName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                <input className={`UserSettingsInputClass ${isUpdatedDisplayNameValid == true ? "" : "InvalidInput2"}`} placeholder="Update Display Name Here..." type="text" value={updatedDisplayName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   let initialString = event.target.value;
                   let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
                   setUpdatedDisplayName(event.target.value);
@@ -154,22 +262,44 @@ function Main() {
                   } else {
                     setIsUpdatedDisplayNameValid(false);
                   };
-                  console.log("isUpdatedDisplayNameValid:",isUpdatedDisplayNameValid);
+                  setHasUpdatedDisplayName(true);
                 }}/>
                 {isUpdatedDisplayNameValid == false && (<div className="UpdateAccountErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
                 <div className="UserSettingsLabelClass">Biography</div>
-                <textarea placeholder="Biography" id="UserSettingsBiographyTextArea"></textarea>
+                <textarea placeholder="Update Biography Here..." id="UserSettingsBiographyTextArea" className={`${isUpdatedBiographyValid == true ? "" : "InvalidInput3"}`} onChange={UpdateBiography} value={updatedBiography}/>
+                {isUpdatedBiographyValid == false && (<div className="UpdateAccountErrorDiv">Biography Can Have Up To 500 Characters Maximum!</div>)}
                 <div className="UserSettingsLabelClass">Change Password</div>
-                <input placeholder="Change Password Here..." className={`UserSettingsInputClass ${isUpdatedPasswordValid == true ? "" : "InvalidInput2"}`} value={updatedPassword} type="password" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                <input placeholder="Update Password Here..." className={`UserSettingsInputClass ${isUpdatedPasswordValid == true ? "" : "InvalidInput2"}`} value={updatedPassword} type="password" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                   setUpdatedPassword(event.target.value);
                   if (event.target.value.length >= 8 && event.target.value.length <= 99) {
                     setIsUpdatedPasswordValid(true);
                   } else {
                     setIsUpdatedPasswordValid(false);
                   };
+                  setHasUpdatedPassword(true);
                 }}/>
                 {isUpdatedPasswordValid == false && (<div className="UpdateAccountErrorDiv">8 Minimum Characters Up To 99 Maximum Characters Only!</div>)}
-                <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton">Save Changes</button>
+                <div className="UserSettingsLabelClass">Status</div>
+                <div id="UserStatusDiv">
+                  <label className="UserStatusLabel" id="OnlineStatusLabel">
+                    <input type="radio" name="UserStatus" value="Online" checked={updatedStatus == "Online"} onChange={(event) => setUpdatedStatus(event.target.value)}/>
+                    Online
+                  </label>
+                  <label className="UserStatusLabel" id="DoNotDisturbStatusLabel">
+                    <input type="radio" name="UserStatus" value="Do Not Disturb" checked={updatedStatus == "Do Not Disturb"} onChange={(event) => setUpdatedStatus(event.target.value)}/>
+                    Do Not Disturb
+                  </label>
+                  <label className="UserStatusLabel" id="IdleStatusLabel">
+                    <input type="radio" name="UserStatus" value="Idle" checked={updatedStatus == "Idle"} onChange={(event) => setUpdatedStatus(event.target.value)}/>
+                    Idle
+                  </label>
+                  <label className="UserStatusLabel" id="InvisibleStatusLabel">
+                    <input type="radio" name="UserStatus" value="Invisible" checked={updatedStatus == "Invisible"} onChange={(event) => setUpdatedStatus(event.target.value)}/>
+                    Invisible
+                  </label>
+                </div>
+                <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton" onClick={UpdateUserSettings}>Save Changes</button>
+                <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton" onClick={LogoutButton}>Log Out</button>
               </div>
             </div>
           )}

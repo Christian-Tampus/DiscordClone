@@ -109,31 +109,56 @@ h1 {
     color:white;
 }
 
+#UserSettingsBiographyTextArea {
+    width:80%;
+    height:100px;
+    margin:25px auto 25px auto;
+    display:block;
+    resize:none;
+    color:white;
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    background-color:#3f3f46;
+    border:1px solid white;
+    border-radius:10px;
+}
+
 .LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder {
     color:white;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
 
 .InvalidInput {
-    background-color:#3f3f46;
-    border:1px solid red;
-    border-radius:10px;
-    width:90%;
-    margin:auto;
-    display:block;
-    height:35px;
-    color:white;
+    background-color:#3f3f46 !important;
+    border:1px solid red !important;
+    border-radius:10px !important;
+    width:90% !important;
+    margin:auto !important;
+    display:block !important;
+    height:35px !important;
+    color:white !important;
 }
 
 .InvalidInput2 {
-    background-color:#3f3f46;
-    border:1px solid red;
-    border-radius:10px;
-    width:80%;
-    margin:25px auto 25px auto;
-    display:block;
-    height:35px;
-    color:white;
+    background-color:#3f3f46 !important;
+    border:1px solid red !important;
+    border-radius:10px !important;
+    width:80% !important;
+    margin:25px auto 25px auto !important;
+    display:block !important;
+    height:35px !important;
+    color:white !important;
+}
+
+.InvalidInput3 {
+    background-color:#3f3f46 !important;
+    border:1px solid red !important;
+    border-radius:10px !important;
+    width:80% !important;
+    margin:25px auto 25px auto !important;
+    display:block !important;
+    height:100px !important;
+    color:white !important;
 }
 
 #LoginTextDiv5 {
@@ -151,15 +176,21 @@ h1 {
 }
 
 .InvalidInput:focus {
-    border-color:red;
-    outline:none;
-    box-shadow:0px 0px 10px red;
+    border-color:red !important;
+    outline:none !important;
+    box-shadow:0px 0px 10px red !important;
 }
 
 .InvalidInput2:focus {
-    border-color:red;
-    outline:none;
-    box-shadow:0px 0px 10px red;
+    border-color:red !important;
+    outline:none !important;
+    box-shadow:0px 0px 10px red !important;
+}
+
+.InvalidInput3:focus {
+    border-color:red !important;
+    outline:none !important;
+    box-shadow:0px 0px 10px red !important;
 }
 
 .LoginScreenDivButtonClass, .CreateNewAccountButtonClass {
@@ -393,13 +424,13 @@ h1 {
 
 .UserSettingsLabelClass {
     color:white;
-    font-size:20px;
+    font-size:15px;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
     font-weight:bold;
     width:80%;
     margin:auto;
-    height:50px;
-    line-height:50px;
+    height:25px;
+    line-height:25px;
     text-align:left;
     border-bottom:1px solid white;
 }
@@ -410,7 +441,7 @@ h1 {
     border:3px solid white;
     border-radius:100%;
     display:block;
-    margin:25px auto 25px auto;
+    margin:15px auto 15px auto;
     transition:filter 0.5s ease;
 }
 
@@ -427,21 +458,36 @@ h1 {
     text-align:center;
 }
 
-#UserSettingsBiographyTextArea {
-    width:80%;
-    height:100px;
-    margin:25px auto 25px auto;
-    display:block;
-    resize:none;
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    background-color:#3f3f46;
-    border:1px solid white;
-    border-radius:10px;
-}
-
 #UserSettingsSaveChangesButton {
     width:80%;
-    margin:25px auto 25px auto;
+    margin:15px auto 15px auto;
+}
+
+#UserStatusDiv {
+    width:80%;
+    display:flex;
+    margin:15px auto 15px auto;
+    justify-content:space-evenly;
+}
+
+.UserStatusLabel {
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+}
+
+#OnlineStatusLabel {
+    color:#23a55a;
+}
+
+#DoNotDisturbStatusLabel {
+    color:#f23f42;
+}
+
+#IdleStatusLabel {
+    color:#f0b232;
+}
+
+#InvisibleStatusLabel {
+    color:#80848e;
 }
