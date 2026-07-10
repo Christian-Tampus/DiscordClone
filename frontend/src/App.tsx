@@ -16,6 +16,7 @@ import WhiteDiscordLogo from "./assets/DiscordWhiteLogo.png";
 import GearsIcon from "./assets/GearsIcon.png";
 import ExitIcon from "./assets/ExitIcon.png";
 import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
+import CreateNewServerIcon from "./assets/PlusIcon.jpg";
 import "./App.css";
 
 /*
@@ -24,10 +25,6 @@ Function App
 ==================================================
 */
 function Main() {
-  /*
-  Array Destructoring => [variableName, functionThatUpdatesVariableName] = useState("")
-  useState returns an array with the variable and function that updates it, the variable is initialized as empty string
-  */
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newDisplayName, setNewDisplayName] = useState("");
@@ -53,6 +50,15 @@ function Main() {
   const [hasUpdatedDisplayName, setHasUpdatedDisplayName] = useState(false);
   const [hasUpdatedBiography, setHasUpdatedBiography] = useState(false);
   const [hasUpdatedPassword, setHasUpdatedPassword] = useState(false);
+  const [hasUpdatedProfilePicture, setHasUpdatedProfilePicture] = useState(false);
+  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<File | null>(null);
+  const [displayCreateNewServer, setDisplayCreateNewServer] = useState(false);
+  const [createNewServerIcon, setCreateNewServerIcon] = useState(WhiteDiscordLogo);
+  const [createNewServerName, setCreateNewServerName] = useState("");
+  const [createNewServerIconFile, setCreateNewServerIconFile] = useState<File | null>(null);
+  const [isCreateNewServerNameValid, setIsCreateNewServerNameValid] = useState(true);
+  const [hasDataForCreateNewServerIcon, setHasDataForCreateNewServerIcon] = useState(false);
+  const [hasDataForCreateNewServerName, setHasDataForCreateNewServerName] = useState(false);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -68,6 +74,11 @@ function Main() {
       if (response.ok) {
         const data = await response.json();
         setUserData(data);
+        if (data.profile_picture != "") {
+          setCurrentPFP("http://localhost:5000" + data.profile_picture);
+        } else {
+          setCurrentPFP(PlaceHolderPFP);
+        };
         console.log("[CLIENT] Log In!");
       } else {
         const errorCode = await response.json();
@@ -103,13 +114,6 @@ function Main() {
     };
   };
   async function UpdateUserSettings() {
-    /*
-    NEED TO UPDATE PROFILE PICTURE METHOD!
-    NEED TO UPDATE PROFILE PICTURE METHOD!
-    NEED TO UPDATE PROFILE PICTURE METHOD!
-    NEED TO UPDATE PROFILE PICTURE METHOD!
-    NEED TO UPDATE PROFILE PICTURE METHOD!
-    */
     let preventUpdatingUserSettings = false;
     let canUpdateUserSettings = false;
     let UserSettingsToUpdate = {
@@ -185,6 +189,47 @@ function Main() {
       console.log("[CLIENT] There Are No User Settings To Update!");
       alert("[CLIENT] There Are No User Settings To Update!");
     };
+    if (hasUpdatedProfilePicture == true && updatedProfilePicture != null) {
+      const formData = new FormData();
+      formData.append("userProfilePicture", updatedProfilePicture);
+      formData.append("username", userData.username);
+      const response = await fetch("http://localhost:5000/updateProfilePicture", {
+        method: "POST",
+        body: formData
+      });
+      if (response.ok) {
+        alert("[CLIENT] Updated User Profile Picture Successfully!");
+        const data = await response.json();
+        setUserData(data);
+      } else {
+        const errorCode = await response.json();
+        alert(errorCode.error);
+      };
+    };
+  };
+  async function CreateNewServer() {
+    console.log("hasDataForCreateNewServerIcon:",hasDataForCreateNewServerIcon,"createNewServerIconFile:",createNewServerIconFile,"hasDataForCreateNewServerName:",hasDataForCreateNewServerName,"isCreateNewServerNameValid:",isCreateNewServerNameValid);
+    if (hasDataForCreateNewServerIcon == true && createNewServerIconFile != null && hasDataForCreateNewServerName == true && isCreateNewServerNameValid == true) {
+      console.log("CREATE NEW SERVER!");
+      const formData = new FormData();
+      formData.append("serverName", createNewServerName);
+      formData.append("serverIcon", createNewServerIconFile);
+      formData.append("serverOwner", userData.username);
+      const response = await fetch("http://localhost:5000/createNewServer", {
+        method: "POST",
+        body: formData
+      });
+      if (response.ok) {
+        alert("[CLIENT] Created New Server Successfully!");
+        const data = await response.json();
+        setUserData(data);
+      } else {
+        const errorCode = await response.json();
+        alert(errorCode.error);
+      };
+    } else {
+      alert("[ERROR] Invalid Input For Server Name Or You Have Not Selected A Server Icon!");
+    };
   };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
@@ -197,15 +242,26 @@ function Main() {
   function DirectMessagesButton() {
     console.log("DIRECT MESSAGES BUTTON!");
   };
+  function CreateNewServerButton() {
+    setDisplayCreateNewServer(true);
+  };
   function UserSettingsButton() {
     setDisplayUserSettings(true);
     setUpdatedDisplayName(userData.displayname);
     setUpdatedBiography(userData.biography);
     setUpdatedPassword(userData.password);
     setUpdatedStatus(userData.status);
+    if (userData.profile_picture != "") {
+      setCurrentPFP("http://localhost:5000" + userData.profile_picture);
+    } else {
+      setCurrentPFP(PlaceHolderPFP);
+    };
   };
   function ExitUserSettingsButton() {
     setDisplayUserSettings(false);
+  };
+  function ExitCreateNewServerButton() {
+    setDisplayCreateNewServer(false);
   };
   function UpdateBiography(event: React.ChangeEvent<HTMLTextAreaElement>) {
     let currentBiography = event.target.value;
@@ -222,6 +278,30 @@ function Main() {
     setUserData(null);
     console.log("[CLIENT] Log Out!");
   };
+  function SelectImageForUserProfilePicture(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    };
+    setCurrentPFP(URL.createObjectURL(file));
+    setUpdatedProfilePicture(file);
+    setHasUpdatedProfilePicture(true);
+  };
+  function SelectImageForCreateNewServer (event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    };
+    setCreateNewServerIcon(URL.createObjectURL(file));
+    setCreateNewServerIconFile(file);
+    setHasDataForCreateNewServerIcon(true);
+  };
+  function OpenFilePickerForUserProfilePicture() {
+    document.getElementById("ProfilePictureInput")?.click();
+  };
+  function OpenFirePickerForCreateNewServer() {
+    document.getElementById("CreateNewServerIconImageInput")?.click();
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -233,14 +313,56 @@ function Main() {
               <div className="toolTip">Direct Messages</div>
             </div>
             <div className="ServerListDivider"></div>
-            <div id="ServersDiv"></div>
+            <div id="ServersDiv">
+              {
+                /*
+                DISPLAY SERVER ICONS HERE!
+                DISPLAY SERVER ICONS HERE!
+                DISPLAY SERVER ICONS HERE!
+                DISPLAY SERVER ICONS HERE!
+                DISPLAY SERVER ICONS HERE!
+                */
+              }
+            </div>
             <div className="ServerListDivider"></div>
+            <div id="CreateNewServerDivContainer" className="toolTipWrapper" onClick={CreateNewServerButton}>
+              <img id="CreateNewServerButton" src={CreateNewServerIcon} alt="Create New Server"></img>
+              <div className="toolTip">Create New Server</div>
+            </div>
             <div id="UserSettingsDiv" className="toolTipWrapper" onClick={UserSettingsButton}>
               <img id="UserSettingsButton" src={GearsIcon} alt="User Settings"></img>
               <div className="toolTip">User Settings</div>
             </div>
           </div>
           <div id="ChatContainerDiv"></div>
+          {displayCreateNewServer == true && (
+            <div id="CreateNewServerScreenDiv">
+              <div id="CreateNewServerScreenMainContainerDiv">
+                <div id="CreateNewServerScreenHeaderDiv">
+                  Create New Server
+                  <img id="CreateNewServerExitButton" src={ExitIcon} onClick={ExitCreateNewServerButton} alt="Exit Create New Server"></img>
+                </div>
+                <div id="CreateNewServerIconDiv">
+                  <img id="CreateNewServerIconImage" src={createNewServerIcon} alt="Server Icon" onClick={OpenFirePickerForCreateNewServer}></img>
+                  <input id="CreateNewServerIconImageInput" type="file" accept="image/*" hidden onChange={SelectImageForCreateNewServer}></input>
+                </div>
+                <div className="CreateNewServerLabelClass">Server Name</div>
+                <input className={`CreateNewServerInputClass ${isCreateNewServerNameValid == true ? "" : "InvalidInput2"}`} placeholder="Server Name Here..." type="text" value={createNewServerName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setCreateNewServerName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsCreateNewServerNameValid(true);
+                    setHasDataForCreateNewServerName(true);
+                  } else {
+                    setIsCreateNewServerNameValid(false);
+                  };
+                }}/>
+                {isCreateNewServerNameValid == false && (<div className="CreateNewServerErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <button className="CreateNewServerButtonClass" id="CreateNewServerButton" onClick={CreateNewServer}>Create Server</button>
+              </div>
+            </div>
+          )}
           {displayUserSettings == true && (
             <div id="UserSettingsScreenDiv">
               <div id="UserSettingsMainContainerDiv">
@@ -249,7 +371,10 @@ function Main() {
                   <img id="UserSettingsExitButton" src={ExitIcon} onClick={ExitUserSettingsButton} alt="Exit User Settings"></img>
                 </div>
                 <div className="UserSettingsLabelClass" id="ProfilePictureLabel">Profile Picture</div>
-                <img id="UserSettingsPFP" src={currentPFP}></img>
+                <div id="UserSettingsPFPDiv">
+                  <img id="UserSettingsPFP" src={currentPFP} alt="Profile Picture" onClick={OpenFilePickerForUserProfilePicture}></img>
+                  <input id="ProfilePictureInput" type="file" accept="image/*" hidden onChange={SelectImageForUserProfilePicture}></input>
+                </div>
                 <div className="UserSettingsLabelClass">Username</div>
                 <div id="UserSettingsUsernameLabel" className="UserSettingsLabelClass">{userData.username}</div>
                 <div className="UserSettingsLabelClass">Display Name</div>
@@ -299,7 +424,7 @@ function Main() {
                   </label>
                 </div>
                 <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton" onClick={UpdateUserSettings}>Save Changes</button>
-                <button className="CreateNewAccountButtonClass" id="UserSettingsSaveChangesButton" onClick={LogoutButton}>Log Out</button>
+                <button className="CreateNewAccountButtonClass" id="UserSettingsLogOutButton" onClick={LogoutButton}>Log Out</button>
               </div>
             </div>
           )}

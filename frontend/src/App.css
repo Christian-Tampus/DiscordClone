@@ -39,7 +39,7 @@ h1 {
     display:block;
 }
 
-.LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv, .UpdateAccountErrorDiv {
+.LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv, .UpdateAccountErrorDiv, .CreateNewServerErrorDiv {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
     color:white;
     font-weight:bold;
@@ -53,7 +53,7 @@ h1 {
     margin:15px auto 15px auto;
 }
 
-.UpdateAccountErrorDiv {
+.UpdateAccountErrorDiv, .CreateNewServerErrorDiv {
     font-size:15px;
     text-align:center;
     width:80%;
@@ -98,7 +98,7 @@ h1 {
     color:white;
 }
 
-.UserSettingsInputClass {
+.UserSettingsInputClass, .CreateNewServerInputClass {
     background-color:#3f3f46;
     border:1px solid white;
     border-radius:10px;
@@ -123,7 +123,7 @@ h1 {
     border-radius:10px;
 }
 
-.LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder {
+.LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder, .CreateNewServerInputClass::placeholder {
     color:white;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
@@ -169,7 +169,7 @@ h1 {
     padding-top:15px;
 }
 
-.LoginDivInputClass:focus, .CreateNewAccountInputClass:focus, .UserSettingsInputClass:focus, #UserSettingsBiographyTextArea:focus {
+.LoginDivInputClass:focus, .CreateNewAccountInputClass:focus, .UserSettingsInputClass:focus, #UserSettingsBiographyTextArea:focus, .CreateNewServerInputClass:focus {
     border-color:#2684FF;
     outline:none;
     box-shadow:0px 0px 10px #2684FF;
@@ -193,7 +193,7 @@ h1 {
     box-shadow:0px 0px 10px red !important;
 }
 
-.LoginScreenDivButtonClass, .CreateNewAccountButtonClass {
+.LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass {
     background-color:#616fff;
     border:none;
     width:90%;
@@ -207,7 +207,7 @@ h1 {
     height:50px;
 }
 
-.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover {
+.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover {
     cursor:pointer;
     background-color:#4f56c2;
     transition:background-color 0.5s ease;
@@ -291,7 +291,7 @@ h1 {
     flex:1;
 }
 
-#DirectMessageButtonDivContainer, #UserSettingsDiv {
+#DirectMessageButtonDivContainer, #UserSettingsDiv, #CreateNewServerDivContainer {
     width:50px;
     height:50px;
     background-color:#3a3b3c;
@@ -307,13 +307,13 @@ h1 {
     object-fit:contain;
 }
 
-#DirectMessageButtonDivContainer:hover, #UserSettingsDiv:hover {
+#DirectMessageButtonDivContainer:hover, #UserSettingsDiv:hover, #CreateNewServerDivContainer:hover {
     cursor:pointer;
     background-color:#2684FF;
     transition:background-color 0.5s ease;
 }
 
-#UserSettingsDiv:hover #UserSettingsButton, #DirectMessageButtonDivContainer:hover #DirectMessageButton {
+#DirectMessageButtonDivContainer:hover #DirectMessageButton, #UserSettingsDiv:hover #UserSettingsButton, #CreateNewServerDivContainer:hover #CreateNewServerButton {
     animation:rotateOnHover 1s ease-in-out;
 }
 
@@ -369,7 +369,7 @@ h1 {
     transform: translate(0px, -50%);
 }
 
-#UserSettingsScreenDiv {
+#UserSettingsScreenDiv, #CreateNewServerScreenDiv {
     position:fixed;
     top:35px;
     left:0;
@@ -391,7 +391,16 @@ h1 {
     border-radius:10px;
 }
 
-#UserSettingsHeaderDiv {
+#CreateNewServerScreenMainContainerDiv {
+    background-color:#232325;
+    height:425px;
+    width:600px;
+    margin:auto;
+    display:block;
+    border-radius:10px;
+}
+
+#UserSettingsHeaderDiv, #CreateNewServerScreenHeaderDiv {
     width:100%;
     height:50px;
     border-bottom:1px solid white;
@@ -405,7 +414,7 @@ h1 {
     position:relative;
 }
 
-#UserSettingsExitButton {
+#UserSettingsExitButton, #CreateNewServerExitButton {
     position:absolute;
     right:0px;
     width:20px;
@@ -416,13 +425,13 @@ h1 {
     background-color:#3a3b3c;
 }
 
-#UserSettingsExitButton:hover {
+#UserSettingsExitButton:hover, #CreateNewServerExitButton:hover {
     cursor:pointer;
     background-color:#2684FF;
     transition:background-color 0.5s ease;
 }
 
-.UserSettingsLabelClass {
+.UserSettingsLabelClass, .CreateNewServerLabelClass {
     color:white;
     font-size:15px;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
@@ -435,7 +444,7 @@ h1 {
     border-bottom:1px solid white;
 }
 
-#UserSettingsPFP {
+#UserSettingsPFP, #CreateNewServerIconImage {
     width:100px;
     height:100px;
     border:3px solid white;
@@ -445,7 +454,7 @@ h1 {
     transition:filter 0.5s ease;
 }
 
-#UserSettingsPFP:hover {
+#UserSettingsPFP:hover, #CreateNewServerIconImage:hover {
     cursor:pointer;
     filter:brightness(50%);
 }
@@ -458,7 +467,7 @@ h1 {
     text-align:center;
 }
 
-#UserSettingsSaveChangesButton {
+#UserSettingsSaveChangesButton, #UserSettingsLogOutButton, #CreateNewServerButton {
     width:80%;
     margin:15px auto 15px auto;
 }
