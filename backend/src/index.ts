@@ -17,6 +17,7 @@ import { Pool, Result } from "pg";
 import path from "path";
 import multer from "multer";
 import fs from "fs";
+import { Server } from "http";
 
 /*
 ==================================================
@@ -41,9 +42,26 @@ const upload = multer({
       callback(null, true);
     } else {
       callback(null, false);
-    }
+    };
   }
 });
+
+/*
+==================================================
+Retrieve Server Data
+==================================================
+*/
+async function GetServerData(servers) {
+  let serverDataArray = [];
+  for (let index = 0; index < servers.length; index++) {
+    const serverData = await PostgreSQLPool.query(
+      "SELECT * FROM servers WHERE server_id = $1",
+      [servers[index]]
+    );
+    serverDataArray.push(serverData.rows[0]);
+  };
+  return serverDataArray;
+};
 
 /*
 ==================================================
@@ -93,7 +111,9 @@ App.post("/login", async (request, response) => {
     );
     if (checkIfPasswordIsCorrect.rows.length > 0) {
       console.log("[SERVER] Rows:",checkIfPasswordIsCorrect.rows);
-      response.json(checkIfPasswordIsCorrect.rows[0]);
+      let userData = checkIfPasswordIsCorrect.rows[0];
+      userData.serverData = await GetServerData(userData.servers);
+      response.json(userData);
     } else {
       console.log("[SERVER] Password:",password,"Is Incorrect!");
       response.status(401).json({
@@ -128,7 +148,9 @@ App.post("/createAccount", async (request, response) => {
       "INSERT INTO users (displayname, username, password) VALUES ($1, $2, $3) RETURNING *",
       [displayName, username, password]
     );
-    response.json(createNewAccount.rows[0]);
+    let userData = createNewAccount.rows[0];
+    userData.serverData = await GetServerData(userData.servers);
+    response.json(userData);
     console.log("[SERVER] Created New Account Successfully!");
   } else {
     console.log("[SERVER] Username:",username,"Already Exists!");
@@ -179,8 +201,10 @@ App.post("/updateUserSettings", async (request, response) => {
     "SELECT * FROM users WHERE username = $1",
     [UserSettingsToUpdate.username]
   );
-  response.json(returnUserData.rows[0]);
-  console.log(returnUserData.rows[0]);
+  let userData = returnUserData.rows[0];
+  userData.serverData = await GetServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] User Data:", userData);
   console.log("[SERVER] Updated User Settings Successfully!");
 });
 
@@ -218,7 +242,9 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
   );
-  response.json(returnUserData.rows[0]);
+  let userData = returnUserData.rows[0];
+  userData.serverData = await GetServerData(userData.servers);
+  response.json(userData);
   console.log("[SERVER] Updated User Profile Picture Successfully!");
 });
 
@@ -227,8 +253,24 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
 Create New Server API
 ==================================================
 */
-App.post("/createNewServer", upload.single("serverIcon"), async (request, response) => {
+App.post("/createNewServer", upload.single("serverIcon"), async(request, response, next) => {
   console.log("[SERVER] API: /createNewServer");
+  const getUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.serverOwner]
+  );
+  const userData = getUserData.rows[0];
+  if (userData.number_of_servers >= 10) {
+    if (request.file) {
+      fs.unlinkSync(request.file.path);
+      console.log("[SERVER] Deleted The Server Icon File!");
+    };
+    response.status(400).json({
+      error: "[ERROR] You Have Reached The Maximum Amount Of Servers [10] To Be In!"
+    })
+    console.log("[SERVER] User:", userData.username, "Reached The Maximum Amount Of Servers [10]!");
+    return;
+  };
   if (!request.file) {
     response.status(400).json({
       error: "[ERROR] Failed To Create New Server!"
@@ -237,47 +279,60 @@ App.post("/createNewServer", upload.single("serverIcon"), async (request, respon
   };
   const serverName = request.body.serverName;
   const serverIcon = "/imageStorage/" + request.file.filename;
-  const serverId = "SERVER-" + request.body.serverOwner + "-" + Date.now();
+  const serverId = "SERVER-" + request.body.serverOwner + "-" + serverName + "-" + Date.now();
   const serverOwner = request.body.serverOwner;
   await PostgreSQLPool.query(
     "INSERT INTO servers (server_name, server_icon, server_id, server_owner) VALUES ($1, $2, $3, $4) RETURNING *",
     [serverName, serverIcon, serverId, serverOwner]
   );
-  /*
-  INSERT SERVER DATA INTO USERS!
-  INSERT SERVER DATA INTO USERS!
-  INSERT SERVER DATA INTO USERS!
-  INSERT SERVER DATA INTO USERS!
-  INSERT SERVER DATA INTO USERS!
-
-  REMEMBER TO CLEAR SERVER WITH TRUNCATE TABLE users;
-  REMEMBER TO CLEAR SERVER WITH TRUNCATE TABLE users;
-  REMEMBER TO CLEAR SERVER WITH TRUNCATE TABLE users;
-  REMEMBER TO CLEAR SERVER WITH TRUNCATE TABLE users;
-  REMEMBER TO CLEAR SERVER WITH TRUNCATE TABLE users;
-
-  ADD SERVER LIMIT OF 10 PER USER!
-  ADD SERVER LIMIT OF 10 PER USER!
-  ADD SERVER LIMIT OF 10 PER USER!
-  ADD SERVER LIMIT OF 10 PER USER!
-  ADD SERVER LIMIT OF 10 PER USER!
-  */
+  await PostgreSQLPool.query(
+    "UPDATE users SET servers = array_append(servers, $1) WHERE username = $2",
+    [serverId, request.body.serverOwner]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE users SET number_of_servers = $1 WHERE username = $2",
+    [userData.number_of_servers + 1, serverOwner]
+  );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
-    [request.body.serverOwner]
+    [serverOwner]
   );
-  response.json(returnUserData.rows[0]);
+  let updatedUserData = returnUserData.rows[0];
+  updatedUserData.serverData = await GetServerData(updatedUserData.servers);
+  response.json(updatedUserData);
   console.log("[SERVER] Created New Server Successfully!");
 });
 
 /*
 ==================================================
-Example Database Route
+Update Server Settings API
 ==================================================
 */
-App.get("/users", async (request, response) => {
-  const result = await PostgreSQLPool.query("SELECT NOW()");
-  response.json(result.rows);
+App.post("/updateServerSettings", async (request, response) => {
+  console.log("[SERVER] API: /updateServerSettings");
+  const ServerSettingsToUpdate = request.body;
+  if (ServerSettingsToUpdate.canUpdateServerName == true) {
+    await PostgreSQLPool.query(
+      "UPDATE servers SET server_name = $1 WHERE server_id = $2",
+      [ServerSettingsToUpdate.serverName, ServerSettingsToUpdate.serverId]
+    );
+    console.log("[SERVER] Update Server Name!");
+  };
+  if (ServerSettingsToUpdate.canUpdateServerDescription == true) {
+    await PostgreSQLPool.query(
+      "UPDATE servers SET server_description = $1 WHERE server_id = $2",
+      [ServerSettingsToUpdate.serverDescription, ServerSettingsToUpdate.serverId]
+    );
+    console.log("[SERVER] Update Server Description!");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [ServerSettingsToUpdate.username]
+  );
+  let updatedUserData = returnUserData.rows[0];
+  updatedUserData.serverData = await GetServerData(updatedUserData.servers);
+  response.json(updatedUserData);
+  console.log("[SERVER] Updated Server Settings Successfully!");
 });
 
 /*

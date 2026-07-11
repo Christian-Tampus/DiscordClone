@@ -17,6 +17,7 @@ import GearsIcon from "./assets/GearsIcon.png";
 import ExitIcon from "./assets/ExitIcon.png";
 import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
 import CreateNewServerIcon from "./assets/PlusIcon.jpg";
+import PlaceHolderServerThumbnail from "./assets/PlaceHolderThumbnail.jpg";
 import "./App.css";
 
 /*
@@ -59,6 +60,24 @@ function Main() {
   const [isCreateNewServerNameValid, setIsCreateNewServerNameValid] = useState(true);
   const [hasDataForCreateNewServerIcon, setHasDataForCreateNewServerIcon] = useState(false);
   const [hasDataForCreateNewServerName, setHasDataForCreateNewServerName] = useState(false);
+  const [currentServer, setCurrentServer] = useState("Welcome To Discard!");
+  const [currentServerInfo, setCurrentServerInfo] = useState(null);
+  const [currentServerIcon, setCurrentServerIcon] = useState("");
+  const [currentServerThumbnail, setCurrentServerThumbnail] = useState(PlaceHolderServerThumbnail);
+  const [displayUpdateServerSettings, setDisplayUpdateServerSettings] = useState(false);
+  const [updatedServerIcon, setUpdatedServerIcon] = useState("");
+  const [updatedServerIconFile, setUpdatedServerIconFile] = useState<File | null>(null);
+  const [hasUpdatedServerIcon, setHasUpdatedServerIcon] = useState(false);
+  const [updatedServerThumbnail, setUpdatedServerThumbnail] = useState("");
+  const [updatedServerThumbnailFile, setUpdatedServerThumbnailFile] = useState<File | null>(null);
+  const [hasUpdatedServerThumbnail, setHasUpdatedServerThumbnail] = useState(false);
+  const [isUpdatedServerNameValid, setIsUpdatedServerNameValid] = useState(true);
+  const [updatedServerName, setUpdatedServerName] = useState("");
+  const [hasUpdatedServerName, setHasUpdatedServerName] = useState(false);
+  const [isUpdatedServerDescriptionValid, setIsUpdatedServerDescriptionValid] = useState(true);
+  const [updatedServerDescription, setUpdatedServerDescription] = useState("");
+  const [hasUpdatedServerDescription, setHasUpdatedServerDescription] = useState(false);
+  const [currentServerDescription, setCurrentServerDescription] = useState("");
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -74,6 +93,7 @@ function Main() {
       if (response.ok) {
         const data = await response.json();
         setUserData(data);
+        console.log("[CLIENT] User Data:", data);
         if (data.profile_picture != "") {
           setCurrentPFP("http://localhost:5000" + data.profile_picture);
         } else {
@@ -207,10 +227,71 @@ function Main() {
       };
     };
   };
+  async function UpdateServerSettings() {
+    if (currentServerInfo != null && userData != null) {
+      let preventUpdatingServerSettings = false;
+      let canUpdateServerSettings = false;
+      let ServerSettingsToUpdate = {
+        username: userData.username,
+        serverId: (currentServerInfo as any).server_id,
+        serverName: "",
+        canUpdateServerName: false,
+        serverDescription: "",
+        canUpdateServerDescription: false,
+      };
+      if (isUpdatedServerNameValid == true && hasUpdatedServerName == true) {
+        let sanitizedString = updatedServerName.replace(/[^a-zA-Z0-9_]/g, "");
+        if (sanitizedString.length <= 99 && sanitizedString.length > 0) {
+          ServerSettingsToUpdate.serverName = updatedServerName;
+          ServerSettingsToUpdate.canUpdateServerName = true;
+          canUpdateServerSettings = true;
+        } else {
+          preventUpdatingServerSettings = true;
+        };
+      } else if (isUpdatedServerNameValid == false && hasUpdatedServerName == true) {
+        preventUpdatingServerSettings = true;
+      };
+      if (isUpdatedServerDescriptionValid == true && hasUpdatedServerDescription == true) {
+        if (updatedServerDescription.length <= 500) {
+          ServerSettingsToUpdate.serverDescription = updatedServerDescription;
+          ServerSettingsToUpdate.canUpdateServerDescription = true;
+          canUpdateServerSettings = true;
+        } else {
+          preventUpdatingServerSettings = true;
+        };
+      } else if (isUpdatedServerDescriptionValid == false && hasUpdatedServerDescription == true) {
+        preventUpdatingServerSettings = true;
+      };
+      if (canUpdateServerSettings == true && preventUpdatingServerSettings == false) {
+        const response = await fetch("http://localhost:5000/updateServerSettings", {
+          method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(ServerSettingsToUpdate)
+        });
+        if (response.ok) {
+          alert("[CLIENT] Updated Server Settings Successfully!");
+          const data = await response.json();
+          setUserData(data);
+          UpdateServerDataToLatest(data);
+        } else {
+          const errorCode = await response.json();
+          alert(errorCode.error);
+        };
+      } else if (preventUpdatingServerSettings == true) {
+        console.log("[CLIENT] Cannot Update Server Settings Due To Invalid Changes!");
+        alert("[CLIENT] Cannot Update Server Settings Due To Invalid Changes!");
+      } else {
+        console.log("[CLIENT] There Are No Server Settings To Update!");
+        alert("[CLIENT] There Are No Server Settings To Update!");
+      };
+    } else {
+      alert("[CLIENT] Unexpected Error Has Occured!");
+    };
+  };
   async function CreateNewServer() {
-    console.log("hasDataForCreateNewServerIcon:",hasDataForCreateNewServerIcon,"createNewServerIconFile:",createNewServerIconFile,"hasDataForCreateNewServerName:",hasDataForCreateNewServerName,"isCreateNewServerNameValid:",isCreateNewServerNameValid);
     if (hasDataForCreateNewServerIcon == true && createNewServerIconFile != null && hasDataForCreateNewServerName == true && isCreateNewServerNameValid == true) {
-      console.log("CREATE NEW SERVER!");
       const formData = new FormData();
       formData.append("serverName", createNewServerName);
       formData.append("serverIcon", createNewServerIconFile);
@@ -273,6 +354,16 @@ function Main() {
     };
     setHasUpdatedBiography(true);
   };
+  function UpdateServerDescription(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    let currentServerDescription = event.target.value;
+    setUpdatedServerDescription(currentServerDescription);
+    if (currentServerDescription.length <= 500) {
+      setIsUpdatedServerDescriptionValid(true);
+    } else {
+      setIsUpdatedServerDescriptionValid(false);
+    };
+    setHasUpdatedServerDescription(true);
+  };
   function LogoutButton() {
     setDisplayUserSettings(false);
     setUserData(null);
@@ -296,16 +387,70 @@ function Main() {
     setCreateNewServerIconFile(file);
     setHasDataForCreateNewServerIcon(true);
   };
+  function SelectImageForServerIcon(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    };
+    setUpdatedServerIcon(URL.createObjectURL(file));
+    setUpdatedServerIconFile(file);
+    setHasUpdatedServerIcon(true);
+  };
+  function SelectImageForServerThumbnail(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    };
+    setUpdatedServerThumbnail(URL.createObjectURL(file));
+    setUpdatedServerThumbnailFile(file);
+    setHasUpdatedServerThumbnail(true);
+  };
   function OpenFilePickerForUserProfilePicture() {
     document.getElementById("ProfilePictureInput")?.click();
   };
-  function OpenFirePickerForCreateNewServer() {
+  function OpenFilePickerForCreateNewServer() {
     document.getElementById("CreateNewServerIconImageInput")?.click();
+  };
+  function OpenFilePickerForServerSettingsIcon() {
+    document.getElementById("ServerSettingsIconInput")?.click();
+  };
+  function OpenFilePickerForServerSettingsThumbnail() {
+    document.getElementById("ServerSettingsThumbnailInput")?.click();
+  };
+  function setCurrentServerFunction(serverInfo: any) {
+    setCurrentServer(serverInfo.server_name);
+    setCurrentServerInfo(serverInfo);
+    setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
+    setCurrentServerDescription(serverInfo.server_description);
+  };
+  function displayServerSettings() {
+    if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
+      setDisplayUpdateServerSettings(true);
+      setUpdatedServerName((currentServerInfo as any).server_name);
+      setUpdatedServerDescription((currentServerInfo as any).server_description);
+    } else {
+      alert("[ERROR] You Cannot Edit This Server Since You Are Not The Server Owner!");
+    };
+  };
+  function ExitServerSettingsButton() {
+    setDisplayUpdateServerSettings(false);
+  };
+  function UpdateServerDataToLatest(lastestData: any) {
+    if (currentServerInfo != null) {
+      for (let index = 0; index < lastestData.serverData.length; index++) {
+        if ((currentServerInfo as any).server_id == lastestData.serverData[index].server_id) {
+          setCurrentServer(lastestData.serverData[index].server_name);
+          setCurrentServerDescription(lastestData.serverData[index].server_description);
+        };
+      };
+    } else {
+      alert("[CLIENT] Unexpected Error Has Occured!");
+    };
   };
   if (userData) {
     return (
       <div id="MainPageDiv">
-        <div id="HeaderBar">Server Name</div>
+        <div id="HeaderBar">{currentServer}</div>
         <div id="MainContainerDiv">
           <div id="ServersContainerDiv">
             <div id="DirectMessageButtonDivContainer" className="toolTipWrapper" onClick={DirectMessagesButton}>
@@ -315,13 +460,12 @@ function Main() {
             <div className="ServerListDivider"></div>
             <div id="ServersDiv">
               {
-                /*
-                DISPLAY SERVER ICONS HERE!
-                DISPLAY SERVER ICONS HERE!
-                DISPLAY SERVER ICONS HERE!
-                DISPLAY SERVER ICONS HERE!
-                DISPLAY SERVER ICONS HERE!
-                */
+                userData.serverData.map((serverInfo: any) => (
+                  <div id={serverInfo.server_id} key={serverInfo.server_id} className="serverIconDiv toolTipWrapper">
+                    <img className="serverIconImage" src={"http://localhost:5000" + serverInfo.server_icon} alt={serverInfo.server_name} onClick={() => setCurrentServerFunction(serverInfo)}></img>
+                    <div className="toolTip">{serverInfo.server_name}</div>
+                  </div>
+                ))
               }
             </div>
             <div className="ServerListDivider"></div>
@@ -334,7 +478,102 @@ function Main() {
               <div className="toolTip">User Settings</div>
             </div>
           </div>
-          <div id="ChatContainerDiv"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <div id="CurrentServerMainContainerDiv">
+            <div id="ChannelsMainContainerDiv">
+              {currentServerInfo != null && (
+                <div id="ServerIconSettingNameDiv">
+                  <img id="ServerIcon" src={currentServerIcon}></img>
+                  <div id="ServerNameDiv">{currentServer}</div>
+                  <img id="ServerSettingIcon" src={GearsIcon} onClick={displayServerSettings}></img>
+                </div>
+              )}
+              {currentServerInfo != null && (
+                <div id="ServerThumbnailIconDiv">
+                  <img id="ServerThumbnailIcon" src={currentServerThumbnail}></img>
+                </div>
+              )}
+              {currentServerInfo != null && (
+                <div id="ServerDescriptionDiv">
+                  <textarea id="ServerDescriptionTextArea" placeholder="Server Description Here..." readOnly value={currentServerDescription}></textarea>
+                </div>
+              )}
+            </div>
+            <div id="TextChatMainContainerDiv">
+              TEXT CHAT
+            </div>
+            <div id="PlayerListMainContainerDiv">
+              PLAYERS LIST
+            </div>
+          </div>
+          {displayUpdateServerSettings == true && (
+            <div id="ServerSettingsScreenDiv">
+              <div id="ServerSettingsMainContainerDiv">
+                <div id="ServerSettingsHeaderDiv">
+                  Server Settings
+                  <img id="ServerSettingsExitButton" src={ExitIcon} onClick={ExitServerSettingsButton} alt="Exit Server Settings"></img>
+                </div>
+                <div className="ServerSettingsLabelClass">Server Icon</div>
+                <div>
+                  <img id="ServerSettingsIcon" src={currentServerIcon} alt="Server Icon" onClick={OpenFilePickerForServerSettingsIcon}></img>
+                  <input id="ServerSettingsIconInput" type="file" accept="image/*" hidden onChange={SelectImageForServerIcon}></input>
+                </div>
+                <div className="ServerSettingsLabelClass">Server Name</div>
+                <input className={`ServerSettingsInputClass ${isUpdatedServerNameValid == true ? "" : "InvalidInput2"}`} placeholder="Update Server Name Here..." type="text" value={updatedServerName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setUpdatedServerName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsUpdatedServerNameValid(true);
+                  } else {
+                    setIsUpdatedServerNameValid(false);
+                  };
+                  setHasUpdatedServerName(true);
+                }}/>
+                {isUpdatedServerNameValid == false && (<div className="ServerSettingsErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <div className="ServerSettingsLabelClass">Server Thumbnail</div>
+                <div>
+                  <img id="ServerSettingsThumbnail" src={currentServerThumbnail} alt="Server Thumbnail" onClick={OpenFilePickerForServerSettingsThumbnail}></img>
+                  <input id="ServerSettingsThumbnailInput" type="file" accept="image/*" hidden onChange={SelectImageForServerThumbnail}></input>
+                </div>
+                <div className="ServerSettingsLabelClass">Server Description</div>
+                <textarea placeholder="Update Server Description Here..." id="ServerSettingsDescriptionTextArea" className={`${isUpdatedServerDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={UpdateServerDescription} value={updatedServerDescription}/>
+                {isUpdatedServerDescriptionValid == false && (<div className="ServerSettingsErrorDiv">Server Description Can Have Up To 500 Characters Maximum!</div>)}
+                <button className="ServerSettingsButtonClass" id="CreateNewServerButton" onClick={UpdateServerSettings}>Update Server Settings</button>
+              </div>
+            </div>
+          )}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {displayCreateNewServer == true && (
             <div id="CreateNewServerScreenDiv">
               <div id="CreateNewServerScreenMainContainerDiv">
@@ -342,8 +581,8 @@ function Main() {
                   Create New Server
                   <img id="CreateNewServerExitButton" src={ExitIcon} onClick={ExitCreateNewServerButton} alt="Exit Create New Server"></img>
                 </div>
-                <div id="CreateNewServerIconDiv">
-                  <img id="CreateNewServerIconImage" src={createNewServerIcon} alt="Server Icon" onClick={OpenFirePickerForCreateNewServer}></img>
+                <div>
+                  <img id="CreateNewServerIconImage" src={createNewServerIcon} alt="Server Icon" onClick={OpenFilePickerForCreateNewServer}></img>
                   <input id="CreateNewServerIconImageInput" type="file" accept="image/*" hidden onChange={SelectImageForCreateNewServer}></input>
                 </div>
                 <div className="CreateNewServerLabelClass">Server Name</div>
@@ -370,8 +609,8 @@ function Main() {
                   User Settings
                   <img id="UserSettingsExitButton" src={ExitIcon} onClick={ExitUserSettingsButton} alt="Exit User Settings"></img>
                 </div>
-                <div className="UserSettingsLabelClass" id="ProfilePictureLabel">Profile Picture</div>
-                <div id="UserSettingsPFPDiv">
+                <div className="UserSettingsLabelClass">Profile Picture</div>
+                <div>
                   <img id="UserSettingsPFP" src={currentPFP} alt="Profile Picture" onClick={OpenFilePickerForUserProfilePicture}></img>
                   <input id="ProfilePictureInput" type="file" accept="image/*" hidden onChange={SelectImageForUserProfilePicture}></input>
                 </div>
