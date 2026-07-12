@@ -18,6 +18,7 @@ import ExitIcon from "./assets/ExitIcon.png";
 import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
 import CreateNewServerIcon from "./assets/PlusIcon.jpg";
 import PlaceHolderServerThumbnail from "./assets/PlaceHolderThumbnail.jpg";
+import HashTagIcon from "./assets/HashTag.png";
 import "./App.css";
 
 /*
@@ -78,6 +79,23 @@ function Main() {
   const [updatedServerDescription, setUpdatedServerDescription] = useState("");
   const [hasUpdatedServerDescription, setHasUpdatedServerDescription] = useState(false);
   const [currentServerDescription, setCurrentServerDescription] = useState("");
+  const [displayCreateNewChannels, setDisplayCreateNewChannels] = useState(false);
+  const [isCreateChannelNameValid, setIsCreateChannelNameValid] = useState(true);
+  const [createNewChannelName, setCreateNewChannelName] = useState("");
+  const [hasDataForCreateChannelName, setHasDataForCreateChannelName] = useState(false);
+  const [isCreateChannelDescriptionValid, setIsCreateChannelDescriptionValid] = useState(true);
+  const [createNewChannelDescription, setCreateNewChannelDescription] = useState("");
+  const [hasDataForCreateChannelDescription, setHasDataForCreateChannelDescription] = useState(false);
+  const [currentChannelData, setCurrentChannelData] = useState([]);
+  const [currentChannelName, setCurrentChannelName] = useState("Channel Name");
+  const [currentChannelDescription, setCurrentChannelDescription] = useState("Channel Description");
+  const [displayEditChannel, setDisplayEditChannel] = useState(false);
+  const [isUpdatedChannelNameValid, setIsUpdatedChannelNameValid] = useState(true);
+  const [updatedChannelName, setUpdatedChannelName] = useState("");
+  const [hasUpdatedChannelName, setHasUpdatedChannelName] = useState(false);
+  const [isUpdatedChannelDescriptionValid, setIsUpdatedChannelDescriptionValid] = useState(true);
+  const [updatedChannelDescription, setUpdatedChannelDescription] = useState("");
+  const [hasUpdatedChannelDescription, setHasUpdatedChannelDescription] = useState(false);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -283,8 +301,37 @@ function Main() {
         console.log("[CLIENT] Cannot Update Server Settings Due To Invalid Changes!");
         alert("[CLIENT] Cannot Update Server Settings Due To Invalid Changes!");
       } else {
-        console.log("[CLIENT] There Are No Server Settings To Update!");
-        alert("[CLIENT] There Are No Server Settings To Update!");
+        console.log("[CLIENT] No Changes To Server Name & Description To Update!");
+        alert("[CLIENT] No Changes To Server Name & Description To Update!");
+      };
+      let updateServerImages = false;
+      const formData = new FormData();
+      formData.append("username",userData.username);
+      formData.append("serverId", (currentServerInfo as any).server_id);
+      if (hasUpdatedServerIcon == true && updatedServerIconFile != null) {
+        formData.append("serverIcon", updatedServerIconFile);
+        updateServerImages = true;
+      };
+      if (hasUpdatedServerThumbnail == true && updatedServerThumbnailFile != null) {
+        formData.append("serverThumbnail", updatedServerThumbnailFile);
+        updateServerImages = true;
+      };
+      if (updateServerImages == true) {
+        const serverIconAndThumbnailResponse = await fetch("http://localhost:5000/updateServerImages", {
+          method: "POST",
+          body: formData
+        });
+        if (serverIconAndThumbnailResponse.ok) {
+          alert("[CLIENT] Updated Server Images (Icon & Thumbnail) Successfully!");
+          const data = await serverIconAndThumbnailResponse.json();
+          setUserData(data);
+          UpdateServerDataToLatest(data);
+        } else {
+          const errorCode = await serverIconAndThumbnailResponse.json();
+          alert(errorCode.error);
+        };
+      } else {
+        alert("[CLIENT] No Changes To Server Icon & Thumbnail To Update!");
       };
     } else {
       alert("[CLIENT] Unexpected Error Has Occured!");
@@ -311,6 +358,47 @@ function Main() {
     } else {
       alert("[ERROR] Invalid Input For Server Name Or You Have Not Selected A Server Icon!");
     };
+  };
+  async function CreateNewChannel() {
+    if (hasDataForCreateChannelName == true && hasDataForCreateChannelDescription == true) {
+      let canCreateNewChannel = true;
+      if (isCreateChannelNameValid == false) {
+        alert("[ERROR] Invalid Channel Name!");
+        canCreateNewChannel = false;
+      };
+      if (isCreateChannelDescriptionValid == false) {
+        alert("[ERROR] Invalid Channel Description!");
+        canCreateNewChannel = false;
+      };
+      if (canCreateNewChannel == true) {
+        const response = await fetch("http://localhost:5000/createNewChannel", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            serverId: (currentServerInfo as any).server_id,
+            username: userData.username,
+            channelName: createNewChannelName,
+            channelDescription: createNewChannelDescription
+          })
+        });
+        if (response.ok) {
+          alert("[CLIENT] New Channel Created Successfully!");
+          const data = await response.json();
+          setUserData(data);
+          UpdateServerDataToLatest(data);
+        } else {
+          const errorCode = await response.json();
+          alert(errorCode.error);
+        };
+      };
+    } else {
+      alert("[ERROR] You Must Include Both Channel Name & Channel Description!");
+    };
+  };
+  async function UpdateChannel() {
+    console.log("UPDATE CHANNEL!");
   };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
@@ -363,6 +451,26 @@ function Main() {
       setIsUpdatedServerDescriptionValid(false);
     };
     setHasUpdatedServerDescription(true);
+  };
+  function createNewChannelDescriptionFunction(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    let currentChannelDescription = event.target.value;
+    setCreateNewChannelDescription(currentChannelDescription);
+    if (currentChannelDescription.length <= 500) {
+      setIsCreateChannelDescriptionValid(true);
+    } else {
+      setIsCreateChannelDescriptionValid(false);
+    };
+    setHasDataForCreateChannelDescription(true);
+  };
+  function updateChannelDescriptionFunction(event: React.ChangeEvent<HTMLTextAreaElement>) {
+    let currentUpdatedChannelDescription = event.target.value;
+    setUpdatedChannelDescription(currentUpdatedChannelDescription);
+    if (currentUpdatedChannelDescription.length <= 500) {
+      setIsUpdatedChannelDescriptionValid(true);
+    } else {
+      setIsUpdatedChannelDescriptionValid(false);
+    };
+    setHasUpdatedChannelDescription(true);
   };
   function LogoutButton() {
     setDisplayUserSettings(false);
@@ -422,18 +530,39 @@ function Main() {
     setCurrentServerInfo(serverInfo);
     setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
     setCurrentServerDescription(serverInfo.server_description);
+    if (serverInfo.server_thumbnail != "") {
+      setCurrentServerThumbnail("http://localhost:5000" + serverInfo.server_thumbnail);
+    } else {
+      setCurrentServerThumbnail(PlaceHolderServerThumbnail);
+    };
+    setCurrentChannelData(serverInfo.channelsData);
+    if (serverInfo.channelsData.length > 0) {
+      changeChannel(serverInfo.channelsData[0]);
+    } else {
+      changeChannel(null);
+    };
   };
   function displayServerSettings() {
     if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
       setDisplayUpdateServerSettings(true);
       setUpdatedServerName((currentServerInfo as any).server_name);
       setUpdatedServerDescription((currentServerInfo as any).server_description);
+      setUpdatedServerIcon(currentServerIcon);
+      setUpdatedServerThumbnail(currentServerThumbnail);
     } else {
       alert("[ERROR] You Cannot Edit This Server Since You Are Not The Server Owner!");
     };
   };
+  function displayCreateNewChannelsPanel() {
+    setDisplayUpdateServerSettings(false);
+    setDisplayCreateNewChannels(true)
+  };
   function ExitServerSettingsButton() {
     setDisplayUpdateServerSettings(false);
+  };
+  function ExitCreateChannelButton() {
+    setDisplayUpdateServerSettings(true);
+    setDisplayCreateNewChannels(false);
   };
   function UpdateServerDataToLatest(lastestData: any) {
     if (currentServerInfo != null) {
@@ -441,11 +570,30 @@ function Main() {
         if ((currentServerInfo as any).server_id == lastestData.serverData[index].server_id) {
           setCurrentServer(lastestData.serverData[index].server_name);
           setCurrentServerDescription(lastestData.serverData[index].server_description);
+          setCurrentServerIcon("http://localhost:5000" + lastestData.serverData[index].server_icon);
+          setCurrentServerThumbnail("http://localhost:5000" + lastestData.serverData[index].server_thumbnail);
+          setCurrentChannelData(lastestData.serverData[index].channelsData);
         };
       };
     } else {
       alert("[CLIENT] Unexpected Error Has Occured!");
     };
+  };
+  function changeChannel(channelInfo: any) {
+    if (channelInfo != null) {
+      setCurrentChannelName(channelInfo.channel_name);
+      setCurrentChannelDescription(channelInfo.channel_description);
+    } else {
+      setCurrentChannelName("Channel Name");
+      setCurrentChannelDescription("Channel Description");
+    };
+  };
+  function displayEditChannelFunction(channelInfo: any) {
+    setDisplayEditChannel(true);
+    setUpdatedChannelName(channelInfo.channel_name);
+  };
+  function ExitEditChannelButton() {
+    setDisplayEditChannel(false);
   };
   if (userData) {
     return (
@@ -514,14 +662,97 @@ function Main() {
                   <textarea id="ServerDescriptionTextArea" placeholder="Server Description Here..." readOnly value={currentServerDescription}></textarea>
                 </div>
               )}
+              {currentServerInfo != null && (
+                <div id="ChannelsMainDiv">
+                  <div id="CreateNewChannelMainDiv">
+                    {
+                      currentChannelData.map((channelInfo: any) => (
+                        <div id={channelInfo.channel_id} key={channelInfo.channel_id} className="channelRowDiv" onClick={() => changeChannel(channelInfo)}>
+                          <img src={HashTagIcon} className="hashTagIcon"></img>
+                          <div className="channelNameDiv">{channelInfo.channel_name}</div>
+                          <img src={GearsIcon} className="channelEditButton" onClick={() => displayEditChannelFunction(channelInfo)}></img>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              )}
             </div>
             <div id="TextChatMainContainerDiv">
-              TEXT CHAT
+              {currentServerInfo != null && (
+                <div id="TextChatHeaderDiv">
+                  <div id="TextChatChannelNameDiv">{currentChannelName}</div>
+                  <textarea id="TextChatChannelDescriptionDiv" placeholder="Channel Description" readOnly value={currentChannelDescription}></textarea>
+                </div>
+              )}
             </div>
             <div id="PlayerListMainContainerDiv">
               PLAYERS LIST
             </div>
           </div>
+
+
+
+
+
+
+          {displayEditChannel == true && (
+            <div id="EditChannelScreenDiv">
+              <div id="EditChannelMainContainerDiv">
+                <div id="EditChannelHeaderDiv">
+                  Edit Channel
+                  <img id="EditChannelExitButton" src={ExitIcon} alt="Exit Edit Channel" onClick={ExitEditChannelButton}></img>
+                </div>
+                <div className="EditChannelLabelClass">Channel Name</div>
+                <input className={`EditChannelInputClass ${isUpdatedChannelNameValid == true ? "" : "InvalidInput2"}`} placeholder="Edit Channel Name Here..." type="text" value={updatedChannelName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setUpdatedChannelName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsUpdatedChannelNameValid(true);
+                    setHasUpdatedChannelName(true);
+                  } else {
+                    setIsUpdatedChannelNameValid(false);
+                  };
+                }}/>
+                {isUpdatedChannelNameValid == false && (<div className="EditChannelErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <div className="EditChannelLabelClass">Channel Description</div>
+                <textarea placeholder="Edit Channel Description Here..." id="EditChannelDescriptionTextArea" className={`${isUpdatedChannelDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={updateChannelDescriptionFunction} value={updatedChannelDescription}/> 
+                {isUpdatedChannelDescriptionValid == false && (<div className="EditChannelErrorDiv">Channel Description Can Have Up To 500 Characters Maximum!</div>)}
+                <button className="UpdateChannelButtonClass" id="UpdateChannelButton" onClick={UpdateChannel}>Update Channel</button>
+              </div>
+            </div>
+          )}
+
+
+
+          {displayCreateNewChannels == true && (
+            <div id="CreateChannelsScreenDiv">
+              <div id="CreateChannelsMainContainerDiv">
+                <div id="CreateChannelHeaderDiv">
+                  Create Channel
+                  <img id="CreateChannelExitButton" src={ExitIcon} onClick={ExitCreateChannelButton} alt="Exit Create Channel"></img>
+                </div>
+                <div className="CreateChannelLabelClass">Channel Name</div>
+                <input className={`CreateChannelInputClass ${isCreateChannelNameValid == true ? "" : "InvalidInput2"}`} placeholder="Channel Name Here..." type="text" value={createNewChannelName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setCreateNewChannelName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsCreateChannelNameValid(true);
+                    setHasDataForCreateChannelName(true);
+                  } else {
+                    setIsCreateChannelNameValid(false);
+                  };
+                }}/>
+                {isCreateChannelNameValid == false && (<div className="CreateChannelErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <div className="CreateChannelLabelClass">Channel Description</div>
+                <textarea placeholder="Channel Description Here..." id="CreateChannelDescriptionTextArea" className={`${isCreateChannelDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={createNewChannelDescriptionFunction} value={createNewChannelDescription}/>
+                {isCreateChannelDescriptionValid == false && (<div className="CreateChannelErrorDiv">Channel Description Can Have Up To 500 Characters Maximum!</div>)}
+                <button className="CreateChannelButtonClass" id="CreateChannelButton" onClick={CreateNewChannel}>Create Channel</button>
+              </div>
+            </div>
+          )}
           {displayUpdateServerSettings == true && (
             <div id="ServerSettingsScreenDiv">
               <div id="ServerSettingsMainContainerDiv">
@@ -531,7 +762,7 @@ function Main() {
                 </div>
                 <div className="ServerSettingsLabelClass">Server Icon</div>
                 <div>
-                  <img id="ServerSettingsIcon" src={currentServerIcon} alt="Server Icon" onClick={OpenFilePickerForServerSettingsIcon}></img>
+                  <img id="ServerSettingsIcon" src={updatedServerIcon} alt="Server Icon" onClick={OpenFilePickerForServerSettingsIcon}></img>
                   <input id="ServerSettingsIconInput" type="file" accept="image/*" hidden onChange={SelectImageForServerIcon}></input>
                 </div>
                 <div className="ServerSettingsLabelClass">Server Name</div>
@@ -549,31 +780,17 @@ function Main() {
                 {isUpdatedServerNameValid == false && (<div className="ServerSettingsErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
                 <div className="ServerSettingsLabelClass">Server Thumbnail</div>
                 <div>
-                  <img id="ServerSettingsThumbnail" src={currentServerThumbnail} alt="Server Thumbnail" onClick={OpenFilePickerForServerSettingsThumbnail}></img>
+                  <img id="ServerSettingsThumbnail" src={updatedServerThumbnail} alt="Server Thumbnail" onClick={OpenFilePickerForServerSettingsThumbnail}></img>
                   <input id="ServerSettingsThumbnailInput" type="file" accept="image/*" hidden onChange={SelectImageForServerThumbnail}></input>
                 </div>
                 <div className="ServerSettingsLabelClass">Server Description</div>
                 <textarea placeholder="Update Server Description Here..." id="ServerSettingsDescriptionTextArea" className={`${isUpdatedServerDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={UpdateServerDescription} value={updatedServerDescription}/>
                 {isUpdatedServerDescriptionValid == false && (<div className="ServerSettingsErrorDiv">Server Description Can Have Up To 500 Characters Maximum!</div>)}
+                <button className="ServerSettingsButtonClass" id="CreateNewChannelsButton" onClick={displayCreateNewChannelsPanel}>Create New Channels</button>
                 <button className="ServerSettingsButtonClass" id="CreateNewServerButton" onClick={UpdateServerSettings}>Update Server Settings</button>
               </div>
             </div>
           )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           {displayCreateNewServer == true && (
             <div id="CreateNewServerScreenDiv">
               <div id="CreateNewServerScreenMainContainerDiv">
@@ -717,8 +934,7 @@ function Main() {
       </div>
     );
   };
-  if (loginScreen == true)
-  {
+  if (loginScreen == true) {
     return (
       <div id="LoginScreenDiv">
         <img id="LoginScreenDiscordLogo" src={DiscordLogo} alt="Discord Icon"></img>

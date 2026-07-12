@@ -39,7 +39,7 @@ h1 {
     display:block;
 }
 
-.LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv, .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv {
+.LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv, .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
     color:white;
     font-weight:bold;
@@ -53,7 +53,7 @@ h1 {
     margin:15px auto 15px auto;
 }
 
-.UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv {
+.UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv {
     font-size:15px;
     text-align:center;
     width:80%;
@@ -98,7 +98,7 @@ h1 {
     color:white;
 }
 
-.UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass {
+.UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass {
     background-color:#3f3f46;
     border:1px solid white;
     border-radius:10px;
@@ -109,7 +109,7 @@ h1 {
     color:white;
 }
 
-#UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea {
+#UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea, #CreateChannelDescriptionTextArea, #EditChannelDescriptionTextArea {
     width:80%;
     height:100px;
     margin:25px auto 25px auto;
@@ -123,7 +123,7 @@ h1 {
     border-radius:10px;
 }
 
-.LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder, .CreateNewServerInputClass::placeholder, .ServerSettingsInputClass::placeholder, #ServerSettingsDescriptionTextArea::placeholder {
+.LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder, .CreateNewServerInputClass::placeholder, .ServerSettingsInputClass::placeholder, #ServerSettingsDescriptionTextArea::placeholder, .CreateChannelInputClass::placeholder, #CreateChannelDescriptionTextArea::placeholder, .EditChannelInputClass::placeholder, #EditChannelDescriptionTextArea::placeholder {
     color:white;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
@@ -169,7 +169,7 @@ h1 {
     padding-top:15px;
 }
 
-.LoginDivInputClass:focus, .CreateNewAccountInputClass:focus, .UserSettingsInputClass:focus, #UserSettingsBiographyTextArea:focus, .CreateNewServerInputClass:focus, .ServerSettingsInputClass:focus, #ServerSettingsDescriptionTextArea:focus {
+.LoginDivInputClass:focus, .CreateNewAccountInputClass:focus, .UserSettingsInputClass:focus, #UserSettingsBiographyTextArea:focus, .CreateNewServerInputClass:focus, .ServerSettingsInputClass:focus, #ServerSettingsDescriptionTextArea:focus, .CreateChannelInputClass:focus, #CreateChannelDescriptionTextArea:focus, .EditChannelInputClass:focus, #EditChannelDescriptionTextArea:focus {
     border-color:#2684FF;
     outline:none;
     box-shadow:0px 0px 10px #2684FF;
@@ -193,7 +193,7 @@ h1 {
     box-shadow:0px 0px 10px red !important;
 }
 
-.LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass {
+.LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass, .CreateChannelButtonClass, .UpdateChannelButtonClass {
     background-color:#616fff;
     border:none;
     width:90%;
@@ -207,7 +207,7 @@ h1 {
     height:50px;
 }
 
-.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover, .ServerSettingsButtonClass:hover {
+.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover, .ServerSettingsButtonClass:hover, .CreateChannelButtonClass:hover, .UpdateChannelButtonClass:hover {
     cursor:pointer;
     background-color:#4f56c2;
     transition:background-color 0.5s ease;
@@ -308,7 +308,7 @@ h1 {
     transition:background-color 0.5s ease;
 }
 
-#DirectMessageButtonDivContainer:hover #DirectMessageButton, .serverIconDiv:hover .serverIconImage, #UserSettingsDiv:hover #UserSettingsButton, #CreateNewServerDivContainer:hover #CreateNewServerButton {
+#DirectMessageButtonDivContainer:hover #DirectMessageButton, .serverIconDiv:hover .serverIconImage {
     animation:rotateOnHover 1s ease-in-out;
 }
 
@@ -365,7 +365,7 @@ h1 {
     transform: translate(0px, -50%);
 }
 
-#UserSettingsScreenDiv, #CreateNewServerScreenDiv, #ServerSettingsScreenDiv {
+#UserSettingsScreenDiv, #CreateNewServerScreenDiv, #ServerSettingsScreenDiv, #CreateChannelsScreenDiv, #EditChannelScreenDiv {
     position:fixed;
     top:35px;
     left:0;
@@ -396,7 +396,16 @@ h1 {
     border-radius:10px;
 }
 
-#UserSettingsHeaderDiv, #CreateNewServerScreenHeaderDiv, #ServerSettingsHeaderDiv {
+#CreateChannelsMainContainerDiv, #EditChannelMainContainerDiv {
+    background-color:#232325;
+    height:600px;
+    width:400px;
+    margin:auto;
+    display:block;
+    border-radius:10px;
+}
+
+#UserSettingsHeaderDiv, #CreateNewServerScreenHeaderDiv, #ServerSettingsHeaderDiv, #CreateChannelHeaderDiv, #EditChannelHeaderDiv {
     width:100%;
     height:50px;
     border-bottom:1px solid white;
@@ -410,7 +419,7 @@ h1 {
     position:relative;
 }
 
-#UserSettingsExitButton, #CreateNewServerExitButton, #ServerSettingsExitButton {
+#UserSettingsExitButton, #CreateNewServerExitButton, #ServerSettingsExitButton, #CreateChannelExitButton, #EditChannelExitButton {
     position:absolute;
     right:0px;
     width:20px;
@@ -421,13 +430,13 @@ h1 {
     background-color:#3a3b3c;
 }
 
-#UserSettingsExitButton:hover, #CreateNewServerExitButton:hover, #ServerSettingsExitButton:hover {
+#UserSettingsExitButton:hover, #CreateNewServerExitButton:hover, #ServerSettingsExitButton:hover, #CreateChannelExitButton:hover, #EditChannelExitButton:hover {
     cursor:pointer;
     background-color:#2684FF;
     transition:background-color 0.5s ease;
 }
 
-.UserSettingsLabelClass, .CreateNewServerLabelClass, .ServerSettingsLabelClass {
+.UserSettingsLabelClass, .CreateNewServerLabelClass, .ServerSettingsLabelClass, .CreateChannelLabelClass, .EditChannelLabelClass {
     color:white;
     font-size:15px;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
@@ -475,7 +484,7 @@ h1 {
     text-align:center;
 }
 
-#UserSettingsSaveChangesButton, #UserSettingsLogOutButton, #CreateNewServerButton {
+#UserSettingsSaveChangesButton, #UserSettingsLogOutButton, #CreateNewServerButton, #CreateNewChannelsButton, #CreateChannelButton, #UpdateChannelButton {
     width:80%;
     margin:15px auto 15px auto;
 }
@@ -522,6 +531,9 @@ h1 {
     border-top:1px solid #3f3f46;
     border-left:1px solid #3f3f46;
     border-top-left-radius: 10px;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
 }
 
 #TextChatMainContainerDiv {
@@ -529,6 +541,53 @@ h1 {
     background-color:#232325;
     border-top:1px solid #3f3f46;
     border-left:1px solid #3f3f46;
+}
+
+#TextChatHeaderDiv {
+    height:60px;
+    width:100%;
+    border-bottom:1px solid #3f3f46;
+    display:flex;
+    align-items:center;
+}
+
+#TextChatChannelNameDiv {
+    color:white;
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    width:300px;
+    margin:5px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+#TextChatChannelDescriptionDiv {
+    margin:5px;
+    width:100%;
+    height:40px;
+    resize:none;
+    color:white;
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    background-color:#232325;
+}
+
+#TextChatChannelDescriptionDiv:hover {
+    cursor:default;
+}
+
+#TextChatChannelDescriptionDiv::placeholder {
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+}
+
+#TextChatChannelDescriptionDiv:focus {
+    outline:none;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
 
 #PlayerListMainContainerDiv {
@@ -551,13 +610,20 @@ h1 {
     height:40px;
     margin:5px;
     padding:5px;
+    flex-shrink:0;
 }
 
 #ServerNameDiv {
     color:white;
-    font-size:15px;
+    font-size:20px;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
     font-weight:bold;
+    flex:1;
+    min-width:0;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 #ServerSettingIcon {
@@ -566,6 +632,7 @@ h1 {
     margin:5px;
     padding:5px;
     border-radius:100%;
+    flex-shrink:0;
 }
 
 #ServerSettingIcon:hover {
@@ -607,6 +674,7 @@ h1 {
     box-sizing:border-box;
     color:white;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-size:15px;
 }
 
 #ServerDescriptionTextArea:focus {
@@ -618,4 +686,57 @@ h1 {
 #ServerDescriptionTextArea::placeholder {
     color:white;
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+}
+
+#ChannelsMainDiv {
+    width:100%;
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+}
+
+.channelRowDiv {
+    display:flex;
+    align-items:center;
+    border-bottom:1px solid #3f3f46;
+    padding:5px;
+}
+
+.channelRowDiv:hover {
+    background-color:#3f3f46;
+    border:none;
+    border-radius:25px;
+}
+
+.hashTagIcon, .channelEditButton {
+    width:40px;
+    height:40px;
+    margin:5px;
+    padding:5px;
+}
+
+.channelEditButton {
+    border-radius:100%;
+}
+
+.channelNameDiv {
+    flex:1;
+    min-width:0;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    text-align:center;
+    font-size:20px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.channelRowDiv:hover, .channelEditButton:hover {
+    cursor:pointer;
+}
+
+.channelEditButton:hover {
+    background-color:#2684FF;
+    transition:background-color 0.5s ease;
+    animation:rotateOnHover 1s ease-in-out;
 }

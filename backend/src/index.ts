@@ -58,7 +58,17 @@ async function GetServerData(servers) {
       "SELECT * FROM servers WHERE server_id = $1",
       [servers[index]]
     );
-    serverDataArray.push(serverData.rows[0]);
+    let currentServerData = serverData.rows[0];
+    currentServerData.channelsData = [];
+    for (let channelIndex = 0; channelIndex < serverData.rows[0].server_channel_array.length; channelIndex++) {
+      const channelId = serverData.rows[0].server_channel_array[channelIndex];
+      const channelData = await PostgreSQLPool.query(
+        "SELECT * FROM channels WHERE channel_id = $1",
+        [channelId]
+      );
+      currentServerData.channelsData.push(channelData.rows[0]);
+    };
+    serverDataArray.push(currentServerData);
   };
   return serverDataArray;
 };
@@ -333,6 +343,133 @@ App.post("/updateServerSettings", async (request, response) => {
   updatedUserData.serverData = await GetServerData(updatedUserData.servers);
   response.json(updatedUserData);
   console.log("[SERVER] Updated Server Settings Successfully!");
+});
+
+/*
+==================================================
+Update Server Settings Icon & Thumbnail API
+==================================================
+*/
+App.post("/updateServerImages", upload.fields([
+  {name: "serverIcon", maxCount: 1},
+  {name: "serverThumbnail", maxCount: 1}
+]), async (request, response) => {
+  console.log("[SERVER] API: /updateServerImages");
+  const serverImageFiles = request.files as {
+    serverIcon?: Express.Multer.File[];
+    serverThumbnail?: Express.Multer.File[];
+  };
+  const serverIcon = serverImageFiles.serverIcon?.[0];
+  const serverThumbnail = serverImageFiles.serverThumbnail?.[0];
+  if (!serverIcon && !serverThumbnail) {
+    response.status(400).json({
+      error: "[ERROR] No Images Uploaded To Update Server Icon Or Thumbnail!"
+    });
+    return;
+  };
+  if (serverIcon) {
+    const oldServerIcon = await PostgreSQLPool.query(
+      "SELECT server_icon FROM servers WHERE server_id = $1",
+      [request.body.serverId]
+    );
+    const oldServerIconPath = oldServerIcon.rows[0]?.server_icon;
+    if (oldServerIconPath) {
+      const oldServerIconFullPath = path.join(__dirname, "..", oldServerIconPath);
+      if (fs.existsSync(oldServerIconFullPath)) {
+        fs.unlinkSync(oldServerIconFullPath);
+        console.log("[SERVER] Deleted Old Server Icon Image!");
+      };
+    };
+    const newServerIconImagePath = "/imageStorage/" + serverIcon?.filename;
+    await PostgreSQLPool.query(
+      "UPDATE servers SET server_icon = $1 WHERE server_id = $2",
+      [newServerIconImagePath, request.body.serverId]
+    );
+    console.log("[SERVER] Updated Server Icon Image For ServerId:", request.body.serverId);
+  };
+  if (serverThumbnail) {
+    const oldServerThumbnail = await PostgreSQLPool.query(
+      "SELECT server_thumbnail FROM servers WHERE server_id = $1",
+      [request.body.serverId]
+    );
+    const oldServerThumbnailPath = oldServerThumbnail.rows[0]?.server_thumbnail;
+    if (oldServerThumbnailPath) {
+      const oldServerThumbnailFullPath = path.join(__dirname, "..", oldServerThumbnailPath);
+      console.log("oldServerThumbnailFullPath:",oldServerThumbnailFullPath);
+      if (fs.existsSync(oldServerThumbnailFullPath)) {
+        fs.unlinkSync(oldServerThumbnailFullPath);
+        console.log("[SERVER] Deleted Old Server Thumbnail Image!");
+      };
+    };
+    const newServerThumbnailImagePath = "/imageStorage/" + serverThumbnail?.filename;
+    console.log("newServerThumbnailImagePath:",newServerThumbnailImagePath);
+    await PostgreSQLPool.query(
+      "UPDATE servers SET server_thumbnail = $1 WHERE server_id = $2",
+      [newServerThumbnailImagePath, request.body.serverId]
+    );
+    console.log("[SERVER] Updated Server Thumbnail IMage For ServerId:", request.body.serverId);
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await GetServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] Updated Server Image Settings (Icon & Thumbnail) Successfully!");
+});
+
+/*
+==================================================
+Create New Channel API
+==================================================
+*/
+App.post("/createNewChannel", async (request, response) => {
+  console.log("[SERVER] API: /createNewChannel");
+  const serverId = request.body.serverId;
+  const username = request.body.username;
+  const channelName = request.body.channelName;
+  const channelDescription = request.body.channelDescription;
+  const getCurrentServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [serverId]
+  );
+  const serverData = getCurrentServerData.rows[0];
+  if (serverData.server_owner != username) {
+    console.log("[SERVER] Username:", username, " Cannot Create A New Channel Since They Are Not The Server Owner!");
+    response.status(401).json({
+      error: "[ERROR] You Cannot Create A New Channel Since You Are Not The Server Owner!"
+    });
+    return;
+  };
+  if (serverData.server_channels >= 10) {
+    console.log("[SERVER] This Server Reached The Maximum Channel Count Of 10!");
+    response.status(401).json({
+      error: "[ERROR] This Server Reached The Maximum Channel Count Of 10!"
+    });
+    return;
+  };
+  const channelId = serverId + "-Channel-[" + (serverData.server_channels + 1) + "]-" + Date.now();
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_channel_array = array_append(server_channel_array, $1) WHERE server_id = $2",
+    [channelId, serverId]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_channels = $1 WHERE server_id = $2",
+    [serverData.server_channels + 1, serverId]
+  );
+  await PostgreSQLPool.query(
+    "INSERT INTO channels (channel_id, channel_name, channel_description) VALUES ($1, $2, $3) RETURNING *",
+    [channelId, channelName, channelDescription]
+  );
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await GetServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] Created New Channel Successfully!");
 });
 
 /*

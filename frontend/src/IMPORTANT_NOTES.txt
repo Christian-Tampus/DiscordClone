@@ -1,3 +1,19 @@
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+1. [IN_PROGRESS] Fully Functional Discord Clone
+2. [_] Responsive Web Design (Desktop, Tablet & Mobile)
+3. [_] Source Code Documentation
+4. [_] Create README.md
+5. [_] Deploy Application On Render
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+!!!!!=====PROJECT GOALS=====!!!!!
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     displayName VARCHAR(99) NOT NULL,
@@ -21,16 +37,7 @@ STATUS: Online, Do Not Disturb, Idle, Invisible
 
 docker exec -it pg psql -U postgres -d mydb
 
-CLEAR ALL ITEMS FROM A TABLE: TRUNCATE TABLE users, servers RESTART IDENTITY;
-
-Users:
-Builder
-Builder_Elite
-chemtampus555
-
-testuser1
-test_user1
-test_user1password
+CLEAR ALL ITEMS FROM A TABLE: TRUNCATE TABLE users, servers, channels RESTART IDENTITY;
 
 CREATE TABLE servers (
     id SERIAL PRIMARY KEY,
@@ -38,5 +45,15 @@ CREATE TABLE servers (
     server_icon VARCHAR(999) NOT NULL,
     server_id VARCHAR(999) UNIQUE NOT NULL,
     server_owner VARCHAR(99) NOT NULL,
-    server_description VARCHAR(500)
+    server_description VARCHAR(500),
+    server_thumbnail VARCHAR(999),
+    server_channels INTEGER DEFAULT 0,
+    server_channel_array TEXT[] NOT NULL DEFAULT '{}'
+);
+
+CREATE TABLE channels (
+    id SERIAL PRIMARY KEY,
+    channel_id VARCHAR(999) UNIQUE NOT NULL,
+    channel_name VARCHAR(99) NOT NULL,
+    channel_description VARCHAR(99) NOT NULL
 );
