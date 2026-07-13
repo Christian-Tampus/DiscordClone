@@ -55,5 +55,13 @@ CREATE TABLE channels (
     id SERIAL PRIMARY KEY,
     channel_id VARCHAR(999) UNIQUE NOT NULL,
     channel_name VARCHAR(99) NOT NULL,
-    channel_description VARCHAR(99) NOT NULL
+    channel_description VARCHAR(99) NOT NULL,
+);
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    messages_channel_id VARCHAR(999) NOT NULL,
+    messages_username VARCHAR(99) NOT NULL,
+    messages_message TEXT, <---- THIS SUPPORTS EMOJIS
+    messages_created_at TIMESTAMP DEFAULT NOW()
 );

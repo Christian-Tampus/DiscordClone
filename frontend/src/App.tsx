@@ -19,7 +19,26 @@ import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
 import CreateNewServerIcon from "./assets/PlusIcon.jpg";
 import PlaceHolderServerThumbnail from "./assets/PlaceHolderThumbnail.jpg";
 import HashTagIcon from "./assets/HashTag.png";
+import { io, Socket } from "socket.io-client";
 import "./App.css";
+
+/*
+==================================================
+Global Variables
+==================================================
+*/
+const WEB_SAFE_EMOJIS = [
+  '😀', '😂', '🙂', '😍', '🤔', '😭', '😱', '😎', '😡', '👍',
+  '👎', '👌', '✌️', '🙌', '👋', '👏', '🙏', '🙋', '🤦', '🤷',
+  '🐶', '🐱', '🦁', '🐵', '🦅', '🌲', '🌱', '🔥', '⭐', '☀️',
+  '🍏', '🍌', '🍕', '🍔', '🍟', '🍿', '☕', '🍺', '🍷', '🍰',
+  '🚗', '✈️', '⏰', '💡', '💻', '📱', '🔒', '❤️', '✨', '✅',
+  '😉', '😋', '🥳', '🤩', '🙄', '😴', '😷', '👿', '👻', '💩',
+  '💘', '💖', '💗', '💓', '💬', '📢', '🔔', '✉️', '📦', '✏️',
+  '📌', '✂️', '🔑', '🔨', '🛡️', '📷', '📺', '🎨', '🎵', '⚽',
+  '🌈', '🌙', '☁️', '⚡', '❄️', '🌊', '🌍', '🏠', '🚀', '🚲',
+  '👑', '🎒', '🕶️', '🎈', '🎉', '🏆', '💯', '❌', '⚠️', '🏁'
+];
 
 /*
 ==================================================
@@ -27,6 +46,7 @@ Function App
 ==================================================
 */
 function Main() {
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [newDisplayName, setNewDisplayName] = useState("");
@@ -86,6 +106,7 @@ function Main() {
   const [isCreateChannelDescriptionValid, setIsCreateChannelDescriptionValid] = useState(true);
   const [createNewChannelDescription, setCreateNewChannelDescription] = useState("");
   const [hasDataForCreateChannelDescription, setHasDataForCreateChannelDescription] = useState(false);
+  const [currentChannelId, setCurrentChannelId] = useState("");
   const [currentChannelData, setCurrentChannelData] = useState([]);
   const [currentChannelName, setCurrentChannelName] = useState("Channel Name");
   const [currentChannelDescription, setCurrentChannelDescription] = useState("Channel Description");
@@ -96,6 +117,22 @@ function Main() {
   const [isUpdatedChannelDescriptionValid, setIsUpdatedChannelDescriptionValid] = useState(true);
   const [updatedChannelDescription, setUpdatedChannelDescription] = useState("");
   const [hasUpdatedChannelDescription, setHasUpdatedChannelDescription] = useState(false);
+  const [displayEmojiPicker, setDisplayEmojiPicker] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [currentChannelInfo, setCurrentChannelInfo] = useState(null);
+  const [messageDataArray, setMessageDataArray] = useState([]);
+  useEffect(() => {
+    if (socket == null) {
+      return;
+    };
+    socket.on("recieveMessage", (messageData) => {
+      console.log("[CLIENT] Received:", messageData);
+      setMessageDataArray(messageData);
+    });
+    return () => {
+      socket.off("recieveMessage");
+    };
+  }, [socket]);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -109,13 +146,24 @@ function Main() {
         })
       });
       if (response.ok) {
+        const newSocket = io("http://localhost:5000");
+        setSocket(newSocket);
+        newSocket.on("connect", () => {
+          console.log("[CLIENT] Socket Connected:", newSocket.id);
+        });
         const data = await response.json();
-        setUserData(data);
         console.log("[CLIENT] User Data:", data);
+        setUserData(data);
         if (data.profile_picture != "") {
           setCurrentPFP("http://localhost:5000" + data.profile_picture);
         } else {
           setCurrentPFP(PlaceHolderPFP);
+        };
+        if (data.serverData.length > 0) {
+          setCurrentServerFunction(data.serverData[0]);
+          if (data.serverData[0].channelsData.length > 0 && newSocket != null) {
+            newSocket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id);
+          };
         };
         console.log("[CLIENT] Log In!");
       } else {
@@ -398,7 +446,43 @@ function Main() {
     };
   };
   async function UpdateChannel() {
-    console.log("UPDATE CHANNEL!");
+    if (hasUpdatedChannelName == false && hasUpdatedChannelDescription == false) {
+      alert("[CLIENT] You Have Not Made Any Changes To The Channel Name Or Description!");
+      return;
+    };
+    let ChannelSettingsToUpdate = {
+      username: userData.username,
+      serverId: (currentServerInfo as any).server_id,
+      channelId: currentChannelId,
+      channelName: "",
+      canUpdateChannelName: false,
+      channelDescription: "",
+      canUpdateChannelDescription: false,
+    }
+    if (hasUpdatedChannelName == true) {
+      ChannelSettingsToUpdate.canUpdateChannelName = true;
+      ChannelSettingsToUpdate.channelName = updatedChannelName;
+    };
+    if (hasUpdatedChannelDescription == true) {
+      ChannelSettingsToUpdate.canUpdateChannelDescription = true;
+      ChannelSettingsToUpdate.channelDescription = updatedChannelDescription;
+    };
+    const updateChannelResponse = await fetch("http://localhost:5000/updateChannelSettings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(ChannelSettingsToUpdate)
+    });
+    if (updateChannelResponse.ok) {
+      alert("[CLIENT] Updated Channel Settings Successfully!");
+      const data = await updateChannelResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await updateChannelResponse.json();
+      alert(errorCode.error);
+    };
   };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
@@ -473,6 +557,10 @@ function Main() {
     setHasUpdatedChannelDescription(true);
   };
   function LogoutButton() {
+    if (socket != null) {
+      socket.disconnect();
+      setSocket(null);
+    };
     setDisplayUserSettings(false);
     setUserData(null);
     console.log("[CLIENT] Log Out!");
@@ -566,6 +654,7 @@ function Main() {
   };
   function UpdateServerDataToLatest(lastestData: any) {
     if (currentServerInfo != null) {
+      let currentSelectedChannelDataToUse = null;
       for (let index = 0; index < lastestData.serverData.length; index++) {
         if ((currentServerInfo as any).server_id == lastestData.serverData[index].server_id) {
           setCurrentServer(lastestData.serverData[index].server_name);
@@ -573,6 +662,15 @@ function Main() {
           setCurrentServerIcon("http://localhost:5000" + lastestData.serverData[index].server_icon);
           setCurrentServerThumbnail("http://localhost:5000" + lastestData.serverData[index].server_thumbnail);
           setCurrentChannelData(lastestData.serverData[index].channelsData);
+          currentSelectedChannelDataToUse = lastestData.serverData[index].channelsData;
+        };
+      };
+      if (currentSelectedChannelDataToUse != null) {
+        for (let index = 0; index < currentSelectedChannelDataToUse.length; index++) {
+          if (currentSelectedChannelDataToUse[index].channel_id == currentChannelId) {
+            setCurrentChannelName(currentSelectedChannelDataToUse[index].channel_name);
+            setCurrentChannelDescription(currentSelectedChannelDataToUse[index].channel_description);
+          };
         };
       };
     } else {
@@ -580,9 +678,13 @@ function Main() {
     };
   };
   function changeChannel(channelInfo: any) {
+    setCurrentChannelInfo(channelInfo);
     if (channelInfo != null) {
       setCurrentChannelName(channelInfo.channel_name);
       setCurrentChannelDescription(channelInfo.channel_description);
+      if (socket != null) {
+        socket.emit("joinChannel", channelInfo.channel_id);
+      };
     } else {
       setCurrentChannelName("Channel Name");
       setCurrentChannelDescription("Channel Description");
@@ -590,10 +692,38 @@ function Main() {
   };
   function displayEditChannelFunction(channelInfo: any) {
     setDisplayEditChannel(true);
+    setCurrentChannelId(channelInfo.channel_id);
     setUpdatedChannelName(channelInfo.channel_name);
+    setUpdatedChannelDescription(channelInfo.channel_description);
   };
   function ExitEditChannelButton() {
     setDisplayEditChannel(false);
+  };
+  function DisplayEmojiPicker() {
+    setDisplayEmojiPicker(!displayEmojiPicker);
+  };
+  function addEmojiToTextBox(emoji: any) {
+    setMessageText(messageText + emoji);
+  };
+  function sendMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key == "Enter") {
+      const currentMessage = messageText.trim();
+      if (currentMessage.length > 0) {
+        if (socket != null && currentChannelInfo != null) {
+          socket.emit("sendMessage",{
+            channelId: (currentChannelInfo as any).channel_id,
+            username: userData.username,
+            message: currentMessage
+          });
+        } else {
+          alert("[ERROR] Channel Socket Is Null!");
+        };
+      } else {
+        alert("[ERROR] You Have No Message To Send!");
+      };
+      event.currentTarget.value = "";
+      setMessageText("");
+    };
   };
   if (userData) {
     return (
@@ -626,6 +756,20 @@ function Main() {
               <div className="toolTip">User Settings</div>
             </div>
           </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -685,11 +829,63 @@ function Main() {
                   <textarea id="TextChatChannelDescriptionDiv" placeholder="Channel Description" readOnly value={currentChannelDescription}></textarea>
                 </div>
               )}
+              {currentServerInfo != null && (
+                <div id="TextChatMainDisplayDiv">
+                  {messageDataArray.length > 0 && (
+                    messageDataArray.map((currentMessageData: any) => (
+                      <div key={currentMessageData.messages_created_at}>{currentMessageData.messages_message}</div>
+                    ))
+                  )}
+                </div>
+              )}
+              {currentServerInfo != null && (
+                <div id="TextChatMainTextBoxDiv">
+                  {displayEmojiPicker && (
+                    <div id="EmojiPickerDiv">
+                      {WEB_SAFE_EMOJIS.map((emoji) => (
+                        <button key={emoji} className="EmojiPickerButton" onClick={() => addEmojiToTextBox(emoji)}>{emoji}</button>
+                      ))}
+                    </div>
+                  )}
+                  <input id="TextChatInput" type="text" placeholder={currentChannelName} value={messageText} onChange={(event) => setMessageText(event.target.value)} onKeyDown={sendMessageFunction}></input>
+                  <button id="EmojiButton" onClick={DisplayEmojiPicker}>😀</button>
+                </div>
+              )}
             </div>
             <div id="PlayerListMainContainerDiv">
               PLAYERS LIST
             </div>
           </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -723,9 +919,6 @@ function Main() {
               </div>
             </div>
           )}
-
-
-
           {displayCreateNewChannels == true && (
             <div id="CreateChannelsScreenDiv">
               <div id="CreateChannelsMainContainerDiv">

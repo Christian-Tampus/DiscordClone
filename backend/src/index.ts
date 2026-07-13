@@ -17,7 +17,8 @@ import { Pool, Result } from "pg";
 import path from "path";
 import multer from "multer";
 import fs from "fs";
-import { Server } from "http";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 /*
 ==================================================
@@ -29,6 +30,12 @@ dotenv.config();
 const App = express();
 App.use(cors());
 App.use(express.json());
+const httpServer = createServer(App);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*"
+  }
+});
 const storage = multer.diskStorage({
   destination: "imageStorage/",
   filename: (request, file, callback) => {
@@ -51,7 +58,7 @@ const upload = multer({
 Retrieve Server Data
 ==================================================
 */
-async function GetServerData(servers) {
+async function RetrieveServerData(servers) {
   let serverDataArray = [];
   for (let index = 0; index < servers.length; index++) {
     const serverData = await PostgreSQLPool.query(
@@ -71,6 +78,28 @@ async function GetServerData(servers) {
     serverDataArray.push(currentServerData);
   };
   return serverDataArray;
+};
+
+/*
+==================================================
+Retrieve Message Data
+==================================================
+*/
+async function RetrieveMessageData(channelId) {
+  const currentChannelMessagesArray = await PostgreSQLPool.query(
+    "SELECT * FROM messages WHERE messages_channel_id = $1 ORDER BY messages_created_at ASC",
+    [channelId]
+  );
+  const messagesArray = currentChannelMessagesArray.rows;
+  for (let index = 0; index < messagesArray.length; index++) {
+    const getMessageSenderData = await PostgreSQLPool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [messagesArray[index].messages_username]
+    );
+    messagesArray[index].message_sender_data = getMessageSenderData.rows[0];
+  };
+  console.log("[SOCKET] ChannelId:", channelId, "Messages Array:", messagesArray);
+  return messagesArray;
 };
 
 /*
@@ -122,7 +151,7 @@ App.post("/login", async (request, response) => {
     if (checkIfPasswordIsCorrect.rows.length > 0) {
       console.log("[SERVER] Rows:",checkIfPasswordIsCorrect.rows);
       let userData = checkIfPasswordIsCorrect.rows[0];
-      userData.serverData = await GetServerData(userData.servers);
+      userData.serverData = await RetrieveServerData(userData.servers);
       response.json(userData);
     } else {
       console.log("[SERVER] Password:",password,"Is Incorrect!");
@@ -159,7 +188,7 @@ App.post("/createAccount", async (request, response) => {
       [displayName, username, password]
     );
     let userData = createNewAccount.rows[0];
-    userData.serverData = await GetServerData(userData.servers);
+    userData.serverData = await RetrieveServerData(userData.servers);
     response.json(userData);
     console.log("[SERVER] Created New Account Successfully!");
   } else {
@@ -212,7 +241,7 @@ App.post("/updateUserSettings", async (request, response) => {
     [UserSettingsToUpdate.username]
   );
   let userData = returnUserData.rows[0];
-  userData.serverData = await GetServerData(userData.servers);
+  userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] User Data:", userData);
   console.log("[SERVER] Updated User Settings Successfully!");
@@ -253,7 +282,7 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
-  userData.serverData = await GetServerData(userData.servers);
+  userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] Updated User Profile Picture Successfully!");
 });
@@ -308,7 +337,7 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
     [serverOwner]
   );
   let updatedUserData = returnUserData.rows[0];
-  updatedUserData.serverData = await GetServerData(updatedUserData.servers);
+  updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   console.log("[SERVER] Created New Server Successfully!");
 });
@@ -340,7 +369,7 @@ App.post("/updateServerSettings", async (request, response) => {
     [ServerSettingsToUpdate.username]
   );
   let updatedUserData = returnUserData.rows[0];
-  updatedUserData.serverData = await GetServerData(updatedUserData.servers);
+  updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   console.log("[SERVER] Updated Server Settings Successfully!");
 });
@@ -414,7 +443,7 @@ App.post("/updateServerImages", upload.fields([
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
-  userData.serverData = await GetServerData(userData.servers);
+  userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] Updated Server Image Settings (Icon & Thumbnail) Successfully!");
 });
@@ -467,17 +496,100 @@ App.post("/createNewChannel", async (request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
-  userData.serverData = await GetServerData(userData.servers);
+  userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] Created New Channel Successfully!");
 });
 
 /*
 ==================================================
-Port To Listen
+Create New Channel API
 ==================================================
 */
-App.listen(PORT, () => {
+App.post("/updateChannelSettings", async (request, response) => {
+  console.log("[SERVER] API: /updateChannelSettings");
+  const userName = request.body.username;
+  const serverId = request.body.serverId;
+  const channelId = request.body.channelId;
+  const channelName = request.body.channelName;
+  const channelDescription = request.body.channelDescription;
+  const checkIfUserIsServerOwner = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [serverId]
+  );
+  const serverData = checkIfUserIsServerOwner.rows[0];
+  if (serverData.server_owner != userName) {
+    console.log("[SERVER] User:", userName, " Does Not Have Permission To Edit This Channel!");
+    response.status(401).json({
+      error: "[ERROR] You Do Not Have Permission To Edit This Channel!"
+    });
+   return;
+  };
+  if (!serverData.server_channel_array.includes(channelId)) {
+    console.log("[SERVER] channelId:", channelId, " Does Not Exists In The Server!");
+    response.status(401).json({
+      error: "[ERROR] Unexpected Error Occured, Channel Does Not Exist In The Server!"
+    });
+   return;
+  };
+  if (request.body.canUpdateChannelName == true) {
+    await PostgreSQLPool.query(
+      "UPDATE channels SET channel_name = $1 WHERE channel_id = $2",
+      [channelName, channelId]
+    );
+    console.log("[SERVER] Updated Channel Name!");
+  };
+  if (request.body.canUpdateChannelDescription == true) {
+    await PostgreSQLPool.query(
+      "UPDATE channels SET channel_description = $1 WHERE channel_id = $2",
+      [channelDescription, channelId]
+    );
+    console.log("[SERVER] Updated Channel Description!");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] Updated Channel Successfully!");
+});
+
+
+/*
+==================================================
+Socket.IO Real Time Chat
+==================================================
+*/
+io.on("connection", (socket) => {
+  console.log("[SOCKET] User Connected:", socket.id);
+  socket.on("joinChannel", async (channelId) => {
+    socket.join(channelId);
+    console.log("[SOCKET] Joined Channel:", channelId);
+    const getMessagesData = await RetrieveMessageData(channelId);
+    io.to(channelId).emit("recieveMessage", getMessagesData);
+  });
+  socket.on("sendMessage", async(messageData) => {
+    console.log("[SOCKET] Message:", messageData);
+    await PostgreSQLPool.query(
+      "INSERT INTO messages (messages_channel_id, messages_username, messages_message) VALUES ($1, $2, $3) RETURNING *",
+      [messageData.channelId, messageData.username, messageData.message]
+    );
+    const getMessagesData = await RetrieveMessageData(messageData.channelId);
+    io.to(messageData.channelId).emit("recieveMessage", getMessagesData);
+  });
+  socket.on("disconnect", () => {
+    console.log("[SOCKET] User Disconnected:", socket.id);
+  });
+});
+
+/*
+==================================================
+HTTPServer Listen To Port
+==================================================
+*/
+httpServer.listen(PORT, () => {
   console.log("[SERVER] Server Running On Port:",PORT);
 });
 
