@@ -121,6 +121,8 @@ function Main() {
   const [messageText, setMessageText] = useState("");
   const [currentChannelInfo, setCurrentChannelInfo] = useState(null);
   const [messageDataArray, setMessageDataArray] = useState([]);
+  const [messageIdToEdit, setMessageIdToEdit] = useState(null);
+  const [displayCreateNewRoles, setDisplayCreateNewRoles] = useState(false);
   useEffect(() => {
     if (socket == null) {
       return;
@@ -202,8 +204,13 @@ function Main() {
   async function UpdateUserSettings() {
     let preventUpdatingUserSettings = false;
     let canUpdateUserSettings = false;
+    let localChannelId = "";
+    if (currentChannelInfo != null) {
+      localChannelId = (currentChannelInfo as any).channel_id;
+    };
     let UserSettingsToUpdate = {
       username: userData.username,
+      channelId: localChannelId, 
       displayName: "",
       canUpdateDisplayName: false,
       biography: "",
@@ -645,6 +652,10 @@ function Main() {
     setDisplayUpdateServerSettings(false);
     setDisplayCreateNewChannels(true)
   };
+  function displayCreateNewRolesPannel() {
+    setDisplayUpdateServerSettings(false);
+    setDisplayCreateNewRoles(true);
+  };
   function ExitServerSettingsButton() {
     setDisplayUpdateServerSettings(false);
   };
@@ -713,8 +724,11 @@ function Main() {
           socket.emit("sendMessage",{
             channelId: (currentChannelInfo as any).channel_id,
             username: userData.username,
-            message: currentMessage
+            message: currentMessage,
+            isEditingMessage: (messageIdToEdit != null),
+            editedMessageId: messageIdToEdit
           });
+          setMessageIdToEdit(null);
         } else {
           alert("[ERROR] Channel Socket Is Null!");
         };
@@ -724,6 +738,9 @@ function Main() {
       event.currentTarget.value = "";
       setMessageText("");
     };
+  };
+  function editMessageFunction(messageId: any) {
+    setMessageIdToEdit(messageId);
   };
   if (userData) {
     return (
@@ -756,30 +773,6 @@ function Main() {
               <div className="toolTip">User Settings</div>
             </div>
           </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -833,7 +826,22 @@ function Main() {
                 <div id="TextChatMainDisplayDiv">
                   {messageDataArray.length > 0 && (
                     messageDataArray.map((currentMessageData: any) => (
-                      <div key={currentMessageData.messages_created_at}>{currentMessageData.messages_message}</div>
+                      <div key={currentMessageData.id} className="messageMainDiv">
+                        <div className="messagePFPContainer">
+                          <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                          <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
+                        </div>
+                        <div className="messageContainerDiv">
+                          <div className="messageHeaderDiv">
+                            <div className="messageUserNameDiv">{currentMessageData.message_sender_data.username}</div>
+                            <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
+                            {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
+                          </div>
+                          {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                          {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
+                          {messageIdToEdit != null && messageIdToEdit != currentMessageData.id && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                        </div>
+                      </div>
                     ))
                   )}
                 </div>
@@ -861,37 +869,16 @@ function Main() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+          {displayCreateNewRoles == true && (
+            <div id="CreateRolesScreenDiv">
+              <div id="CreateRolesMainContainerDiv">
+                <div id="CreateRolesHeaderDiv">
+                  Create Roles
+                  <img id="CreateRolesExitButton" src={ExitIcon} alt="Exit Edit Channel" onClick={ExitEditChannelButton}></img>
+                </div>
+              </div>
+            </div>
+          )};
           {displayEditChannel == true && (
             <div id="EditChannelScreenDiv">
               <div id="EditChannelMainContainerDiv">
@@ -980,6 +967,7 @@ function Main() {
                 <textarea placeholder="Update Server Description Here..." id="ServerSettingsDescriptionTextArea" className={`${isUpdatedServerDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={UpdateServerDescription} value={updatedServerDescription}/>
                 {isUpdatedServerDescriptionValid == false && (<div className="ServerSettingsErrorDiv">Server Description Can Have Up To 500 Characters Maximum!</div>)}
                 <button className="ServerSettingsButtonClass" id="CreateNewChannelsButton" onClick={displayCreateNewChannelsPanel}>Create New Channels</button>
+                <button className="ServerSettingsButtonClass" id="CreateNewRolesButton" onClick={displayCreateNewRolesPannel}>Create New Roles</button>
                 <button className="ServerSettingsButtonClass" id="CreateNewServerButton" onClick={UpdateServerSettings}>Update Server Settings</button>
               </div>
             </div>

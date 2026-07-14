@@ -87,20 +87,21 @@ Retrieve Message Data
 */
 async function RetrieveMessageData(channelId) {
   const currentChannelMessagesArray = await PostgreSQLPool.query(
-    "SELECT * FROM messages WHERE messages_channel_id = $1 ORDER BY messages_created_at ASC",
+    "SELECT id, messages_channel_id, messages_username, messages_message, TO_CHAR(messages_created_at, 'MM-DD-YYYY HH12:MI AM') as messages_created_at FROM messages WHERE messages_channel_id = $1 ORDER BY id ASC",
     [channelId]
   );
   const messagesArray = currentChannelMessagesArray.rows;
   for (let index = 0; index < messagesArray.length; index++) {
     const getMessageSenderData = await PostgreSQLPool.query(
-      "SELECT * FROM users WHERE username = $1",
+      "SELECT displayname, username, biography, status, profile_picture FROM users WHERE username = $1",
       [messagesArray[index].messages_username]
     );
     messagesArray[index].message_sender_data = getMessageSenderData.rows[0];
   };
-  console.log("[SOCKET] ChannelId:", channelId, "Messages Array:", messagesArray);
   return messagesArray;
 };
+
+
 
 /*
 ==================================================
@@ -243,6 +244,10 @@ App.post("/updateUserSettings", async (request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  if (request.body.channelId != "") {
+    const getMessagesData = await RetrieveMessageData(request.body.channelId);
+    io.to(request.body.channelId).emit("recieveMessage", getMessagesData);
+  };
   console.log("[SERVER] User Data:", userData);
   console.log("[SERVER] Updated User Settings Successfully!");
 });
@@ -572,10 +577,19 @@ io.on("connection", (socket) => {
   });
   socket.on("sendMessage", async(messageData) => {
     console.log("[SOCKET] Message:", messageData);
-    await PostgreSQLPool.query(
-      "INSERT INTO messages (messages_channel_id, messages_username, messages_message) VALUES ($1, $2, $3) RETURNING *",
-      [messageData.channelId, messageData.username, messageData.message]
-    );
+    if (messageData.isEditingMessage == false) {
+      await PostgreSQLPool.query(
+        "INSERT INTO messages (messages_channel_id, messages_username, messages_message) VALUES ($1, $2, $3) RETURNING *",
+        [messageData.channelId, messageData.username, messageData.message]
+      );
+      console.log("[SOCKET] New Message Created Successfully!");
+    } else if (messageData.isEditingMessage == true && messageData.editedMessageId != null) {
+      await PostgreSQLPool.query(
+        "UPDATE messages SET messages_message = $1 WHERE id = $2 AND messages_username = $3",
+        [messageData.message, messageData.editedMessageId, messageData.username]
+      );
+      console.log("[SOCKET] Message Updated Successfully!");
+    };
     const getMessagesData = await RetrieveMessageData(messageData.channelId);
     io.to(messageData.channelId).emit("recieveMessage", getMessagesData);
   });
