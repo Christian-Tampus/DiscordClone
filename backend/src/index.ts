@@ -10,7 +10,7 @@ console.log("[SYSTEM MESSAGE] index.ts Program Start!");
 Dependencies
 ==================================================
 */
-import express from "express";
+import express, { response } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { Pool, Result } from "pg";
@@ -75,6 +75,15 @@ async function RetrieveServerData(servers) {
       );
       currentServerData.channelsData.push(channelData.rows[0]);
     };
+    currentServerData.rolesData = [];
+    for (let roleIndex = 0; roleIndex < serverData.rows[0].server_roles_array.length; roleIndex++) {
+      const roleId = serverData.rows[0].server_roles_array[roleIndex];
+      const roleData = await PostgreSQLPool.query(
+        "SELECT * FROM roles WHERE role_id = $1",
+        [roleId]
+      );
+      currentServerData.rolesData.push(roleData.rows[0]);
+    };
     serverDataArray.push(currentServerData);
   };
   return serverDataArray;
@@ -100,8 +109,6 @@ async function RetrieveMessageData(channelId) {
   };
   return messagesArray;
 };
-
-
 
 /*
 ==================================================
@@ -508,7 +515,7 @@ App.post("/createNewChannel", async (request, response) => {
 
 /*
 ==================================================
-Create New Channel API
+Update Channel API
 ==================================================
 */
 App.post("/updateChannelSettings", async (request, response) => {
@@ -561,6 +568,52 @@ App.post("/updateChannelSettings", async (request, response) => {
   console.log("[SERVER] Updated Channel Successfully!");
 });
 
+/*
+==================================================
+Create New Role API
+==================================================
+*/
+App.post("/createNewRole", async(request, response) => {
+  console.log("[SERVER] API: /createNewRole");
+  console.log(request.body);
+  const retrieveCurrentServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  let serverData = retrieveCurrentServerData.rows[0];
+  if (serverData.server_owner != request.body.username) {
+    console.log("[SERVER] User Is Not Server Owner And Does Not Have Permission To Create New Roles!");
+    response.status(401).json({
+      error: "[ERROR] User Is Not Server Owner And Does Not Have Permission To Create New Roles!"
+    });
+    return;
+  };
+  if (serverData.server_roles >= 10) {
+    console.log("[SERVER] Max Number Of Roles [10] Have Been Reached!");
+    response.status(401).json({
+      error: "[ERROR] Max Number Of Roles [10] Have Been Reached!"
+    });
+    return;
+  };
+  const roleId = request.body.serverId + "-Role-[" + (serverData.server_roles + 1) + "]-" + Date.now();
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_roles_array = array_append(server_roles_array, $1), server_roles = $2 WHERE server_id = $3",
+    [roleId, serverData.server_roles + 1, request.body.serverId]
+  );
+  await PostgreSQLPool.query(
+    "INSERT INTO roles (role_id, role_server_id, role_name, role_rank, role_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+    [roleId, request.body.serverId, request.body.roleName, 0, request.body.roleColor]
+  );
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log(userData);
+  console.log("[SERVER] Create New Role Successfully!");
+});
 
 /*
 ==================================================

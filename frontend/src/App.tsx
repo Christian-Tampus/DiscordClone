@@ -123,6 +123,15 @@ function Main() {
   const [messageDataArray, setMessageDataArray] = useState([]);
   const [messageIdToEdit, setMessageIdToEdit] = useState(null);
   const [displayCreateNewRoles, setDisplayCreateNewRoles] = useState(false);
+  const [isCreateRoleNameValid, setIsCreateRoleNameValid] = useState(true);
+  const [createNewRoleName, setCreateNewRoleName] = useState("");
+  const [hasDataForNewRoleName, setHasDataForNewRoleName] = useState(false);
+  const [createNewRoleColor, setCreateNewRoleColor] = useState("#000000");
+  const [hasDataForNewRoleColor, setHasDataForNewRoleColor] = useState(false);
+  const [currentRoleData, setCurrentRoleData] = useState([]);
+  const [currentRoleIdToEdit, setCurrentRoleIdToEdit] = useState("");
+  const [displayEditRole, setDisplayEditRole] = useState(false);
+  const [isUpdatedRoleNameValid, setIsUpdatedRoleNameValid] = useState(true);
   useEffect(() => {
     if (socket == null) {
       return;
@@ -491,6 +500,46 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function CreateRoleFunction() {
+    if (hasDataForNewRoleName == false && hasDataForNewRoleColor == false) {
+      alert("[ERROR] You Must Add A New Role Name & Role Color!");
+      return;
+    };
+    if (hasDataForNewRoleName == false) {
+      alert("[ERROR] You Must Add A New Role Name!");
+      return;
+    };
+    if (isCreateRoleNameValid == false) {
+      alert("[ERROR] Role Name Not Valid!");
+      return;
+    };
+    if (hasDataForNewRoleColor == false) {
+      alert("[ERROR] You Must Add A New Role Color!");
+      return;
+    };
+    const newRoleResponse = await fetch("http://localhost:5000/createNewRole", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        serverId: (currentServerInfo as any).server_id,
+        username: userData.username,
+        roleName: createNewRoleName,
+        roleColor: createNewRoleColor,
+      })
+    });
+    if (newRoleResponse.ok) {
+      alert("[CLIENT] Created New Role Successfully!");
+      const data = await newRoleResponse.json();
+      console.log(data);
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await newRoleResponse.json();
+      alert(errorCode.error);
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -625,6 +674,8 @@ function Main() {
     setCurrentServerInfo(serverInfo);
     setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
     setCurrentServerDescription(serverInfo.server_description);
+    serverInfo.rolesData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
+    setCurrentRoleData(serverInfo.rolesData);
     if (serverInfo.server_thumbnail != "") {
       setCurrentServerThumbnail("http://localhost:5000" + serverInfo.server_thumbnail);
     } else {
@@ -663,6 +714,14 @@ function Main() {
     setDisplayUpdateServerSettings(true);
     setDisplayCreateNewChannels(false);
   };
+  function ExitCreateNewRoleButton() {
+    setDisplayUpdateServerSettings(true);
+    setDisplayCreateNewRoles(false);
+  };
+  function ExitEditRoleButton() {
+    setDisplayEditRole(false);
+    setDisplayCreateNewRoles(true);
+  }
   function UpdateServerDataToLatest(lastestData: any) {
     if (currentServerInfo != null) {
       let currentSelectedChannelDataToUse = null;
@@ -672,7 +731,9 @@ function Main() {
           setCurrentServerDescription(lastestData.serverData[index].server_description);
           setCurrentServerIcon("http://localhost:5000" + lastestData.serverData[index].server_icon);
           setCurrentServerThumbnail("http://localhost:5000" + lastestData.serverData[index].server_thumbnail);
+          lastestData.serverData[index].channelsData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
           setCurrentChannelData(lastestData.serverData[index].channelsData);
+          setCurrentRoleData(lastestData.serverData[index].rolesData);
           currentSelectedChannelDataToUse = lastestData.serverData[index].channelsData;
         };
       };
@@ -741,6 +802,15 @@ function Main() {
   };
   function editMessageFunction(messageId: any) {
     setMessageIdToEdit(messageId);
+  };
+  function updateRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
+    setCreateNewRoleColor(event.target.value);
+    setHasDataForNewRoleColor(true);
+  };
+  function EditRoleFunction(roleId: any) {
+    setCurrentRoleIdToEdit(roleId);
+    setDisplayEditRole(true);
+    setDisplayCreateNewRoles(false);
   };
   if (userData) {
     return (
@@ -868,17 +938,80 @@ function Main() {
 
 
 
+          {displayEditRole == true && (
+            <div id="EditRolesScreenDiv">
+              <div id="EditRolesMainContainerDiv">
+                <div id="EditRolesHeaderDiv">
+                  Edit Role
+                  <img id="EditRoleExitButton" src={ExitIcon} alt="Exit Edit Role" onClick={ExitEditRoleButton}></img>
+                </div>
+                <div className="EditRolesLabelClass">Role Name</div>
 
+                <input className={`EditRolesInputClass ${isUpdatedRoleNameValid == true ? "" : "InvalidInput2"}`} placeholder="Edit Role Name Here..." type="text" value={createNewRoleName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setCreateNewRoleName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsCreateRoleNameValid(true);
+                    setHasDataForNewRoleName(true);
+                  } else {
+                    setIsCreateRoleNameValid(false);
+                  };
+                }}/>
+
+
+
+
+
+
+
+              </div>
+            </div>
+          )}
           {displayCreateNewRoles == true && (
             <div id="CreateRolesScreenDiv">
               <div id="CreateRolesMainContainerDiv">
                 <div id="CreateRolesHeaderDiv">
                   Create Roles
-                  <img id="CreateRolesExitButton" src={ExitIcon} alt="Exit Edit Channel" onClick={ExitEditChannelButton}></img>
+                  <img id="CreateRolesExitButton" src={ExitIcon} alt="Exit Create Roles" onClick={ExitCreateNewRoleButton}></img>
                 </div>
+                <div className="CreateRolesLabelClass">Role Name</div>
+                <input className={`CreateRolesInputClass ${isCreateRoleNameValid == true ? "" : "InvalidInput2"}`} placeholder="Create Role Name Here..." type="text" value={createNewRoleName} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  let initialString = event.target.value;
+                  let sanitizedString = initialString.replace(/[^a-zA-Z0-9_]/g, "");
+                  setCreateNewRoleName(event.target.value);
+                  if (initialString.length <= 99 && initialString == sanitizedString && sanitizedString.length > 0) {
+                    setIsCreateRoleNameValid(true);
+                    setHasDataForNewRoleName(true);
+                  } else {
+                    setIsCreateRoleNameValid(false);
+                  };
+                }}/>
+                {isCreateRoleNameValid == false && (<div className="CreateNewRoleErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
+                <div className="CreateRolesLabelClass">Role Color</div>
+                <input className={`CreateRolesInputClass`} type="color" value={createNewRoleColor} onChange={updateRoleColor}/>
+                <button className="CreateRoleButtonClass" id="CreateRoleButton" onClick={CreateRoleFunction}>Create Role</button>
+                <div className="CreateRolesLabelClass">Roles (Sorted From Highest To Lowest)</div>
+                <div id="rolesContainerDiv">{currentRoleData.map((roleData: any) => (<button id={roleData.role_id} key={roleData.role_id} className="EditRoleButtonClass" style={{color: roleData.role_color}} onClick={() => EditRoleFunction(roleData.role_id)}>Edit Role: {roleData.role_name}</button>))}</div>
               </div>
             </div>
           )};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           {displayEditChannel == true && (
             <div id="EditChannelScreenDiv">
               <div id="EditChannelMainContainerDiv">
