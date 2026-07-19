@@ -84,6 +84,22 @@ async function RetrieveServerData(servers) {
       );
       currentServerData.rolesData.push(roleData.rows[0]);
     };
+    currentServerData.server_members_array_data = [];
+    for (let memberIndex = 0; memberIndex < serverData.rows[0].server_members_array.length; memberIndex++) {
+      const memberUsername = serverData.rows[0].server_members_array[memberIndex];
+      const memberData = await PostgreSQLPool.query(
+        "SELECT * FROM users WHERE username = $1",
+        [memberUsername]
+      );
+      const memberDataTable = {
+        displayname: memberData.rows[0].displayname,
+        username: memberData.rows[0].username,
+        biography: memberData.rows[0].biography,
+        status: memberData.rows[0].status,
+        profile_picture: memberData.rows[0].profile_picture,
+      };
+      currentServerData.server_members_array_data.push(memberDataTable);
+    };
     serverDataArray.push(currentServerData);
   };
   return serverDataArray;
@@ -337,6 +353,10 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
     [serverName, serverIcon, serverId, serverOwner]
   );
   await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_array = array_append(server_members_array, $1) WHERE server_id = $2",
+    [serverOwner, serverId]
+  );
+  await PostgreSQLPool.query(
     "UPDATE users SET servers = array_append(servers, $1) WHERE username = $2",
     [serverId, request.body.serverOwner]
   );
@@ -575,7 +595,6 @@ Create New Role API
 */
 App.post("/createNewRole", async(request, response) => {
   console.log("[SERVER] API: /createNewRole");
-  console.log(request.body);
   const retrieveCurrentServerData = await PostgreSQLPool.query(
     "SELECT * FROM servers WHERE server_id = $1",
     [request.body.serverId]
@@ -613,6 +632,57 @@ App.post("/createNewRole", async(request, response) => {
   response.json(userData);
   console.log(userData);
   console.log("[SERVER] Create New Role Successfully!");
+});
+
+/*
+==================================================
+Update Role API
+==================================================
+*/
+App.post("/updateRole", async(request, response) => {
+  console.log("[SERVER] API: /updateRole");
+  const retrieveCurrentServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  let serverData = retrieveCurrentServerData.rows[0];
+  if (serverData.server_owner != request.body.username) {
+    console.log("[SERVER] User Is Not Server Owner And Does Not Have Permission To Update Roles!");
+    response.status(401).json({
+      error: "[ERROR] User Is Not Server Owner And Does Not Have Permission To Update Roles!"
+    });
+    return;
+  };
+  if (request.body.updateRoleName == true) {
+    await PostgreSQLPool.query(
+      "UPDATE roles SET role_name = $1 WHERE role_id = $2",
+      [request.body.roleName, request.body.roleId]
+    );
+    console.log("[SERVER] Updated Role Name Successfully!");
+  };
+  if (request.body.updateRoleColor == true) {
+    await PostgreSQLPool.query(
+      "UPDATE roles SET role_color = $1 WHERE role_id = $2",
+      [request.body.roleColor, request.body.roleId]
+    );
+    console.log("[SERVER] Updated Role Color Successfully!");
+  };
+  if (request.body.updatedRoleRank == true) {
+    await PostgreSQLPool.query(
+      "UPDATE roles SET role_rank = $1 WHERE role_id = $2",
+      [request.body.roleRank, request.body.roleId]
+    );
+    console.log("[SERVER] Updated Role Rank Successfully!");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log(userData);
+  console.log("[SERVER] Updated Role Successfully!");
 });
 
 /*

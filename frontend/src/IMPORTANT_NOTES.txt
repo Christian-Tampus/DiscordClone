@@ -50,7 +50,15 @@ CREATE TABLE servers (
     server_channels INTEGER DEFAULT 0,
     server_channel_array TEXT[] NOT NULL DEFAULT '{}',
     server_roles_array TEXT[] NOT NULL DEFAULT '{}',
-    server_roles INTEGER DEFAULT 0
+    server_roles INTEGER DEFAULT 0,
+    server_members_array TEXT[] NOT NULL DEFAULT '{}',
+);
+
+CREATE TABLE member_roles (
+    id SERIAL PRIMARY KEY,
+    member_roles_server_id VARCHAR(999) UNIQUE NOT NULL,
+    member_roles_username VARCHAR(999) UNIQUE NOT NULL,
+    member_roles_array TEXT[] NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE channels (
