@@ -687,6 +687,25 @@ App.post("/updateRole", async(request, response) => {
 
 /*
 ==================================================
+Add Role To Member API
+==================================================
+*/
+App.post("/addRoleToMember", async(request, response) => {
+  console.log("[SERVER] API: /updateRole");
+  console.log("REQUEST BODY:", request.body);
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log(userData);
+  console.log("[SERVER] Updated Role Successfully!");
+});
+
+/*
+==================================================
 Socket.IO Real Time Chat
 ==================================================
 */

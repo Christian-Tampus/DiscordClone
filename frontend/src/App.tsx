@@ -140,6 +140,9 @@ function Main() {
   const [updatedRoleRank, setUpdatedRoleRank] = useState(0);
   const [hasUpdatedRoleRank, setHasUpdatedRoleRank] = useState(false);
   const [membersDataArray, setMembersDataArray] = useState([]);
+  const [currentMemberDataToEdit, setCurrentMemberDataToEdit] = useState(null);
+  const [editMemberScreen, setEditMemberScreen] = useState(false);
+  const [displayAddRolesToMemberScreen, setDisplayAddRolesToMemberScreen] = useState(false);
   useEffect(() => {
     if (socket == null) {
       return;
@@ -583,6 +586,38 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function AddRoleToMemberFunction(roleData: any) {
+    if (currentMemberDataToEdit == null) {
+      alert("[ERROR] currentMemberDataToEdit Is Null!");
+      return;
+    };
+    if (currentServerInfo == null) {
+      alert("[ERROR] currentServerInfo Is Null!");
+      return;
+    };
+    let roleDataTable = {
+      adminUsername: userData.username,
+      username: (currentMemberDataToEdit as any).username,
+      roleId: roleData.role_id,
+      serverId: (currentServerInfo as any).server_id,
+    };
+    const addRoleToMemberResponse = await fetch("http://localhost:5000/addRoleToMember", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(roleDataTable)
+    });
+    if (addRoleToMemberResponse.ok) {
+      alert("[CLIENT] Added Role To Member Successfully!");
+      const data = await addRoleToMemberResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await addRoleToMemberResponse.json();
+      alert(errorCode.error);
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -779,7 +814,6 @@ function Main() {
           setCurrentChannelData(lastestData.serverData[index].channelsData);
           setCurrentRoleData(lastestData.serverData[index].rolesData);
           setMembersDataArray(lastestData.serverData[index].server_members_array_data);
-          console.log("lastestData.serverData[index].server_members_array_data:",lastestData.serverData[index].server_members_array_data);
           currentSelectedChannelDataToUse = lastestData.serverData[index].channelsData;
         };
       };
@@ -864,6 +898,21 @@ function Main() {
   function updateEditRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setUpdatedRoleColor(event.target.value);
     setHasUpdatedRoleColor(true);
+  };
+  function displayEditMemberScreen(memberData: any) {
+    setCurrentMemberDataToEdit(memberData);
+    setEditMemberScreen(true);
+  };
+  function ExitEditMemberButton() {
+    setEditMemberScreen(false);
+  };
+  function AddRoleToMemberButton() {
+    setEditMemberScreen(false);
+    setDisplayAddRolesToMemberScreen(true);
+  };
+  function ExitAddRoleToMemberButton() {
+    setEditMemberScreen(true);
+    setDisplayAddRolesToMemberScreen(false);
   };
   if (userData) {
     return (
@@ -977,11 +1026,19 @@ function Main() {
               )}
             </div>
             <div id="PlayerListMainContainerDiv">
-              {membersDataArray.map((memberData: any) => (
-                <div id={memberData.username} key={memberData.username}>
-                  {memberData.username}
-                </div>
-              ))}
+              <div id="membersListDivLabel">Members List</div>
+              <div id="memberListMainContainerDiv">
+                {membersDataArray.map((memberData: any) => (
+                  <div id={memberData.username} key={memberData.username} className="membersListDiv" onClick={() => displayEditMemberScreen(memberData)}>
+                    <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                    <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
+                    <div className="membersListUserNameAndDisplayDiv">
+                      <div className="membersListUserNameDiv">@{memberData.username}</div>
+                      <div className="membersListDisplayNameDiv">{memberData.displayname}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1000,9 +1057,43 @@ function Main() {
 
 
 
-
-
-
+          {displayAddRolesToMemberScreen == true && currentMemberDataToEdit != null && (
+            <div id="AddRoleToMemberScreenDiv">
+              <div id="AddRoleToMemberMainContainerDiv">
+                <div id="AddRoleToMemberHeaderDiv">
+                  Add Roles
+                  <img id="AddRoleToMemberExitButton" src={ExitIcon} alt="Exit Edit Role" onClick={ExitAddRoleToMemberButton}></img>
+                </div>
+                <div id="AddRoleToMemberRolesContainerDiv">{currentRoleData.map((roleData: any) => (<button id={roleData.role_id} key={roleData.role_id} className="AddRoleToMemberButtonClass" style={{color: roleData.role_color}} onClick={() => AddRoleToMemberFunction(roleData)}>Add Role: {roleData.role_name}</button>))}</div>
+              </div>
+            </div>
+          )}
+          {editMemberScreen == true && currentMemberDataToEdit != null && (
+            <div id="EditMemberScreenDiv">
+              <div id="EditMemberMainContainerDiv">
+                <div id="EditMemberHeaderDiv">
+                  Edit Member
+                  <img id="EditMemberExitButton" src={ExitIcon} alt="Exit Edit Role" onClick={ExitEditMemberButton}></img>
+                </div>
+                <div className="EditMemberLabelClass">Profile Picture</div>
+                <div>
+                  <img id="EditMemberPFP" title="Member Profile Picture" className={(currentMemberDataToEdit as any).status == "Online" ? "OnlineBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvislbeBackgroundPFPColor"} src={"http://localhost:5000" + (currentMemberDataToEdit as any).profile_picture} alt="Profile Picture"></img>
+                </div>
+                <div className="EditMemberLabelClass">Member Username</div>
+                <div id="EditMemberUsernameLabel" className="EditMemberLabelClass">{(currentMemberDataToEdit as any).username}</div>
+                <div className="EditMemberLabelClass">Member Display Name</div>
+                <div id="EditMemberUsernameLabel" className="EditMemberLabelClass">{(currentMemberDataToEdit as any).displayname}</div>
+                <div className="EditMemberLabelClass">Member Status</div>
+                <div id="EditMemberUsernameLabel" className={"EditMemberLabelClass " + (currentMemberDataToEdit as any).status == "Online" ? "OnlineStatusLabelColor2" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor2" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleStatusLabelColor2" : "InvisibleStatusLabelColor2"}>{(currentMemberDataToEdit as any).status}</div>
+                <div className="EditMemberLabelClass">Member Biography</div>
+                <textarea id="EditMemberBiographyTextArea" value={(currentMemberDataToEdit as any).biography} readOnly/>
+                <div className="EditMemberLabelClass">Member Roles</div>
+                <div id="EditMemberRolesContainerDiv">
+                  <button id="EditMemberRolesAddRoleButton" title="Add Role" onClick={AddRoleToMemberButton}>+</button>
+                </div>
+              </div>
+            </div>
+          )}
           {displayEditRole == true && (
             <div id="EditRolesScreenDiv">
               <div id="EditRolesMainContainerDiv">
