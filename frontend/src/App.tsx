@@ -143,6 +143,15 @@ function Main() {
   const [currentMemberDataToEdit, setCurrentMemberDataToEdit] = useState(null);
   const [editMemberScreen, setEditMemberScreen] = useState(false);
   const [displayAddRolesToMemberScreen, setDisplayAddRolesToMemberScreen] = useState(false);
+  const [canKickLowerRankMembers, setCanKickLowerRankMembers] = useState(false);
+  const [canBanLowerRankMembers, setCanBanLowerRankMembers] = useState(false);
+  const [canEditLowerRankMemberRoles, setCanEditLowerRankMemberRoles] = useState(false);
+  const [updateRoleCanKickLowerRankMembers, setUpdateRoleCanKickLowerRankMembers] = useState(false);
+  const [updateRoleCanBanLowerRankMembers, setUpdateRoleCanBanLowerRankMembers] = useState(false);
+  const [updateRoleCanEditLowerRankMembers, setUpdateRoleCanEditLowerRankMembers] = useState(false);
+  const [hasUpdatedCanKickLowerRankMembers, setHasUpdatedCanKickLowerRankMembers] = useState(false);
+  const [hasUpdatedCanBanLowerRankMembers, setHasUpdatedCanBanLowerRankMembers] = useState(false);
+  const [hasUpdatedCanEditLowerRankMembers, setHasUpdatedCanEditLowerRankMembers] = useState(false);
   useEffect(() => {
     if (socket == null) {
       return;
@@ -541,6 +550,9 @@ function Main() {
         username: userData.username,
         roleName: createNewRoleName,
         roleColor: createNewRoleColor,
+        canKickLowerRankMembers: canKickLowerRankMembers,
+        canBanLowerRankMembers: canBanLowerRankMembers,
+        canEditLowerRankMemberRoles: canEditLowerRankMemberRoles,
       })
     });
     if (newRoleResponse.ok) {
@@ -554,7 +566,7 @@ function Main() {
     };
   };
   async function UpdateRoleFunction() {
-    if (hasUpdatedRoleName == false && hasUpdatedRoleColor == false && hasUpdatedRoleRank == false) {
+    if (hasUpdatedRoleName == false && hasUpdatedRoleColor == false && hasUpdatedRoleRank == false && hasUpdatedCanKickLowerRankMembers == false && hasUpdatedCanBanLowerRankMembers == false && hasUpdatedCanEditLowerRankMembers == false) {
       alert("[ERROR] You Have Not Updated Anything!");
       return;
     };
@@ -568,6 +580,9 @@ function Main() {
       updateRoleName: hasUpdatedRoleName,
       updateRoleColor: hasUpdatedRoleColor,
       updatedRoleRank: hasUpdatedRoleRank,
+      canKickLowerRankMembers: updateRoleCanKickLowerRankMembers,
+      canBanLowerRankMembers: updateRoleCanBanLowerRankMembers,
+      canEditLowerRankMemberRoles: updateRoleCanEditLowerRankMembers,
     };
     const updatedRoleResponse = await fetch("http://localhost:5000/updateRole", {
       method: "POST",
@@ -615,6 +630,30 @@ function Main() {
       UpdateServerDataToLatest(data);
     } else {
       const errorCode = await addRoleToMemberResponse.json();
+      alert(errorCode.error);
+    };
+  };
+  async function RemoveRoleFunction(roleData: any) {
+    let roleDataToRemove = {
+      adminUsername: userData.username,
+      username: (currentMemberDataToEdit as any).username,
+      roleId: roleData.role_id,
+      serverId: (currentServerInfo as any).server_id,
+    };
+    const removeRoleFromMemberResponse = await fetch("http://localhost:5000/removeRoleFromMember", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(roleDataToRemove)
+    });
+    if (removeRoleFromMemberResponse.ok) {
+      alert("[CLIENT] Removed Role From Member Successfully!");
+      const data = await removeRoleFromMemberResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await removeRoleFromMemberResponse.json();
       alert(errorCode.error);
     };
   };
@@ -815,6 +854,13 @@ function Main() {
           setCurrentRoleData(lastestData.serverData[index].rolesData);
           setMembersDataArray(lastestData.serverData[index].server_members_array_data);
           currentSelectedChannelDataToUse = lastestData.serverData[index].channelsData;
+          if (currentMemberDataToEdit != null) {
+            for (let member_index = 0; member_index < lastestData.serverData[index].server_members_array_data.length; member_index++) {
+              if (lastestData.serverData[index].server_members_array_data[member_index].username == (currentMemberDataToEdit as any).username) {
+                setCurrentMemberDataToEdit(lastestData.serverData[index].server_members_array_data[member_index]);
+              };
+            };
+          };
         };
       };
       if (currentSelectedChannelDataToUse != null) {
@@ -892,6 +938,9 @@ function Main() {
     setUpdatedRoleName(roleData.role_name);
     setUpdatedRoleRank(roleData.role_rank);
     setUpdatedRoleColor(roleData.role_color);
+    setUpdateRoleCanKickLowerRankMembers(roleData.can_kick_lower_rank_members);
+    setUpdateRoleCanBanLowerRankMembers(roleData.can_ban_lower_rank_members)
+    setUpdateRoleCanEditLowerRankMembers(roleData.can_edit_lower_rank_member_roles);
     setDisplayEditRole(true);
     setDisplayCreateNewRoles(false);
   };
@@ -913,6 +962,18 @@ function Main() {
   function ExitAddRoleToMemberButton() {
     setEditMemberScreen(true);
     setDisplayAddRolesToMemberScreen(false);
+  };
+  function setUpdateRoleCanKickLowerRankMembersFunction(boolean: any) {
+    setUpdateRoleCanKickLowerRankMembers(boolean);
+    setHasUpdatedCanKickLowerRankMembers(true);
+  };
+  function setUpdateRoleCanBanLowerRankMembersFunction(boolean: any) {
+    setUpdateRoleCanBanLowerRankMembers(boolean);
+    setHasUpdatedCanBanLowerRankMembers(true);
+  };
+  function setUpdateRoleCanEditLowerRankMembersFunction(boolean: any) {
+    setUpdateRoleCanEditLowerRankMembers(boolean);
+    setHasUpdatedCanEditLowerRankMembers(true);
   };
   if (userData) {
     return (
@@ -1033,7 +1094,7 @@ function Main() {
                     <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                     <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
                     <div className="membersListUserNameAndDisplayDiv">
-                      <div className="membersListUserNameDiv">@{memberData.username}</div>
+                      <div className="membersListUserNameDiv" style={{color:memberData.text_color}}>@{memberData.username}</div>
                       <div className="membersListDisplayNameDiv">{memberData.displayname}</div>
                     </div>
                   </div>
@@ -1090,6 +1151,17 @@ function Main() {
                 <div className="EditMemberLabelClass">Member Roles</div>
                 <div id="EditMemberRolesContainerDiv">
                   <button id="EditMemberRolesAddRoleButton" title="Add Role" onClick={AddRoleToMemberButton}>+</button>
+                  {currentMemberDataToEdit != null && (
+                    <div id="MemberRolesDiv">
+                      {(currentMemberDataToEdit as any).roles_array.sort((roleDataA: any, roleDataB: any) => roleDataA.role_rank - roleDataB.role_rank).map((roleData: any) => (
+                        <div className="RoleDiv" style={{color: roleData.role_color}} key={roleData.role_id + roleData.role_color} id={roleData.role_id + roleData.role_color}>
+                          <div className="RoleDotDiv" style={{backgroundColor: roleData.role_color}}></div>
+                          {roleData.role_name}
+                          <button className="RoleRemoveButton" onClick={() => RemoveRoleFunction(roleData)}>-</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1128,29 +1200,25 @@ function Main() {
                   };
                 }}/>
                 {isUpdatedRoleRankValid == false && (<div className="UpdateRoleErrorDiv">Role Rank Must Be From 0-9 Only!</div>)}
+                <div className="EditRolesLabelClass">Can Kick Lower Rank Members</div>
+                <div className="EditRolesRadioButtonDiv">
+                  <label className="EditRolesRadioButtonClass">Yes<input type="radio" name="CanKickLowerRankMembers" value="Yes" checked={updateRoleCanKickLowerRankMembers == true} onChange={() => setUpdateRoleCanKickLowerRankMembersFunction(true)}></input></label>
+                  <label className="EditRolesRadioButtonClass">No<input type="radio" name="CanKickLowerRankMembers" value="No" checked={updateRoleCanKickLowerRankMembers == false} onChange={() => setUpdateRoleCanKickLowerRankMembersFunction(false)}></input></label>
+                </div>
+                <div className="EditRolesLabelClass">Can Ban Lower Rank Members</div>
+                <div className="EditRolesRadioButtonDiv">
+                  <label className="EditRolesRadioButtonClass">Yes<input type="radio" name="CanBanLowerRankMembers" value="Yes" checked={updateRoleCanBanLowerRankMembers == true} onChange={() => setUpdateRoleCanBanLowerRankMembersFunction(true)}></input></label>
+                <label className="EditRolesRadioButtonClass">No<input type="radio" name="CanBanLowerRankMembers" value="No" checked={updateRoleCanBanLowerRankMembers == false} onChange={() => setUpdateRoleCanBanLowerRankMembersFunction(false)}></input></label>
+                </div>
+                <div className="EditRolesLabelClass">Can Edit Lower Rank Member Roles</div>
+                <div className="EditRolesRadioButtonDiv">
+                  <label className="EditRolesRadioButtonClass">Yes<input type="radio" name="canEditLowerRankMemberRoles" value="Yes" checked={updateRoleCanEditLowerRankMembers == true} onChange={() => setUpdateRoleCanEditLowerRankMembersFunction(true)}></input></label>
+                  <label className="EditRolesRadioButtonClass">No<input type="radio" name="canEditLowerRankMemberRoles" value="No" checked={updateRoleCanEditLowerRankMembers == false} onChange={() => setUpdateRoleCanEditLowerRankMembersFunction(false)}></input></label>
+                </div>
                 <button className="UpdatedRoleButtonClass" id="UpdateRoleButton" onClick={UpdateRoleFunction}>Update Role</button>
               </div>
             </div>
           )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           {displayCreateNewRoles == true && (
             <div id="CreateRolesScreenDiv">
               <div id="CreateRolesMainContainerDiv">
@@ -1173,6 +1241,21 @@ function Main() {
                 {isCreateRoleNameValid == false && (<div className="CreateNewRoleErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
                 <div className="CreateRolesLabelClass">Role Color</div>
                 <input className={`CreateRolesInputClass`} type="color" value={createNewRoleColor} onChange={updateRoleColor}/>
+                <div className="CreateRolesLabelClass">Can Kick Lower Rank Members</div>
+                <div className="CreateRolesRadioButtonDiv">
+                  <label className="CreateRolesRadioButtonClass">Yes<input type="radio" name="CanKickLowerRankMembers" value="Yes" checked={canKickLowerRankMembers == true} onChange={() => setCanKickLowerRankMembers(true)}></input></label>
+                  <label className="CreateRolesRadioButtonClass">No<input type="radio" name="CanKickLowerRankMembers" value="No" checked={canKickLowerRankMembers == false} onChange={() => setCanKickLowerRankMembers(false)}></input></label>
+                </div>
+                <div className="CreateRolesLabelClass">Can Ban Lower Rank Members</div>
+                <div className="CreateRolesRadioButtonDiv">
+                  <label className="CreateRolesRadioButtonClass">Yes<input type="radio" name="CanBanLowerRankMembers" value="Yes" checked={canBanLowerRankMembers == true} onChange={() => setCanBanLowerRankMembers(true)}></input></label>
+                <label className="CreateRolesRadioButtonClass">No<input type="radio" name="CanBanLowerRankMembers" value="No" checked={canBanLowerRankMembers == false} onChange={() => setCanBanLowerRankMembers(false)}></input></label>
+                </div>
+                <div className="CreateRolesLabelClass">Can Edit Lower Rank Member Roles</div>
+                <div className="CreateRolesRadioButtonDiv">
+                  <label className="CreateRolesRadioButtonClass">Yes<input type="radio" name="canEditLowerRankMemberRoles" value="Yes" checked={canEditLowerRankMemberRoles == true} onChange={() => setCanEditLowerRankMemberRoles(true)}></input></label>
+                  <label className="CreateRolesRadioButtonClass">No<input type="radio" name="canEditLowerRankMemberRoles" value="No" checked={canEditLowerRankMemberRoles == false} onChange={() => setCanEditLowerRankMemberRoles(false)}></input></label>
+                </div>
                 <button className="CreateRoleButtonClass" id="CreateRoleButton" onClick={CreateRoleFunction}>Create Role</button>
                 <div className="CreateRolesLabelClass">Roles (Sorted From Highest To Lowest)</div>
                 <div id="rolesContainerDiv">{currentRoleData.map((roleData: any) => (<button id={roleData.role_id} key={roleData.role_id} className="EditRoleButtonClass" style={{color: roleData.role_color}} onClick={() => EditRoleFunction(roleData)}>Edit Role: {roleData.role_name}</button>))}</div>

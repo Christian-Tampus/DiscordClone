@@ -91,12 +91,35 @@ async function RetrieveServerData(servers) {
         "SELECT * FROM users WHERE username = $1",
         [memberUsername]
       );
+      const getMemberRoles = await PostgreSQLPool.query(
+        "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+        [servers[index], memberData.rows[0].username]
+      );
+      let current_roles_array = [];
+      let roleTextColor = "white";
+      if (getMemberRoles.rows.length == 1) {
+        for (let role_index = 0; role_index < getMemberRoles.rows[0].member_roles_array.length; role_index++) {
+        const getRole = await PostgreSQLPool.query(
+          "SELECT * FROM roles WHERE role_id = $1",
+          [getMemberRoles.rows[0].member_roles_array[role_index]]
+        );
+        if (getRole.rows.length == 1) {
+          current_roles_array.push(getRole.rows[0]);
+        };
+      };
+      };
+      current_roles_array.sort((roleDataA: any, roleDataB: any) => roleDataA.role_rank - roleDataB.role_rank);
+      if (current_roles_array.length > 0) {
+        roleTextColor = current_roles_array[0].role_color;
+      };
       const memberDataTable = {
         displayname: memberData.rows[0].displayname,
         username: memberData.rows[0].username,
         biography: memberData.rows[0].biography,
         status: memberData.rows[0].status,
         profile_picture: memberData.rows[0].profile_picture,
+        roles_array: current_roles_array,
+        text_color: roleTextColor,
       };
       currentServerData.server_members_array_data.push(memberDataTable);
     };
@@ -620,8 +643,8 @@ App.post("/createNewRole", async(request, response) => {
     [roleId, serverData.server_roles + 1, request.body.serverId]
   );
   await PostgreSQLPool.query(
-    "INSERT INTO roles (role_id, role_server_id, role_name, role_rank, role_color) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [roleId, request.body.serverId, request.body.roleName, 0, request.body.roleColor]
+    "INSERT INTO roles (role_id, role_server_id, role_name, role_rank, role_color, can_kick_lower_rank_members, can_ban_lower_rank_members, can_edit_lower_rank_member_roles) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+    [roleId, request.body.serverId, request.body.roleName, 0, request.body.roleColor, request.body.canKickLowerRankMembers, request.body.canBanLowerRankMembers, request.body.canEditLowerRankMemberRoles]
   );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
@@ -674,6 +697,10 @@ App.post("/updateRole", async(request, response) => {
     );
     console.log("[SERVER] Updated Role Rank Successfully!");
   };
+  await PostgreSQLPool.query(
+    "UPDATE roles SET can_kick_lower_rank_members = $1, can_ban_lower_rank_members = $2, can_edit_lower_rank_member_roles = $3 WHERE role_id = $4",
+    [request.body.canKickLowerRankMembers, request.body.canBanLowerRankMembers, request.body.canEditLowerRankMemberRoles, request.body.roleId]
+  );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -691,8 +718,45 @@ Add Role To Member API
 ==================================================
 */
 App.post("/addRoleToMember", async(request, response) => {
-  console.log("[SERVER] API: /updateRole");
+  console.log("[SERVER] API: /addRoleToMember");
   console.log("REQUEST BODY:", request.body);
+  const adminUsername = request.body.adminUsername;
+  const username = request.body.username;
+  const roleId = request.body.roleId;
+  const serverId = request.body.serverId;
+  const checkIfMemberRolesExist = await PostgreSQLPool.query(
+    "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+    [serverId, username]
+  );
+  if (checkIfMemberRolesExist.rows.length != 1) {
+    console.log("[SERVER] Intializing Member Roles!");
+    await PostgreSQLPool.query(
+      "INSERT INTO member_roles (member_roles_server_id, member_roles_username) VALUES ($1, $2) RETURNING *",
+      [serverId, username]
+    );
+  } else {
+    console.log("[SERVER] Member Roles Already Exists!");
+  };
+  const getMemberRoles = await PostgreSQLPool.query(
+    "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+    [serverId, username]
+  );
+  if (getMemberRoles.rows.length != 1) {
+    console.log("[ERROR] Member Roles Does Not Exist For Username:", username);
+    response.status(401).json({
+      error: "[ERROR] Member Roles Does Not Exist For Username:"+ username
+    });
+    return;
+  };
+  if (!getMemberRoles.rows[0].member_roles_array.includes(roleId)) {
+    console.log("[SERVER] Insert RoleId:", roleId, " Into Array!")
+    await PostgreSQLPool.query(
+      "UPDATE member_roles SET member_roles_array = array_append(member_roles_array, $1) WHERE member_roles_server_id = $2 AND member_roles_username = $3",
+      [roleId, serverId, username]
+    );
+  } else {
+    console.log("[SERVER] Role Already Exist For This Member!");
+  };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -700,8 +764,41 @@ App.post("/addRoleToMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  console.log(userData);
-  console.log("[SERVER] Updated Role Successfully!");
+  console.log("[SERVER] Added Role Successfully!");
+});
+
+/*
+==================================================
+Remove Role From Member API
+==================================================
+*/
+App.post("/removeRoleFromMember", async(request, response) => {
+  console.log("[SERVER] API: /removeRoleFromMember");
+  console.log("REQUEST BODY:", request.body);
+  const adminUsername = request.body.adminUsername;
+  const username = request.body.username;
+  const roleId = request.body.roleId;
+  const serverId = request.body.serverId;
+  const checkIfMemberRolesExist = await PostgreSQLPool.query(
+    "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+    [serverId, username]
+  );
+  if (checkIfMemberRolesExist.rows.length == 0) {
+    console.log("[SERVER] Member Does Not Have Any Roles!");
+    return;
+  };
+  await PostgreSQLPool.query(
+    "UPDATE member_roles SET member_roles_array = array_remove(member_roles_array, $1) WHERE member_roles_server_id = $2 AND member_roles_username = $3",
+    [roleId, serverId, username]
+  );
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] Removed Role Successfully!");
 });
 
 /*

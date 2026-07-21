@@ -82,5 +82,21 @@ CREATE TABLE roles (
     role_server_id VARCHAR(999) NOT NULL,
     role_name VARCHAR(99) NOT NULL,
     role_rank INTEGER NOT NULL DEFAULT 0,
-    role_color VARCHAR(7) NOT NULL
+    role_color VARCHAR(7) NOT NULL,
+    can_kick_lower_rank_members BOOLEAN NOT NULL DEFAULT FALSE,
+    can_ban_lower_rank_members BOOLEAN NOT NULL DEFAULT FALSE,
+    can_edit_lower_rank_member_roles BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    role_id VARCHAR(999) UNIQUE NOT NULL,
+    role_server_id VARCHAR(999) NOT NULL,
+    role_name VARCHAR(99) NOT NULL,
+    role_rank INTEGER NOT NULL DEFAULT 0,
+    role_color VARCHAR(7) NOT NULL,
+    can_kick_lower_rank_members BOOLEAN NOT NULL DEFAULT FALSE,
+    can_ban_lower_rank_members BOOLEAN NOT NULL DEFAULT FALSE,
+    can_edit_lower_rank_member_roles BOOLEAN NOT NULL DEFAULT FALSE
 );
