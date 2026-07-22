@@ -152,18 +152,49 @@ function Main() {
   const [hasUpdatedCanKickLowerRankMembers, setHasUpdatedCanKickLowerRankMembers] = useState(false);
   const [hasUpdatedCanBanLowerRankMembers, setHasUpdatedCanBanLowerRankMembers] = useState(false);
   const [hasUpdatedCanEditLowerRankMembers, setHasUpdatedCanEditLowerRankMembers] = useState(false);
+  const [displayJoinServerScreen, setDisplayJoinServerScreen] = useState(false);
+  const [joinServerId, setJoinServerId] = useState("");
+  const [hasDataForJoinServerId, setHasDataForJoinServerId] = useState(false);
+  async function RetrieveLatestData() {
+    const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: username
+      })
+    });
+    if (retrieveLatestDataResponse.ok) {
+      const data = await retrieveLatestDataResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await retrieveLatestDataResponse.json();
+      alert(errorCode.error);
+    };
+  };
   useEffect(() => {
     if (socket == null) {
       return;
     };
-    socket.on("recieveMessage", (messageData) => {
+    socket.on("recieveMessage", (messageData, recieveMessageChannelId) => {
       console.log("[CLIENT] Received:", messageData);
-      setMessageDataArray(messageData);
+      if (currentChannelInfo != null && (currentChannelInfo as any).channel_id == recieveMessageChannelId) {
+        setMessageDataArray(messageData);
+      };
+    });
+    socket.on("retrieveLatestData", (latestData) => {
+      console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
+      if (latestData.usernameToIgnore != username) {
+        RetrieveLatestData();
+      };
     });
     return () => {
       socket.off("recieveMessage");
+      socket.off("retrieveLatestData");
     };
-  }, [socket]);
+  }, [socket, currentServerInfo, currentChannelInfo]);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -194,6 +225,7 @@ function Main() {
           setCurrentServerFunction(data.serverData[0]);
           if (data.serverData[0].channelsData.length > 0 && newSocket != null) {
             newSocket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id);
+            newSocket.emit("joinServer", data.serverData[0].server_id);
           };
         };
         console.log("[CLIENT] Log In!");
@@ -419,8 +451,6 @@ function Main() {
       } else {
         alert("[CLIENT] No Changes To Server Icon & Thumbnail To Update!");
       };
-    } else {
-      alert("[CLIENT] Unexpected Error Has Occured!");
     };
   };
   async function CreateNewServer() {
@@ -657,6 +687,31 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function JoinServer() {
+    if (hasDataForJoinServerId == false) {
+      alert("[ERROR] You Do Not Have Any Server Id Yet!");
+      return;
+    };
+    const joinServerResponse = await fetch("http://localhost:5000/joinServer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: userData.username,
+        joinServerId: joinServerId
+      })
+    });
+    if (joinServerResponse.ok) {
+      alert("[CLIENT] Joined Server Successfully!");
+      const data = await joinServerResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await joinServerResponse.json();
+      alert(errorCode.error);
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -805,6 +860,9 @@ function Main() {
     } else {
       changeChannel(null);
     };
+    if (socket != null) {
+      socket.emit("joinServer", serverInfo.server_id);
+    };
   };
   function displayServerSettings() {
     if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
@@ -872,7 +930,7 @@ function Main() {
         };
       };
     } else {
-      alert("[CLIENT] Unexpected Error Has Occured!");
+      alert("[ERROR] Unexpected Error Has Occured Where currentServerInfo Is Null!");
     };
   };
   function changeChannel(channelInfo: any) {
@@ -889,10 +947,14 @@ function Main() {
     };
   };
   function displayEditChannelFunction(channelInfo: any) {
-    setDisplayEditChannel(true);
-    setCurrentChannelId(channelInfo.channel_id);
-    setUpdatedChannelName(channelInfo.channel_name);
-    setUpdatedChannelDescription(channelInfo.channel_description);
+    if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
+      setDisplayEditChannel(true);
+      setCurrentChannelId(channelInfo.channel_id);
+      setUpdatedChannelName(channelInfo.channel_name);
+      setUpdatedChannelDescription(channelInfo.channel_description);
+    } else {
+      alert("[ERROR] You Do Not Have Permission To Edit Channels, Only The Server Owner!");
+    };
   };
   function ExitEditChannelButton() {
     setDisplayEditChannel(false);
@@ -975,6 +1037,14 @@ function Main() {
     setUpdateRoleCanEditLowerRankMembers(boolean);
     setHasUpdatedCanEditLowerRankMembers(true);
   };
+  function DisplayJoinServerButton() {
+    setDisplayCreateNewServer(false);
+    setDisplayJoinServerScreen(true);
+  };
+  function ExitJoinServerButton() {
+    setDisplayCreateNewServer(true);
+    setDisplayJoinServerScreen(false);
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -1050,7 +1120,7 @@ function Main() {
               )}
               {currentServerInfo != null && (
                 <div id="TextChatMainDisplayDiv">
-                  {messageDataArray.length > 0 && (
+                  {messageDataArray.length > 0 && membersDataArray.length > 0 && (
                     messageDataArray.map((currentMessageData: any) => (
                       <div key={currentMessageData.id} className="messageMainDiv">
                         <div className="messagePFPContainer">
@@ -1059,7 +1129,7 @@ function Main() {
                         </div>
                         <div className="messageContainerDiv">
                           <div className="messageHeaderDiv">
-                            <div className="messageUserNameDiv">{currentMessageData.message_sender_data.username}</div>
+                            <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
                             <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
                             {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
                           </div>
@@ -1117,7 +1187,22 @@ function Main() {
 
 
 
-
+          {displayJoinServerScreen == true && (
+            <div id="JoinServerScreenDiv">
+              <div id="JoinServerScreenMainContainerDiv">
+                <div id="JoinServerScreenHeaderDiv">
+                  Join Server
+                  <img id="JoinServerScreenExitButton" src={ExitIcon} onClick={ExitJoinServerButton} alt="Exit Join Server"></img>
+                </div>
+                <div className="JoinServerLabelClass">Enter Server Id</div>
+                <input className={"JoinServerInputClass"} placeholder="Server Id Here..." type="text" value={joinServerId} onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                  setJoinServerId(event.target.value);
+                  setHasDataForJoinServerId(true);
+                }}/>
+                <button className="JoinServerButtonClass" id="JoinServerButton" onClick={JoinServer}>Join Server</button>
+              </div>
+            </div>
+          )}
           {displayAddRolesToMemberScreen == true && currentMemberDataToEdit != null && (
             <div id="AddRoleToMemberScreenDiv">
               <div id="AddRoleToMemberMainContainerDiv">
@@ -1323,6 +1408,8 @@ function Main() {
                   Server Settings
                   <img id="ServerSettingsExitButton" src={ExitIcon} onClick={ExitServerSettingsButton} alt="Exit Server Settings"></img>
                 </div>
+                <div className="ServerSettingsLabelClass">Server Id</div>
+                <div id="ServerSettingsUsernameLabel" className="ServerSettingsLabelClass">{(currentServerInfo as any).server_id}</div>
                 <div className="ServerSettingsLabelClass">Server Icon</div>
                 <div>
                   <img id="ServerSettingsIcon" src={updatedServerIcon} alt="Server Icon" onClick={OpenFilePickerForServerSettingsIcon}></img>
@@ -1380,6 +1467,7 @@ function Main() {
                 }}/>
                 {isCreateNewServerNameValid == false && (<div className="CreateNewServerErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
                 <button className="CreateNewServerButtonClass" id="CreateNewServerButton" onClick={CreateNewServer}>Create Server</button>
+                <button className="CreateNewServerButtonClass" id="CreateNewServerJoinServerButton" onClick={DisplayJoinServerButton}>Join Server</button>
               </div>
             </div>
           )}

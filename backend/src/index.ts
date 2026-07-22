@@ -19,6 +19,7 @@ import multer from "multer";
 import fs from "fs";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { channel } from "diagnostics_channel";
 
 /*
 ==================================================
@@ -52,6 +53,19 @@ const upload = multer({
     };
   }
 });
+
+/*
+==================================================
+Emitter To Get Latest Data
+==================================================
+*/
+function EmitAllClients(serverIdArray, username) {
+  for (let index = 0; index < serverIdArray.length; index++) {
+    io.to(serverIdArray[index]).emit("retrieveLatestData", {
+      usernameToIgnore: username
+    });
+  };
+};
 
 /*
 ==================================================
@@ -176,6 +190,24 @@ App.get("/", (request, response) => {
 
 /*
 ==================================================
+Retrieve Latest Data API
+==================================================
+*/
+App.post("/retrieveLatestData", async(request, response) => {
+  console.log("[SERVER] API: /retrieveLatestData");
+  console.log("REQUEST BODY:", request.body);
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  console.log("[SERVER] Retrieved Latest Data Successfully!");
+});
+
+/*
+==================================================
 Login API
 ==================================================
 */
@@ -292,9 +324,9 @@ App.post("/updateUserSettings", async (request, response) => {
   response.json(userData);
   if (request.body.channelId != "") {
     const getMessagesData = await RetrieveMessageData(request.body.channelId);
-    io.to(request.body.channelId).emit("recieveMessage", getMessagesData);
+    io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId);
   };
-  console.log("[SERVER] User Data:", userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated User Settings Successfully!");
 });
 
@@ -335,6 +367,7 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated User Profile Picture Successfully!");
 });
 
@@ -394,6 +427,7 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Created New Server Successfully!");
 });
 
@@ -426,6 +460,7 @@ App.post("/updateServerSettings", async (request, response) => {
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
+  EmitAllClients(updatedUserData.servers, updatedUserData.username);
   console.log("[SERVER] Updated Server Settings Successfully!");
 });
 
@@ -500,6 +535,7 @@ App.post("/updateServerImages", upload.fields([
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated Server Image Settings (Icon & Thumbnail) Successfully!");
 });
 
@@ -553,6 +589,7 @@ App.post("/createNewChannel", async (request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Created New Channel Successfully!");
 });
 
@@ -608,6 +645,7 @@ App.post("/updateChannelSettings", async (request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated Channel Successfully!");
 });
 
@@ -653,7 +691,7 @@ App.post("/createNewRole", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  console.log(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Create New Role Successfully!");
 });
 
@@ -708,7 +746,7 @@ App.post("/updateRole", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  console.log(userData);
+  EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated Role Successfully!");
 });
 
@@ -719,11 +757,76 @@ Add Role To Member API
 */
 App.post("/addRoleToMember", async(request, response) => {
   console.log("[SERVER] API: /addRoleToMember");
-  console.log("REQUEST BODY:", request.body);
+  let isServerOwner = false;
   const adminUsername = request.body.adminUsername;
   const username = request.body.username;
   const roleId = request.body.roleId;
   const serverId = request.body.serverId;
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [serverId]
+  );
+  if (getServerData.rows[0].server_owner == adminUsername) {
+    isServerOwner = true;
+  };
+  const getAdminMemberRoles = await PostgreSQLPool.query(
+    "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+    [serverId, adminUsername]
+  );
+  if (getAdminMemberRoles.rows.length != 1 && isServerOwner == false) {
+    console.log("[SERVER] Admin Does Not Have Any Member Roles Data!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Any Member Roles Data!"
+    });
+    return;
+  };
+  const adminMemberRolesData = getAdminMemberRoles.rows[0];
+  if (adminMemberRolesData.member_roles_array.length <= 0 && isServerOwner == false) {
+    console.log("[SERVER] Admin Does Not Have Any Roles In The Member Roles Array!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Any Roles In The Member Roles Array!"
+    });
+    return;
+  };
+  const member_roles_array = adminMemberRolesData.member_roles_array;
+  const member_roles_array_data = [];
+  for (let index = 0; index < member_roles_array.length; index++) {
+    const currentRoleData = await PostgreSQLPool.query(
+      "SELECT * FROM roles WHERE role_id = $1",
+      [member_roles_array[index]]
+    );
+    member_roles_array_data.push(currentRoleData.rows[0]);
+  };
+  member_roles_array_data.sort((roleDataA: any, roleDataB: any) => roleDataA.role_rank - roleDataB.role_rank);
+  const roleDataToAddToMember = await PostgreSQLPool.query(
+    "SELECT * FROM roles WHERE role_id = $1",
+    [roleId]
+  );
+  if (roleDataToAddToMember.rows.length != 1) {
+    console.log("[SERVER] Role To Add Does Not Exist!");
+    response.status(401).json({
+      error: "[ERROR] Role To Add Does Not Exist!"
+    });
+    return;
+  };
+  const roleDataToAddToMemberData = roleDataToAddToMember.rows[0];
+  let addRoleToMemberBoolean = false;
+  for (let index = member_roles_array_data.length - 1; index >= 0; index--) {
+    if (member_roles_array_data[index].role_rank > roleDataToAddToMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
+      addRoleToMemberBoolean = true;
+      break;
+    };
+  };
+  if (isServerOwner == true) {
+    addRoleToMemberBoolean = true;
+  };
+  if (addRoleToMemberBoolean == false) {
+    console.log("[SERVER] Admin Does Not Have Permission To Add This Role!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Permission To Add This Role!"
+    });
+    return;
+  };
   const checkIfMemberRolesExist = await PostgreSQLPool.query(
     "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
     [serverId, username]
@@ -764,6 +867,7 @@ App.post("/addRoleToMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, username);
   console.log("[SERVER] Added Role Successfully!");
 });
 
@@ -774,11 +878,76 @@ Remove Role From Member API
 */
 App.post("/removeRoleFromMember", async(request, response) => {
   console.log("[SERVER] API: /removeRoleFromMember");
-  console.log("REQUEST BODY:", request.body);
+  let isServerOwner = false;
   const adminUsername = request.body.adminUsername;
   const username = request.body.username;
   const roleId = request.body.roleId;
   const serverId = request.body.serverId;
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [serverId]
+  );
+  if (getServerData.rows[0].server_owner == adminUsername) {
+    isServerOwner = true;
+  };
+  const getAdminMemberRoles = await PostgreSQLPool.query(
+    "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+    [serverId, adminUsername]
+  );
+  if (getAdminMemberRoles.rows.length != 1 && isServerOwner == false) {
+    console.log("[SERVER] Admin Does Not Have Any Member Roles Data!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Any Member Roles Data!"
+    });
+    return;
+  };
+  const adminMemberRolesData = getAdminMemberRoles.rows[0];
+  if (adminMemberRolesData.member_roles_array.length <= 0 && isServerOwner == false) {
+    console.log("[SERVER] Admin Does Not Have Any Roles In The Member Roles Array!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Any Roles In The Member Roles Array!"
+    });
+    return;
+  };
+  const member_roles_array = adminMemberRolesData.member_roles_array;
+  const member_roles_array_data = [];
+  for (let index = 0; index < member_roles_array.length; index++) {
+    const currentRoleData = await PostgreSQLPool.query(
+      "SELECT * FROM roles WHERE role_id = $1",
+      [member_roles_array[index]]
+    );
+    member_roles_array_data.push(currentRoleData.rows[0]);
+  };
+  member_roles_array_data.sort((roleDataA: any, roleDataB: any) => roleDataA.role_rank - roleDataB.role_rank);
+  const roleDataToRemoveFromMember = await PostgreSQLPool.query(
+    "SELECT * FROM roles WHERE role_id = $1",
+    [roleId]
+  );
+  if (roleDataToRemoveFromMember.rows.length != 1) {
+    console.log("[SERVER] Role To Remove Does Not Exist!");
+    response.status(401).json({
+      error: "[ERROR] Role To Remove Does Not Exist!"
+    });
+    return;
+  };
+  const roleDataToRemoveFromMemberData = roleDataToRemoveFromMember.rows[0];
+  let removeRoleFromMemberBoolean = false;
+  for (let index = member_roles_array_data.length - 1; index >= 0; index--) {
+    if (member_roles_array_data[index].role_rank >= roleDataToRemoveFromMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
+      removeRoleFromMemberBoolean = true;
+      break;
+    };
+  };
+  if (isServerOwner == true) {
+    removeRoleFromMemberBoolean = true;
+  };
+  if (removeRoleFromMemberBoolean == false) {
+    console.log("[SERVER] Admin Does Not Have Permission To Remove This Role!");
+    response.status(401).json({
+      error: "[ERROR] Admin Does Not Have Permission To Remove This Role!"
+    });
+    return;
+  };
   const checkIfMemberRolesExist = await PostgreSQLPool.query(
     "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
     [serverId, username]
@@ -798,7 +967,79 @@ App.post("/removeRoleFromMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
+  EmitAllClients(userData.servers, username);
   console.log("[SERVER] Removed Role Successfully!");
+});
+
+/*
+==================================================
+Join Server API
+==================================================
+*/
+App.post("/joinServer", async(request, response) => {
+  console.log("[SERVER] API: /joinServer");
+  console.log("REQUEST BODY:", request.body);
+  const username = request.body.username;
+  const joinServerId = request.body.joinServerId;
+  const getUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [username]
+  );
+  const currentUserData = getUserData.rows[0];
+  if (currentUserData.number_of_servers >= 10) {
+    console.log("[SERVER] User Has Reached The Maximum Amount Of Servers [10] To Be In!");
+    response.status(400).json({
+      error: "[ERROR] You Have Reached The Maximum Amount Of Servers [10] To Be In!"
+    });
+    console.log("[SERVER] User:", currentUserData.username, "Reached The Maximum Amount Of Servers [10]!");
+    return;
+  };
+  const getCurrentServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [joinServerId]
+  );
+  if (getCurrentServerData.rows.length != 1) {
+    console.log("[SERVER] Server Id Does Not Exit!");
+    response.status(400).json({
+      error: "[ERROR] Server Id Does Not Exit!"
+    });
+    return;
+  };
+  if (currentUserData.servers.includes(joinServerId)) {
+    console.log("[SERVER] You Are Already In This Server!");
+    response.status(400).json({
+      error: "[ERROR] You Are Already In This Server!"
+    });
+    return;
+  };
+  await PostgreSQLPool.query(
+    "UPDATE users SET servers = array_append(servers, $1) WHERE username = $2",
+    [joinServerId, username]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE users SET number_of_servers = $1 WHERE username = $2",
+    [currentUserData.number_of_servers + 1, username]
+  );
+  if (getCurrentServerData.rows[0].server_members_array.includes(username)) {
+    console.log("[SERVER] Username Is Already Inside server_members_array!");
+    response.status(400).json({
+      error: "[ERROR] Username Is Already Inside server_members_array!"
+    });
+    return;
+  };
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_array = array_append(server_members_array, $1) WHERE server_id = $2",
+    [username, joinServerId]
+  );
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, username);
+  console.log("[SERVER] Joined Server Successfully!");
 });
 
 /*
@@ -812,8 +1053,12 @@ io.on("connection", (socket) => {
     socket.join(channelId);
     console.log("[SOCKET] Joined Channel:", channelId);
     const getMessagesData = await RetrieveMessageData(channelId);
-    io.to(channelId).emit("recieveMessage", getMessagesData);
+    io.to(channelId).emit("recieveMessage", getMessagesData, channelId);
   });
+  socket.on("joinServer", async(serverId) => {
+    socket.join(serverId);
+    console.log("[SOCKET] Joined Server:", serverId);
+  })
   socket.on("sendMessage", async(messageData) => {
     console.log("[SOCKET] Message:", messageData);
     if (messageData.isEditingMessage == false) {
@@ -830,7 +1075,7 @@ io.on("connection", (socket) => {
       console.log("[SOCKET] Message Updated Successfully!");
     };
     const getMessagesData = await RetrieveMessageData(messageData.channelId);
-    io.to(messageData.channelId).emit("recieveMessage", getMessagesData);
+    io.to(messageData.channelId).emit("recieveMessage", getMessagesData, messageData.channelId);
   });
   socket.on("disconnect", () => {
     console.log("[SOCKET] User Disconnected:", socket.id);
