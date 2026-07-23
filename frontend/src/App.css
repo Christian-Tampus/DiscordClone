@@ -1294,6 +1294,10 @@ h1 {
     line-height:25px;
 }
 
+.asdf {
+    color:purple;
+}
+
 .DoNotDisturbStatusLabelColor2 {
     color:#f23f42;
     font-size:15px;
@@ -1319,4 +1323,16 @@ h1 {
     font-weight:bold;
     height:25px;
     line-height:25px;
+}
+
+.UserNotification {
+    background-color:#7289DA;
+}
+
+.RoleNotification {
+    background-color:#4752C4;
+}
+
+.ChannelNotification {
+    color:#ED4245;
 }

@@ -324,7 +324,7 @@ App.post("/updateUserSettings", async (request, response) => {
   response.json(userData);
   if (request.body.channelId != "") {
     const getMessagesData = await RetrieveMessageData(request.body.channelId);
-    io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId);
+    io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId, false);
   };
   EmitAllClients(userData.servers, userData.username);
   console.log("[SERVER] Updated User Settings Successfully!");
@@ -812,7 +812,7 @@ App.post("/addRoleToMember", async(request, response) => {
   const roleDataToAddToMemberData = roleDataToAddToMember.rows[0];
   let addRoleToMemberBoolean = false;
   for (let index = member_roles_array_data.length - 1; index >= 0; index--) {
-    if (member_roles_array_data[index].role_rank > roleDataToAddToMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
+    if (member_roles_array_data[index].role_rank < roleDataToAddToMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
       addRoleToMemberBoolean = true;
       break;
     };
@@ -862,12 +862,12 @@ App.post("/addRoleToMember", async(request, response) => {
   };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
-    [request.body.username]
+    [request.body.adminUsername]
   );
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, username);
+  EmitAllClients(userData.servers, adminUsername);
   console.log("[SERVER] Added Role Successfully!");
 });
 
@@ -933,7 +933,7 @@ App.post("/removeRoleFromMember", async(request, response) => {
   const roleDataToRemoveFromMemberData = roleDataToRemoveFromMember.rows[0];
   let removeRoleFromMemberBoolean = false;
   for (let index = member_roles_array_data.length - 1; index >= 0; index--) {
-    if (member_roles_array_data[index].role_rank >= roleDataToRemoveFromMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
+    if (member_roles_array_data[index].role_rank < roleDataToRemoveFromMemberData.role_rank && member_roles_array_data[index].can_edit_lower_rank_member_roles == true) {
       removeRoleFromMemberBoolean = true;
       break;
     };
@@ -962,12 +962,13 @@ App.post("/removeRoleFromMember", async(request, response) => {
   );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
-    [request.body.username]
+    [request.body.adminUsername]
   );
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, username);
+  console.log("REMOVE ROLE FORM MEMBER ADMIN USER NAME:", adminUsername);
+  EmitAllClients(userData.servers, adminUsername);
   console.log("[SERVER] Removed Role Successfully!");
 });
 
@@ -1049,11 +1050,14 @@ Socket.IO Real Time Chat
 */
 io.on("connection", (socket) => {
   console.log("[SOCKET] User Connected:", socket.id);
-  socket.on("joinChannel", async (channelId) => {
+  socket.on("joinChannel", async (channelId, retrieveMessageData) => {
     socket.join(channelId);
     console.log("[SOCKET] Joined Channel:", channelId);
-    const getMessagesData = await RetrieveMessageData(channelId);
-    io.to(channelId).emit("recieveMessage", getMessagesData, channelId);
+    console.log("retrieveMessageData:",retrieveMessageData);
+    if (retrieveMessageData == true) {
+      const getMessagesData = await RetrieveMessageData(channelId);
+      io.to(channelId).emit("recieveMessage", getMessagesData, channelId, true);
+    };
   });
   socket.on("joinServer", async(serverId) => {
     socket.join(serverId);
@@ -1075,7 +1079,7 @@ io.on("connection", (socket) => {
       console.log("[SOCKET] Message Updated Successfully!");
     };
     const getMessagesData = await RetrieveMessageData(messageData.channelId);
-    io.to(messageData.channelId).emit("recieveMessage", getMessagesData, messageData.channelId);
+    io.to(messageData.channelId).emit("recieveMessage", getMessagesData, messageData.channelId, false);
   });
   socket.on("disconnect", () => {
     console.log("[SOCKET] User Disconnected:", socket.id);

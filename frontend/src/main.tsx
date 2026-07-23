@@ -1,12 +1,5 @@
 /*
 ==================================================
-Program Start
-==================================================
-*/
-console.log("[SYSTEM MESSAGE] main.tsx Program Start!");
-
-/*
-==================================================
 Dependencies
 ==================================================
 */
@@ -24,10 +17,3 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App/>
   </React.StrictMode>
 );
-
-/*
-==================================================
-Program End
-==================================================
-*/
-console.log("[SYSTEM MESSAGE] main.tsx Program End!");

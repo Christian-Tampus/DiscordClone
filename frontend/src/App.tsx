@@ -1,12 +1,5 @@
 /*
 ==================================================
-Program Start
-==================================================
-*/
-console.log("[SYSTEM MESSAGE] App.tsx Program Start!");
-
-/*
-==================================================
 Dependencies
 ==================================================
 */
@@ -155,6 +148,10 @@ function Main() {
   const [displayJoinServerScreen, setDisplayJoinServerScreen] = useState(false);
   const [joinServerId, setJoinServerId] = useState("");
   const [hasDataForJoinServerId, setHasDataForJoinServerId] = useState(false);
+  const [canEditRoles, setCanEditRoles] = useState(false);
+  const [currentHighestRoleThatCanEditLowerRankMembers, setCurrentHighestRoleThatCanEditLowerRankMembers] = useState(null);
+  const [currentUserRolesArray, setCurrentUserRolesArray] = useState([]);
+  const [notifyChannelIdArray, setNotifyChannelIdArray] = useState<string[]>([]);
   async function RetrieveLatestData() {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -178,8 +175,11 @@ function Main() {
     if (socket == null) {
       return;
     };
-    socket.on("recieveMessage", (messageData, recieveMessageChannelId) => {
+    socket.on("recieveMessage", (messageData, recieveMessageChannelId, isInitialMessage) => {
       console.log("[CLIENT] Received:", messageData);
+      if (isInitialMessage == false) {
+        setNotifyChannelIdArray(previous => [...previous, recieveMessageChannelId]);
+      };
       if (currentChannelInfo != null && (currentChannelInfo as any).channel_id == recieveMessageChannelId) {
         setMessageDataArray(messageData);
       };
@@ -194,7 +194,7 @@ function Main() {
       socket.off("recieveMessage");
       socket.off("retrieveLatestData");
     };
-  }, [socket, currentServerInfo, currentChannelInfo]);
+  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit]);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -216,18 +216,53 @@ function Main() {
         const data = await response.json();
         console.log("[CLIENT] User Data:", data);
         setUserData(data);
+        for (let index = 0; index < data.serverData[0].server_members_array_data.length; index++) {
+          if (data.serverData[0].server_members_array_data[index].username == data.username) {
+            setCurrentUserRolesArray(data.serverData[0].server_members_array_data[index].roles_array);
+          };
+        };
         if (data.profile_picture != "") {
           setCurrentPFP("http://localhost:5000" + data.profile_picture);
         } else {
           setCurrentPFP(PlaceHolderPFP);
         };
         if (data.serverData.length > 0) {
+          let tempCanEditRoles = false;
+          for (let index = 0; index < data.serverData[0].server_members_array_data.length; index++) {
+            if (data.serverData[0].server_members_array_data[index].username == data.username) {
+              for (let index2 = 0; index2 < data.serverData[0].server_members_array_data[index].roles_array.length; index2++) {
+                if (data.serverData[0].server_members_array_data[index].roles_array[index2].can_edit_lower_rank_member_roles == true) {
+                  setCanEditRoles(true);
+                  tempCanEditRoles = true;
+                  let currentRoleData = structuredClone(data.serverData[0].server_members_array_data[index].roles_array[index2]);
+                  if (data.username == data.serverData[0].server_owner) {
+                    currentRoleData.isServerOwner = true;
+                  } else {
+                    currentRoleData.isServerOwner = false;
+                  };
+                  setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
+                  break;
+                };
+              };
+            };
+          };
+          if (data.username == data.serverData[0].server_owner) {
+            setCanEditRoles(true);
+            tempCanEditRoles = true;
+          };
+          if (tempCanEditRoles == false) {
+            setCanEditRoles(false);
+          };
           setCurrentServerFunction(data.serverData[0]);
           if (data.serverData[0].channelsData.length > 0 && newSocket != null) {
-            newSocket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id);
+            newSocket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id, true);
             newSocket.emit("joinServer", data.serverData[0].server_id);
           };
+          for (let index = 0; index < data.serverData[0].channelsData.length; index++) {
+            newSocket.emit("joinChannel", data.serverData[0].channelsData[index].channel_id, false);
+          };
         };
+        UpdateServerDataToLatest(data);
         console.log("[CLIENT] Log In!");
       } else {
         const errorCode = await response.json();
@@ -842,6 +877,35 @@ function Main() {
     document.getElementById("ServerSettingsThumbnailInput")?.click();
   };
   function setCurrentServerFunction(serverInfo: any) {
+    if (userData != null) {
+      let tempCanEditRoles = false;
+      for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
+        if (serverInfo.server_members_array_data[index].username == userData.username) {
+          for (let index2 = 0; index2 < serverInfo.server_members_array_data[index].roles_array.length; index2++) {
+            if (serverInfo.server_members_array_data[index].roles_array[index2].can_edit_lower_rank_member_roles == true) {
+              setCanEditRoles(true);
+              tempCanEditRoles = true;
+              let currentRoleData = structuredClone(serverInfo.server_members_array_data[index].roles_array[index2]);
+              if (userData.username == serverInfo.server_owner) {
+                currentRoleData.isServerOwner = true;
+              } else {
+                currentRoleData.isServerOwner = false;
+              };
+              setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
+              break;
+            };
+          };
+        };
+      };
+      if (tempCanEditRoles == false) {
+        setCanEditRoles(false);
+      };
+      for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
+        if (serverInfo.server_members_array_data[index].username == userData.username) {
+          setCurrentUserRolesArray(serverInfo.server_members_array_data[index].roles_array);
+        };
+      };
+    };
     setCurrentServer(serverInfo.server_name);
     setCurrentServerInfo(serverInfo);
     setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
@@ -862,6 +926,11 @@ function Main() {
     };
     if (socket != null) {
       socket.emit("joinServer", serverInfo.server_id);
+    };
+    if (socket != null) {
+      for (let index = 0; index < serverInfo.channelsData.length; index++) {
+        socket.emit("joinChannel", serverInfo.channelsData[index].channel_id, false);
+      };
     };
   };
   function displayServerSettings() {
@@ -912,12 +981,46 @@ function Main() {
           setCurrentRoleData(lastestData.serverData[index].rolesData);
           setMembersDataArray(lastestData.serverData[index].server_members_array_data);
           currentSelectedChannelDataToUse = lastestData.serverData[index].channelsData;
+          for (let member_index = 0; member_index < lastestData.serverData[index].server_members_array_data.length; member_index++) {
+            if (lastestData.serverData[index].server_members_array_data[member_index].username == lastestData.username) {
+              for (let rank_index = 0; rank_index < lastestData.serverData[index].server_members_array_data[member_index].roles_array.length; rank_index++) {
+                if (lastestData.serverData[index].server_members_array_data[member_index].roles_array[rank_index].can_edit_lower_rank_member_roles == true) {
+                  let currentRoleData = structuredClone(lastestData.serverData[index].server_members_array_data[member_index].roles_array[rank_index]);
+                  if (lastestData.username == lastestData.serverData[0].server_owner) {
+                    currentRoleData.isServerOwner = true;
+                  } else {
+                    currentRoleData.isServerOwner = false;
+                  };
+                  setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
+                  break;
+                };
+              };
+            };
+          };
           if (currentMemberDataToEdit != null) {
             for (let member_index = 0; member_index < lastestData.serverData[index].server_members_array_data.length; member_index++) {
               if (lastestData.serverData[index].server_members_array_data[member_index].username == (currentMemberDataToEdit as any).username) {
                 setCurrentMemberDataToEdit(lastestData.serverData[index].server_members_array_data[member_index]);
               };
             };
+          };
+          let tempCanEditRoles = false;
+          for (let index2 = 0; index2 < lastestData.serverData[index].server_members_array_data.length; index2++) {
+            if (lastestData.serverData[index].server_members_array_data[index2].username == lastestData.username) {
+              for (let index3 = 0; index3 < lastestData.serverData[index].server_members_array_data[index2].roles_array.length; index3++) {
+                if (lastestData.serverData[index].server_members_array_data[index2].roles_array[index3].can_edit_lower_rank_member_roles == true) {
+                  setCanEditRoles(true);
+                  tempCanEditRoles = true;
+                };
+              };
+            };
+          };
+          if (lastestData.username == lastestData.serverData[index].server_owner) {
+            setCanEditRoles(true);
+            tempCanEditRoles = true;
+          };
+          if (tempCanEditRoles == false) {
+            setCanEditRoles(false);
           };
         };
       };
@@ -929,17 +1032,18 @@ function Main() {
           };
         };
       };
-    } else {
-      alert("[ERROR] Unexpected Error Has Occured Where currentServerInfo Is Null!");
     };
   };
   function changeChannel(channelInfo: any) {
+    if (channelInfo != null) {
+      setNotifyChannelIdArray(previous => previous.filter(channelId => channelId != channelInfo.channel_id));
+    };
     setCurrentChannelInfo(channelInfo);
     if (channelInfo != null) {
       setCurrentChannelName(channelInfo.channel_name);
       setCurrentChannelDescription(channelInfo.channel_description);
       if (socket != null) {
-        socket.emit("joinChannel", channelInfo.channel_id);
+        socket.emit("joinChannel", channelInfo.channel_id, true);
       };
     } else {
       setCurrentChannelName("Channel Name");
@@ -1102,7 +1206,7 @@ function Main() {
                       currentChannelData.map((channelInfo: any) => (
                         <div id={channelInfo.channel_id} key={channelInfo.channel_id} className="channelRowDiv" onClick={() => changeChannel(channelInfo)}>
                           <img src={HashTagIcon} className="hashTagIcon"></img>
-                          <div className="channelNameDiv">{channelInfo.channel_name}</div>
+                          <div className={"channelNameDiv " + ((notifyChannelIdArray.length > 0 && notifyChannelIdArray.includes(channelInfo.channel_id)) ? "ChannelNotification" : "")}>{channelInfo.channel_name}</div>
                           <img src={GearsIcon} className="channelEditButton" onClick={() => displayEditChannelFunction(channelInfo)}></img>
                         </div>
                       ))
@@ -1120,9 +1224,15 @@ function Main() {
               )}
               {currentServerInfo != null && (
                 <div id="TextChatMainDisplayDiv">
-                  {messageDataArray.length > 0 && membersDataArray.length > 0 && (
+                  {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
                     messageDataArray.map((currentMessageData: any) => (
-                      <div key={currentMessageData.id} className="messageMainDiv">
+                      <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
+                        let roleNameNotification = "@" + roleData.role_name;
+                        if (currentMessageData.messages_message.includes(roleNameNotification)) {
+                          return true;
+                        };
+                        return false;
+                      }).length > 0 ? "RoleNotification" : "" : "")}>
                         <div className="messagePFPContainer">
                           <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                           <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
@@ -1159,7 +1269,11 @@ function Main() {
             <div id="PlayerListMainContainerDiv">
               <div id="membersListDivLabel">Members List</div>
               <div id="memberListMainContainerDiv">
-                {membersDataArray.map((memberData: any) => (
+                {membersDataArray.sort((memberDataA: any, memberDataB: any) => {
+                  let memberDataRankA = memberDataA.roles_array.length > 0 ? memberDataA.roles_array[0].role_rank : Infinity;
+                  let memberDataRankB = memberDataB.roles_array.length > 0 ? memberDataB.roles_array[0].role_rank : Infinity;
+                  return memberDataRankA - memberDataRankB;
+                }).map((memberData: any) => (
                   <div id={memberData.username} key={memberData.username} className="membersListDiv" onClick={() => displayEditMemberScreen(memberData)}>
                     <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                     <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
@@ -1210,7 +1324,14 @@ function Main() {
                   Add Roles
                   <img id="AddRoleToMemberExitButton" src={ExitIcon} alt="Exit Edit Role" onClick={ExitAddRoleToMemberButton}></img>
                 </div>
-                <div id="AddRoleToMemberRolesContainerDiv">{currentRoleData.map((roleData: any) => (<button id={roleData.role_id} key={roleData.role_id} className="AddRoleToMemberButtonClass" style={{color: roleData.role_color}} onClick={() => AddRoleToMemberFunction(roleData)}>Add Role: {roleData.role_name}</button>))}</div>
+                {currentHighestRoleThatCanEditLowerRankMembers != null && canEditRoles == true && (<div id="AddRoleToMemberRolesContainerDiv">{currentRoleData.filter((roleData: any) => {
+                  if ((currentHighestRoleThatCanEditLowerRankMembers as any).isServerOwner == true) {
+                    return true;
+                  } else if (roleData.role_rank > (currentHighestRoleThatCanEditLowerRankMembers as any).role_rank) {
+                    return true;
+                  };
+                  return false;
+                }).map((roleData: any) => (<button id={roleData.role_id} key={roleData.role_id} className="AddRoleToMemberButtonClass" style={{color: roleData.role_color}} onClick={() => AddRoleToMemberFunction(roleData)}>Add Role: {roleData.role_name}</button>))}</div>)}
               </div>
             </div>
           )}
@@ -1230,19 +1351,19 @@ function Main() {
                 <div className="EditMemberLabelClass">Member Display Name</div>
                 <div id="EditMemberUsernameLabel" className="EditMemberLabelClass">{(currentMemberDataToEdit as any).displayname}</div>
                 <div className="EditMemberLabelClass">Member Status</div>
-                <div id="EditMemberUsernameLabel" className={"EditMemberLabelClass " + (currentMemberDataToEdit as any).status == "Online" ? "OnlineStatusLabelColor2" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor2" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleStatusLabelColor2" : "InvisibleStatusLabelColor2"}>{(currentMemberDataToEdit as any).status}</div>
+                <div id="EditMemberUsernameLabel" className={"EditMemberLabelClass " +((currentMemberDataToEdit as any).status === "Online" ? "OnlineStatusLabelColor2" : (currentMemberDataToEdit as any).status === "Do Not Disturb" ? "DoNotDisturbStatusLabelColor2" : (currentMemberDataToEdit as any).status === "Idle" ? "IdleStatusLabelColor2" : "InvisibleStatusLabelColor2")}>{(currentMemberDataToEdit as any).status}</div>
                 <div className="EditMemberLabelClass">Member Biography</div>
                 <textarea id="EditMemberBiographyTextArea" value={(currentMemberDataToEdit as any).biography} readOnly/>
                 <div className="EditMemberLabelClass">Member Roles</div>
                 <div id="EditMemberRolesContainerDiv">
-                  <button id="EditMemberRolesAddRoleButton" title="Add Role" onClick={AddRoleToMemberButton}>+</button>
+                  {canEditRoles == true && (<button id="EditMemberRolesAddRoleButton" title="Add Role" onClick={AddRoleToMemberButton}>+</button>)}
                   {currentMemberDataToEdit != null && (
                     <div id="MemberRolesDiv">
                       {(currentMemberDataToEdit as any).roles_array.sort((roleDataA: any, roleDataB: any) => roleDataA.role_rank - roleDataB.role_rank).map((roleData: any) => (
                         <div className="RoleDiv" style={{color: roleData.role_color}} key={roleData.role_id + roleData.role_color} id={roleData.role_id + roleData.role_color}>
                           <div className="RoleDotDiv" style={{backgroundColor: roleData.role_color}}></div>
                           {roleData.role_name}
-                          <button className="RoleRemoveButton" onClick={() => RemoveRoleFunction(roleData)}>-</button>
+                          {canEditRoles == true && (<button className="RoleRemoveButton" onClick={() => RemoveRoleFunction(roleData)}>-</button>)}
                         </div>
                       ))}
                     </div>
@@ -1480,7 +1601,7 @@ function Main() {
                 </div>
                 <div className="UserSettingsLabelClass">Profile Picture</div>
                 <div>
-                  <img id="UserSettingsPFP" src={currentPFP} alt="Profile Picture" onClick={OpenFilePickerForUserProfilePicture}></img>
+                  <img id="UserSettingsPFP" src={currentPFP} alt="Profile Picture" onClick={OpenFilePickerForUserProfilePicture} className={(userData.status === "Online" ? "OnlineBackgroundPFPColor" : userData.status === "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : userData.status === "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                   <input id="ProfilePictureInput" type="file" accept="image/*" hidden onChange={SelectImageForUserProfilePicture}></input>
                 </div>
                 <div className="UserSettingsLabelClass">Username</div>
@@ -1633,10 +1754,3 @@ Export Main Function
 ==================================================
 */
 export default Main;
-
-/*
-==================================================
-Program End
-==================================================
-*/
-console.log("[SYSTEM MESSAGE] App.tsx Program End!");
