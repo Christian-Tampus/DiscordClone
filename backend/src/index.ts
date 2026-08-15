@@ -967,7 +967,6 @@ App.post("/removeRoleFromMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  console.log("REMOVE ROLE FORM MEMBER ADMIN USER NAME:", adminUsername);
   EmitAllClients(userData.servers, adminUsername);
   console.log("[SERVER] Removed Role Successfully!");
 });
@@ -1041,6 +1040,73 @@ App.post("/joinServer", async(request, response) => {
   response.json(userData);
   EmitAllClients(userData.servers, username);
   console.log("[SERVER] Joined Server Successfully!");
+});
+
+/*
+==================================================
+Delete Message API
+==================================================
+*/
+App.post("/deleteMessage", async(request, response) => {
+  console.log("[SERVER] API: /deleteMessage");
+  console.log("REQUEST BODY:", request.body);
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  const deletedMessage = await PostgreSQLPool.query(
+    "DELETE FROM messages WHERE id = $1 AND messages_channel_id = $2 AND messages_message = $3 RETURNING *",
+    [request.body.messageDataToDelete.id, request.body.messageDataToDelete.messages_channel_id, request.body.messageDataToDelete.messages_message]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.username);
+  const getMessagesData = await RetrieveMessageData(request.body.messageDataToDelete.messages_channel_id);
+  io.to(request.body.messageDataToDelete.messages_channel_id).emit("recieveMessage", getMessagesData, request.body.messageDataToDelete.messages_channel_id, false);
+  console.log("[SERVER] Deleted Message Successfully!");
+});
+
+/*
+==================================================
+Delete Channel API
+==================================================
+*/
+App.post("/deleteChannel", async (request, response) => {
+  console.log("[SERVER] API: /deleteChannel");
+  console.log("REQUEST BODY:", request.body);
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.adminUserName]
+  );
+  /*
+  !!!!! PROCESS TO DELETE A channel
+  1. VERIFY IF USER IS THE SERVER OWNER
+  2. DELETE ALL MESSAGES WHERE messages_channel_id = channel_id_to_delete
+  3. DELETE CHANNEL WHERE channel_id = channel_id_to_delete
+  4. REMOVE channel_id_to_delete FROM THE server_channel_array ARRAY WHERE server_id = server_id_where_channel_resides IN servers
+  5. DISCONNECT ALL USERS FROM CHANNEL AT THE VERY LAST JUST BEFORE CONSOLE.LOG()!
+  6. UPDATE CLIENT TO CHANGE TO NEXT AVAILABLE CHANNEL IF ONE IS AVAILABLE!
+  */
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.username);
+  const getMessagesData = await RetrieveMessageData(request.body.channelId);
+  io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId, false);
+  /*
+  EXAMPLE:
+  const room = io.sockets.adapter.rooms.get(request.body.channelId);
+  if (room) {
+    for (const channelId of room) {
+      const socket = io.sockets.sockets.get(channelId);
+      if (socket) {
+        socket.leave(channelId);
+      };
+    };
+  };
+  */
+  console.log("[SERVER] Deleted Channel Successfully!");
 });
 
 /*

@@ -12,6 +12,7 @@ import PlaceHolderPFP from "./assets/PlaceHolderPFP.png";
 import CreateNewServerIcon from "./assets/PlusIcon.jpg";
 import PlaceHolderServerThumbnail from "./assets/PlaceHolderThumbnail.jpg";
 import HashTagIcon from "./assets/HashTag.png";
+import ServerNotificationIcon from "./assets/ServerNotificationIcon.png";
 import { io, Socket } from "socket.io-client";
 import "./App.css";
 
@@ -152,6 +153,9 @@ function Main() {
   const [currentHighestRoleThatCanEditLowerRankMembers, setCurrentHighestRoleThatCanEditLowerRankMembers] = useState(null);
   const [currentUserRolesArray, setCurrentUserRolesArray] = useState([]);
   const [notifyChannelIdArray, setNotifyChannelIdArray] = useState<string[]>([]);
+  const [notifyServerIdArray, setNotifyServerIdArray] = useState<string[]>([]);
+  const [messageDataToDelete, setMessageDataToDelete] = useState(null);
+  const [displayDeleteMessageScreen, setDisplayDeleteMessageScreen] = useState(false);
   async function RetrieveLatestData() {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -177,6 +181,18 @@ function Main() {
     };
     socket.on("recieveMessage", (messageData, recieveMessageChannelId, isInitialMessage) => {
       console.log("[CLIENT] Received:", messageData);
+      if (isInitialMessage == false && userData != null) {
+        let server_id = null;
+        for (let index = 0; index < userData.serverData.length; index++) {
+          if (userData.serverData[index].server_channel_array.includes(recieveMessageChannelId)) {
+            server_id = userData.serverData[index].server_id;
+            break;
+          };
+        };
+        if (server_id != null && !notifyServerIdArray.includes(server_id)) {
+          setNotifyServerIdArray(previous => [...previous, server_id]);
+        };
+      };
       if (isInitialMessage == false) {
         setNotifyChannelIdArray(previous => [...previous, recieveMessageChannelId]);
       };
@@ -194,7 +210,7 @@ function Main() {
       socket.off("recieveMessage");
       socket.off("retrieveLatestData");
     };
-  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit]);
+  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray]);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -588,6 +604,32 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function DeleteChannel() {
+    if (currentChannelId == "") {
+      alert("[ERROR] No Channel Id To Delete!");
+    };
+    const deleteChannelResponse = await fetch("http://localhost:5000/deleteChannel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminUserName: userData.username,
+        serverId: (currentServerInfo as any).server_id,
+        channelId: currentChannelId,
+      })
+    });
+    if (deleteChannelResponse.ok) {
+      alert("[CLIENT] Deleted Channel Successfully!");
+      const data = await deleteChannelResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      setDisplayEditChannel(false);
+    } else {
+      const errorCode = await deleteChannelResponse.json();
+      alert(errorCode.error);
+    };
+  };
   async function CreateRoleFunction() {
     if (hasDataForNewRoleName == false && hasDataForNewRoleColor == false) {
       alert("[ERROR] You Must Add A New Role Name & Role Color!");
@@ -747,6 +789,32 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function DeleteMessage() {
+    if (messageDataToDelete == null) {
+      alert("[ERROR] Message Data Is Null!");
+      return;
+    };
+    const deleteMessage = await fetch("http://localhost:5000/deleteMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: userData.username,
+        messageDataToDelete: messageDataToDelete
+      })
+    });
+    if (deleteMessage.ok) {
+      alert("[CLIENT] Deleted Message Successfully!");
+      const data = await deleteMessage.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      ExitDeleteMessageButton();
+    } else {
+      const errorCode = await deleteMessage.json();
+      alert(errorCode.error);
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -877,6 +945,9 @@ function Main() {
     document.getElementById("ServerSettingsThumbnailInput")?.click();
   };
   function setCurrentServerFunction(serverInfo: any) {
+    if (notifyServerIdArray.includes(serverInfo.server_id)) {
+      setNotifyServerIdArray((previous) => previous.filter((server_id) => server_id != serverInfo.server_id));
+    };
     if (userData != null) {
       let tempCanEditRoles = false;
       for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
@@ -1095,6 +1166,10 @@ function Main() {
   function editMessageFunction(messageId: any) {
     setMessageIdToEdit(messageId);
   };
+  function deleteMessageFunction(messageData: any) {
+    setMessageDataToDelete(messageData);
+    setDisplayDeleteMessageScreen(true);
+  };
   function updateRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setCreateNewRoleColor(event.target.value);
     setHasDataForNewRoleColor(true);
@@ -1149,6 +1224,27 @@ function Main() {
     setDisplayCreateNewServer(true);
     setDisplayJoinServerScreen(false);
   };
+  function ExitDeleteMessageButton() {
+    setDisplayDeleteMessageScreen(false);
+  };
+  function checkMessageSenderRole(messageData: any) {
+    for (let index = 0; index < userData.serverData.length; index++) {
+      if (userData.serverData[index].server_channel_array.includes(messageData.messages_channel_id)) {
+        for (let index2 = 0; index2 < userData.serverData[index].server_members_array_data.length; index2++) {
+          if (userData.serverData[index].server_members_array_data[index2].username == messageData.messages_username) {
+            let messageSenderRoles = userData.serverData[index].server_members_array_data[index2].roles_array;
+            messageSenderRoles.sort((memberDataA: any, memberDataB: any) => {
+              return memberDataA.role_rank - memberDataB.role_rank;
+            });
+            if (currentUserRolesArray.length > 0 && messageSenderRoles.length == 0 || currentUserRolesArray.length > 0 && messageSenderRoles.length > 0 && (currentUserRolesArray[0] as any).role_rank < messageSenderRoles[0].role_rank) {
+              return true;
+            };
+          };
+        };
+      };
+    };
+    return false;
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -1166,6 +1262,7 @@ function Main() {
                   <div id={serverInfo.server_id} key={serverInfo.server_id} className="serverIconDiv toolTipWrapper">
                     <img className="serverIconImage" src={"http://localhost:5000" + serverInfo.server_icon} alt={serverInfo.server_name} onClick={() => setCurrentServerFunction(serverInfo)}></img>
                     <div className="toolTip">{serverInfo.server_name}</div>
+                    <img className={"serverNotificationIcon " + (notifyServerIdArray.includes(serverInfo.server_id) ? "opacityVisible" : "") } src={ServerNotificationIcon}></img>
                   </div>
                 ))
               }
@@ -1242,6 +1339,7 @@ function Main() {
                             <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
                             <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
                             {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
+                            {(currentMessageData.message_sender_data.username == userData.username || checkMessageSenderRole(currentMessageData)) && (<button className="deleteMessageButton" onClick={() => deleteMessageFunction(currentMessageData)}>🗑️</button>)}
                           </div>
                           {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
                           {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
@@ -1300,7 +1398,21 @@ function Main() {
 
 
 
-
+          {displayDeleteMessageScreen == true && (
+            <div id="DeleteMessageScreenDiv">
+              <div id="DeleteMessageScreenMainContainerDiv">
+                <div id="DeleteMessageScreenHeaderDiv">
+                  Delete Message
+                  <img id="DeleteMessageScreenExitButton" src={ExitIcon} onClick={ExitDeleteMessageButton} alt="Exit Delete Message"></img>
+                </div>
+                <div className="DeleteMessageLabelClass">Sender Username</div>
+                <div id="DeleteMessageMessageSenderLabel" className="DeleteMessageLabelClass">{(messageDataToDelete as any).messages_username}</div>
+                <div className="DeleteMessageLabelClass">Sender Message</div>
+                <textarea className="DeleteMessageTextArea" value={(messageDataToDelete as any).messages_message} readOnly></textarea>
+                <button className="DeleteMessageButtonClass" id="DeleteMessageButton" onClick={DeleteMessage}>Delete Message</button>
+              </div>
+            </div>
+          )}
           {displayJoinServerScreen == true && (
             <div id="JoinServerScreenDiv">
               <div id="JoinServerScreenMainContainerDiv">
@@ -1492,6 +1604,7 @@ function Main() {
                 <textarea placeholder="Edit Channel Description Here..." id="EditChannelDescriptionTextArea" className={`${isUpdatedChannelDescriptionValid == true ? "" : "InvalidInput3"}`} onChange={updateChannelDescriptionFunction} value={updatedChannelDescription}/> 
                 {isUpdatedChannelDescriptionValid == false && (<div className="EditChannelErrorDiv">Channel Description Can Have Up To 500 Characters Maximum!</div>)}
                 <button className="UpdateChannelButtonClass" id="UpdateChannelButton" onClick={UpdateChannel}>Update Channel</button>
+                <button className="UpdateChannelButtonClass" id="DeleteChannelButton" onClick={DeleteChannel}>Delete Channel</button>
               </div>
             </div>
           )}
