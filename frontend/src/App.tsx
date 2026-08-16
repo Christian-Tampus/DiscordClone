@@ -156,7 +156,7 @@ function Main() {
   const [notifyServerIdArray, setNotifyServerIdArray] = useState<string[]>([]);
   const [messageDataToDelete, setMessageDataToDelete] = useState(null);
   const [displayDeleteMessageScreen, setDisplayDeleteMessageScreen] = useState(false);
-  async function RetrieveLatestData() {
+  async function RetrieveLatestData(hasDeletedChannel: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
       headers: {
@@ -170,6 +170,27 @@ function Main() {
       const data = await retrieveLatestDataResponse.json();
       setUserData(data);
       UpdateServerDataToLatest(data);
+      if (hasDeletedChannel == true) {
+        setMessageDataArray([]);
+        if (data.serverData.length > 0 && socket != null && currentServerInfo != null) {
+          for (let index = 0; index < data.serverData.length; index++) {
+            if (data.serverData[index].server_id == (currentServerInfo as any).server_id) {
+              if (data.serverData[index].channelsData.length > 0) {
+                changeChannel(data.serverData[index].channelsData[0]);
+              } else {
+                changeChannel(null);
+              };
+            };
+          };
+          if (data.serverData[0].channelsData.length > 0 && socket != null) {
+            socket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id, true);
+            socket.emit("joinServer", data.serverData[0].server_id);
+          };
+          for (let index = 0; index < data.serverData[0].channelsData.length; index++) {
+            socket.emit("joinChannel", data.serverData[0].channelsData[index].channel_id, false);
+          };
+        };
+      };
     } else {
       const errorCode = await retrieveLatestDataResponse.json();
       alert(errorCode.error);
@@ -203,7 +224,7 @@ function Main() {
     socket.on("retrieveLatestData", (latestData) => {
       console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
       if (latestData.usernameToIgnore != username) {
-        RetrieveLatestData();
+        RetrieveLatestData(latestData.hasDeletedChannel);
       };
     });
     return () => {
@@ -270,9 +291,9 @@ function Main() {
             setCanEditRoles(false);
           };
           setCurrentServerFunction(data.serverData[0]);
+          newSocket.emit("joinServer", data.serverData[0].server_id);
           if (data.serverData[0].channelsData.length > 0 && newSocket != null) {
             newSocket.emit("joinChannel", data.serverData[0].channelsData[0].channel_id, true);
-            newSocket.emit("joinServer", data.serverData[0].server_id);
           };
           for (let index = 0; index < data.serverData[0].channelsData.length; index++) {
             newSocket.emit("joinChannel", data.serverData[0].channelsData[index].channel_id, false);
@@ -625,6 +646,17 @@ function Main() {
       setUserData(data);
       UpdateServerDataToLatest(data);
       setDisplayEditChannel(false);
+      if (data.serverData.length > 0 && socket != null && currentServerInfo != null) {
+        for (let index = 0; index < data.serverData.length; index++) {
+          if (data.serverData[index].server_id == (currentServerInfo as any).server_id) {
+            if (data.serverData[index].channelsData.length > 0) {
+              changeChannel(data.serverData[index].channelsData[0]);
+            } else {
+              changeChannel(null);
+            };
+          };
+        };
+      };
     } else {
       const errorCode = await deleteChannelResponse.json();
       alert(errorCode.error);

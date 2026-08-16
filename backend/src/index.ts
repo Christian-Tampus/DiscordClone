@@ -59,11 +59,13 @@ const upload = multer({
 Emitter To Get Latest Data
 ==================================================
 */
-function EmitAllClients(serverIdArray, username) {
+function EmitAllClients(serverIdArray, username, deletedChannel) {
+  const dataToEmitToAllClients = {
+    usernameToIgnore: username,
+    hasDeletedChannel: deletedChannel
+  };
   for (let index = 0; index < serverIdArray.length; index++) {
-    io.to(serverIdArray[index]).emit("retrieveLatestData", {
-      usernameToIgnore: username
-    });
+    io.to(serverIdArray[index]).emit("retrieveLatestData", dataToEmitToAllClients);
   };
 };
 
@@ -195,7 +197,6 @@ Retrieve Latest Data API
 */
 App.post("/retrieveLatestData", async(request, response) => {
   console.log("[SERVER] API: /retrieveLatestData");
-  console.log("REQUEST BODY:", request.body);
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -213,7 +214,6 @@ Login API
 */
 App.post("/login", async (request, response) => {
   console.log("[SERVER] API: /login");
-  console.log("[SERVER] Request:",request.body);
   const username = request.body.username;
   const password = request.body.password;
   const checkIfUsernameExists = await PostgreSQLPool.query(
@@ -326,7 +326,7 @@ App.post("/updateUserSettings", async (request, response) => {
     const getMessagesData = await RetrieveMessageData(request.body.channelId);
     io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId, false);
   };
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Updated User Settings Successfully!");
 });
 
@@ -367,7 +367,7 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Updated User Profile Picture Successfully!");
 });
 
@@ -427,7 +427,7 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Created New Server Successfully!");
 });
 
@@ -460,7 +460,7 @@ App.post("/updateServerSettings", async (request, response) => {
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
-  EmitAllClients(updatedUserData.servers, updatedUserData.username);
+  EmitAllClients(updatedUserData.servers, updatedUserData.username, false);
   console.log("[SERVER] Updated Server Settings Successfully!");
 });
 
@@ -535,7 +535,7 @@ App.post("/updateServerImages", upload.fields([
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Updated Server Image Settings (Icon & Thumbnail) Successfully!");
 });
 
@@ -589,7 +589,7 @@ App.post("/createNewChannel", async (request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Created New Channel Successfully!");
 });
 
@@ -645,7 +645,7 @@ App.post("/updateChannelSettings", async (request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Updated Channel Successfully!");
 });
 
@@ -691,7 +691,7 @@ App.post("/createNewRole", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Create New Role Successfully!");
 });
 
@@ -746,7 +746,7 @@ App.post("/updateRole", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, userData.username);
+  EmitAllClients(userData.servers, userData.username, false);
   console.log("[SERVER] Updated Role Successfully!");
 });
 
@@ -867,7 +867,7 @@ App.post("/addRoleToMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, adminUsername);
+  EmitAllClients(userData.servers, request.body.adminUsername, false);
   console.log("[SERVER] Added Role Successfully!");
 });
 
@@ -967,7 +967,7 @@ App.post("/removeRoleFromMember", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, adminUsername);
+  EmitAllClients(userData.servers, adminUsername, false);
   console.log("[SERVER] Removed Role Successfully!");
 });
 
@@ -978,7 +978,6 @@ Join Server API
 */
 App.post("/joinServer", async(request, response) => {
   console.log("[SERVER] API: /joinServer");
-  console.log("REQUEST BODY:", request.body);
   const username = request.body.username;
   const joinServerId = request.body.joinServerId;
   const getUserData = await PostgreSQLPool.query(
@@ -1038,7 +1037,7 @@ App.post("/joinServer", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, username);
+  EmitAllClients(userData.servers, username, false);
   console.log("[SERVER] Joined Server Successfully!");
 });
 
@@ -1049,7 +1048,6 @@ Delete Message API
 */
 App.post("/deleteMessage", async(request, response) => {
   console.log("[SERVER] API: /deleteMessage");
-  console.log("REQUEST BODY:", request.body);
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -1061,7 +1059,7 @@ App.post("/deleteMessage", async(request, response) => {
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, request.body.username);
+  EmitAllClients(userData.servers, request.body.username, false);
   const getMessagesData = await RetrieveMessageData(request.body.messageDataToDelete.messages_channel_id);
   io.to(request.body.messageDataToDelete.messages_channel_id).emit("recieveMessage", getMessagesData, request.body.messageDataToDelete.messages_channel_id, false);
   console.log("[SERVER] Deleted Message Successfully!");
@@ -1074,38 +1072,42 @@ Delete Channel API
 */
 App.post("/deleteChannel", async (request, response) => {
   console.log("[SERVER] API: /deleteChannel");
-  console.log("REQUEST BODY:", request.body);
+  const retrieveCurrentServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  let serverData = retrieveCurrentServerData.rows[0];
+  if (serverData.server_owner != request.body.adminUserName) {
+    console.log("[SERVER] User Is Not Server Owner And Therefore Cannot Delete Channels!");
+    response.status(401).json({
+      error: "[ERROR] User Is Not Server Owner And Therefore Cannot Delete Channels!"
+    });
+    return;
+  };
+  const deleteAllChannelMessages = await PostgreSQLPool.query(
+    "DELETE FROM messages WHERE messages_channel_id = $1 RETURNING *",
+    [request.body.channelId]
+  );
+  const deleteChannel = await PostgreSQLPool.query(
+    "DELETE FROM channels WHERE channel_id = $1 RETURNING *",
+    [request.body.channelId]
+  );
+  const removedChannelIdFromServerChannelArray = await PostgreSQLPool.query(
+    "UPDATE servers SET server_channel_array = array_remove(server_channel_array, $1) WHERE server_id = $2 RETURNING *",
+    [request.body.channelId, request.body.serverId]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_channels = $1 WHERE server_id = $2",
+    [removedChannelIdFromServerChannelArray.rows[0].server_channel_array.length, request.body.serverId]
+  );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
   );
-  /*
-  !!!!! PROCESS TO DELETE A channel
-  1. VERIFY IF USER IS THE SERVER OWNER
-  2. DELETE ALL MESSAGES WHERE messages_channel_id = channel_id_to_delete
-  3. DELETE CHANNEL WHERE channel_id = channel_id_to_delete
-  4. REMOVE channel_id_to_delete FROM THE server_channel_array ARRAY WHERE server_id = server_id_where_channel_resides IN servers
-  5. DISCONNECT ALL USERS FROM CHANNEL AT THE VERY LAST JUST BEFORE CONSOLE.LOG()!
-  6. UPDATE CLIENT TO CHANGE TO NEXT AVAILABLE CHANNEL IF ONE IS AVAILABLE!
-  */
   let userData = returnUserData.rows[0];
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
-  EmitAllClients(userData.servers, request.body.username);
-  const getMessagesData = await RetrieveMessageData(request.body.channelId);
-  io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId, false);
-  /*
-  EXAMPLE:
-  const room = io.sockets.adapter.rooms.get(request.body.channelId);
-  if (room) {
-    for (const channelId of room) {
-      const socket = io.sockets.sockets.get(channelId);
-      if (socket) {
-        socket.leave(channelId);
-      };
-    };
-  };
-  */
+  EmitAllClients(userData.servers, request.body.adminUserName, true);
   console.log("[SERVER] Deleted Channel Successfully!");
 });
 
