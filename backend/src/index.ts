@@ -1113,6 +1113,227 @@ App.post("/deleteChannel", async (request, response) => {
 
 /*
 ==================================================
+Kick Member API
+==================================================
+*/
+App.post("/kickMember", async (request, response) => {
+  console.log("[SERVER] API: /kickMember");
+  console.log("REQUEST BODY:", request.body);
+  if (request.body.adminUserName == request.body.memberUserNameToKick) {
+    console.log("[SERVER] Cannot Kick Yourself!");
+    response.status(401).json({
+      error: "[ERROR] Cannot Kick Yourself!"
+    });
+    return;
+  };
+  let isServerOwner = false;
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  if (getServerData.rows.length != 1) {
+    console.log("[SERVER] Server Id Not Found!");
+    response.status(401).json({
+      error: "[ERROR] Server Id Not Found!"
+    });
+    return;
+  }
+  if (getServerData.rows[0].server_owner == request.body.adminUserName) {
+    isServerOwner = true;
+  };
+  if (isServerOwner == false) {
+    let highestRoleThatCanKickMembers = null;
+    const getAdminMemberRoles = await PostgreSQLPool.query(
+      "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+      [request.body.serverId, request.body.adminUserName]
+    );
+    if (getAdminMemberRoles.rows.length != 1) {
+      console.log("[SERVER] Admin Member Roles Not Found!");
+      response.status(401).json({
+        error: "[ERROR] Admin Member Roles Not Found!"
+      });
+      return;
+    };
+    for (let index = 0; index < getAdminMemberRoles.rows[0].member_roles_array.length; index++) {
+      if (getAdminMemberRoles.rows[0].member_roles_array[index].can_kick_lower_rank_members == true) {
+        highestRoleThatCanKickMembers = getAdminMemberRoles.rows[0].member_roles_array[index];
+        break;
+      };
+    };
+    if (highestRoleThatCanKickMembers == null) {
+      console.log("[SERVER] No Roles Allow You To Kick This Member!");
+      response.status(401).json({
+        error: "[ERROR] No Roles Allow You To Kick This Member!"
+      });
+      return;
+    };
+    const getMemberToKickMemberRoles = await PostgreSQLPool.query(
+     "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+     [request.body.serverId, request.body.memberUserNameToKick]
+    );
+    if (getMemberToKickMemberRoles.rows.length != 1) {
+      console.log("[SERVER] Member To Kick Member Roles Not Found!");
+      response.status(401).json({
+        error: "[ERROR] Member To Kick Member Roles Not Found!"
+      });
+      return;
+    };
+    if (getMemberToKickMemberRoles.rows[0].roles_array.length > 0 && highestRoleThatCanKickMembers.role_rank >= getMemberToKickMemberRoles.rows[0].roles_array[0].role_rank) {
+      console.log("[SERVER] You Cannot Kick A Member Where Their Highest Role Is Equal Or Greater Than Yours!");
+      response.status(401).json({
+        error: "[ERROR] You Cannot Kick A Member Where Their Highest Role Is Equal Or Greater Than Yours!"
+      });
+      return;
+    };
+  };
+
+
+
+  console.log("YOU CAN NOW KICK THIS MEMBER!");
+
+
+  
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.adminUserName]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.adminUserName, true);
+  console.log("[SERVER] Kicked Member Successfully!");
+});
+
+/*
+==================================================
+Ban Member API
+==================================================
+*/
+App.post("/banMember", async (request, response) => {
+  console.log("[SERVER] API: /banMember");
+  console.log("REQUEST BODY:", request.body);
+  if (request.body.adminUserName == request.body.memberUserNameToBan) {
+    console.log("[SERVER] Cannot Ban Yourself!");
+    response.status(401).json({
+      error: "[ERROR] Cannot Ban Yourself!"
+    });
+    return;
+  };
+  let isServerOwner = false;
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  if (getServerData.rows.length != 1) {
+    console.log("[SERVER] Server Id Not Found!");
+    response.status(401).json({
+      error: "[ERROR] Server Id Not Found!"
+    });
+    return;
+  }
+  if (getServerData.rows[0].server_owner == request.body.adminUserName) {
+    isServerOwner = true;
+  };
+  if (isServerOwner == false) {
+    let highestRoleThatCanBanMembers = null;
+    const getAdminMemberRoles = await PostgreSQLPool.query(
+      "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+      [request.body.serverId, request.body.adminUserName]
+    );
+    if (getAdminMemberRoles.rows.length != 1) {
+      console.log("[SERVER] Admin Member Roles Not Found!");
+      response.status(401).json({
+        error: "[ERROR] Admin Member Roles Not Found!"
+      });
+      return;
+    };
+    for (let index = 0; index < getAdminMemberRoles.rows[0].member_roles_array.length; index++) {
+      if (getAdminMemberRoles.rows[0].member_roles_array[index].can_ban_lower_rank_members == true) {
+        highestRoleThatCanBanMembers = getAdminMemberRoles.rows[0].member_roles_array[index];
+        break;
+      };
+    };
+    if (highestRoleThatCanBanMembers == null) {
+      console.log("[SERVER] No Roles Allow You To Ban This Member!");
+      response.status(401).json({
+        error: "[ERROR] No Roles Allow You To Ban This Member!"
+      });
+      return;
+    };
+    const getMemberToBanMemberRoles = await PostgreSQLPool.query(
+     "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+     [request.body.serverId, request.body.memberUserNameToBan]
+    );
+    if (getMemberToBanMemberRoles.rows.length != 1) {
+      console.log("[SERVER] Member To Ban Member Roles Not Found!");
+      response.status(401).json({
+        error: "[ERROR] Member To Ban Member Roles Not Found!"
+      });
+      return;
+    };
+    if (getMemberToBanMemberRoles.rows[0].roles_array.length > 0 && highestRoleThatCanBanMembers.role_rank >= getMemberToBanMemberRoles.rows[0].roles_array[0].role_rank) {
+      console.log("[SERVER] You Cannot Ban A Member Where Their Highest Role Is Equal Or Greater Than Yours!");
+      response.status(401).json({
+        error: "[ERROR] You Cannot Ban A Member Where Their Highest Role Is Equal Or Greater Than Yours!"
+      });
+      return;
+    };
+  };
+
+
+
+  console.log("YOU CAN NOW BAN THIS MEMBER!");
+
+  /*
+  HOW TO KICK OR BAN A MEMBER:
+  1. REMOVE member_roles WHERE member_roles_server_id = serverId AND member_roles_username = memberUserNameToKick OR memberUserNameToBan
+  2. REMOVE userId FROM server_members_array WHERE server_id = serverId IN servers TABLE
+  3. (APPLIES TO BAN ONLY) APPEND memberUserNameToBan TO server_members_banned_array
+  4. UPDATE SERVER BANS LIST DISPLAY ON CLIENT
+
+  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
+  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
+  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
+  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
+  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
+
+  CREATE TABLE servers (
+      id SERIAL PRIMARY KEY,
+      server_name VARCHAR(99) NOT NULL,
+      server_icon VARCHAR(999) NOT NULL,
+      server_id VARCHAR(999) UNIQUE NOT NULL,
+      server_owner VARCHAR(99) NOT NULL,
+      server_description VARCHAR(500),
+      server_thumbnail VARCHAR(999),
+      server_channels INTEGER DEFAULT 0,
+      server_channel_array TEXT[] NOT NULL DEFAULT '{}',
+      server_roles_array TEXT[] NOT NULL DEFAULT '{}',
+      server_roles INTEGER DEFAULT 0,
+      server_members_array TEXT[] NOT NULL DEFAULT '{}',
+  );
+  CREATE TABLE member_roles (
+      id SERIAL PRIMARY KEY,
+      member_roles_server_id VARCHAR(999) UNIQUE NOT NULL,
+      member_roles_username VARCHAR(999) UNIQUE NOT NULL,
+      member_roles_array TEXT[] NOT NULL DEFAULT '{}'
+  );
+*/
+
+
+
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.adminUserName]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.adminUserName, true);
+  console.log("[SERVER] Banned Member Successfully!");
+});
+
+/*
+==================================================
 Socket.IO Real Time Chat
 ==================================================
 */

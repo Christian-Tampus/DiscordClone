@@ -735,6 +735,15 @@ function Main() {
       const data = await updatedRoleResponse.json();
       setUserData(data);
       UpdateServerDataToLatest(data);
+      for (let index = 0; index < data.serverData.length; index++) {
+        if (data.serverData[index].server_id == (currentServerInfo as any).server_id) {
+          for (let index2 = 0; index2 < data.serverData[index].server_members_array_data.length; index2++) {
+            if (data.serverData[index].server_members_array_data[index2].username == data.username) {
+              setCurrentUserRolesArray(data.serverData[index].server_members_array_data[index2].roles_array);
+            };
+          };
+        };
+      };
     } else {
       const errorCode = await updatedRoleResponse.json();
       alert(errorCode.error);
@@ -844,6 +853,52 @@ function Main() {
       ExitDeleteMessageButton();
     } else {
       const errorCode = await deleteMessage.json();
+      alert(errorCode.error);
+    };
+  };
+  async function KickMemberFunction() {
+    const kickMemberResponse = await fetch("http://localhost:5000/kickMember", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminUserName: userData.username,
+        memberUserNameToKick: (currentMemberDataToEdit as any).username,
+        serverId: (currentServerInfo as any).server_id
+      })
+    });
+    if (kickMemberResponse.ok) {
+      alert("[CLIENT] Kicked Member Successfully!");
+      const data = await kickMemberResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      setEditMemberScreen(false);
+    } else {
+      const errorCode = await kickMemberResponse.json();
+      alert(errorCode.error);
+    };
+  };
+  async function BanMemberFunction() {
+    const banMemberResponse = await fetch("http://localhost:5000/banMember", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminUserName: userData.username,
+        memberUserNameToBan: (currentMemberDataToEdit as any).username,
+        serverId: (currentServerInfo as any).server_id
+      })
+    });
+    if (banMemberResponse.ok) {
+      alert("[CLIENT] Banned Member Successfully!");
+      const data = await banMemberResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      setEditMemberScreen(false);
+    } else {
+      const errorCode = await banMemberResponse.json();
       alert(errorCode.error);
     };
   };
@@ -1277,6 +1332,50 @@ function Main() {
     };
     return false;
   };
+  function displayKickMemberButton() {
+    if (userData == null || currentMemberDataToEdit == null || userData.username == (currentMemberDataToEdit as any).username) {
+      return false;
+    };
+    if (userData.username == (currentServerInfo as any).server_owner) {
+      return true;
+    };
+    let highestRoleThatCanKickMembers = null;
+    for (let index = 0; index < currentUserRolesArray.length; index++) {
+      if ((currentUserRolesArray[index] as any).can_kick_lower_rank_members == true) {
+        highestRoleThatCanKickMembers = currentUserRolesArray[index];
+        break;
+      };
+    };
+    if (highestRoleThatCanKickMembers == null) {
+      return false;
+    };
+    if ((currentMemberDataToEdit as any).roles_array.length > 0 && (highestRoleThatCanKickMembers as any).role_rank >= (currentMemberDataToEdit as any).roles_array[0].role_rank) {
+      return false;
+    };
+    return true;
+  };
+  function displayBanMemberButton() {
+    if (userData == null || currentMemberDataToEdit == null || userData.username == (currentMemberDataToEdit as any).username) {
+      return false;
+    };
+    if (userData.username == (currentServerInfo as any).server_owner) {
+      return true;
+    };
+    let highestRoleThatCanBanMembers = null;
+    for (let index = 0; index < currentUserRolesArray.length; index++) {
+      if ((currentUserRolesArray[index] as any).can_ban_lower_rank_members == true) {
+        highestRoleThatCanBanMembers = currentUserRolesArray[index];
+        break;
+      };
+    };
+    if (highestRoleThatCanBanMembers == null) {
+      return false;
+    };
+    if ((currentMemberDataToEdit as any).roles_array.length > 0 && (highestRoleThatCanBanMembers as any).role_rank >= (currentMemberDataToEdit as any).roles_array[0].role_rank) {
+      return false;
+    };
+    return true;
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -1513,6 +1612,8 @@ function Main() {
                     </div>
                   )}
                 </div>
+                {displayKickMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="KickMemberButton" onClick={KickMemberFunction}>Kick Member</button>)}
+                {displayBanMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="BanMemberButton" onClick={BanMemberFunction}>Ban Member</button>)}
               </div>
             </div>
           )}
