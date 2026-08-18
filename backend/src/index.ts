@@ -17,7 +17,7 @@ import { Pool, Result } from "pg";
 import path from "path";
 import multer from "multer";
 import fs from "fs";
-import { createServer } from "http";
+import { createServer, get } from "http";
 import { Server } from "socket.io";
 import { channel } from "diagnostics_channel";
 
@@ -1021,13 +1021,20 @@ App.post("/joinServer", async(request, response) => {
     });
     return;
   };
+  if (getCurrentServerData.rows[0].server_members_banned_array.includes(username)) {
+    console.log("[SERVER] You Have Been Banned From This Server!");
+    response.status(400).json({
+      error: "[ERROR] You Have Been Banned From This Server!"
+    });
+    return;
+  };
   await PostgreSQLPool.query(
     "UPDATE users SET servers = array_append(servers, $1) WHERE username = $2",
     [joinServerId, username]
   );
   await PostgreSQLPool.query(
-    "UPDATE users SET number_of_servers = $1 WHERE username = $2",
-    [currentUserData.number_of_servers + 1, username]
+    "UPDATE users SET number_of_servers = number_of_servers + 1 WHERE username = $1",
+    [username]
   );
   if (getCurrentServerData.rows[0].server_members_array.includes(username)) {
     console.log("[SERVER] Username Is Already Inside server_members_array!");
@@ -1040,6 +1047,13 @@ App.post("/joinServer", async(request, response) => {
     "UPDATE servers SET server_members_array = array_append(server_members_array, $1) WHERE server_id = $2",
     [username, joinServerId]
   );
+  const getServerMembersArray = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [joinServerId]
+  );
+  for (let index = 0; index < getServerMembersArray.rows[0].server_members_array.length; index++) {
+    io.to("User_" + getServerMembersArray.rows[0].server_members_array[index]).emit("newMemberJoinedServer");
+  };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -1119,6 +1133,44 @@ App.post("/deleteChannel", async (request, response) => {
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
   console.log("[SERVER] Deleted Channel Successfully!");
+});
+
+/*
+==================================================
+Leave Server API
+==================================================
+*/
+App.post("/leaveServer", async (request, response) => {
+  console.log("[SERVER] API: /leaveServer");
+  console.log("REQUEST BODY:", request.body);
+  const deleteMemberRoles = await PostgreSQLPool.query(
+    "DELETE FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2 RETURNING *",
+    [request.body.serverId, request.body.username]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_array = array_remove(server_members_array, $1) WHERE server_id = $2",
+    [request.body.username, request.body.serverId]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE users SET number_of_servers = number_of_servers - 1, servers = array_remove(servers, $1) WHERE username = $2",
+    [request.body.serverId, request.body.username]
+  );
+  const getServerMembersArray = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  for (let index = 0; index < getServerMembersArray.rows[0].server_members_array.length; index++) {
+    io.to("User_" + getServerMembersArray.rows[0].server_members_array[index]).emit("kickedFromServer");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.username, true);
+  console.log("[SERVER] Left Server Successfully!");
 });
 
 /*
@@ -1209,6 +1261,13 @@ App.post("/kickMember", async (request, response) => {
     [request.body.serverId, request.body.memberUserNameToKick]
   );
   io.to("User_" + request.body.memberUserNameToKick).emit("kickedFromServer");
+  const getServerMembersArray = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  for (let index = 0; index < getServerMembersArray.rows[0].server_members_array.length; index++) {
+    io.to("User_" + getServerMembersArray.rows[0].server_members_array[index]).emit("kickedFromServer");
+  };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
@@ -1312,6 +1371,13 @@ App.post("/banMember", async (request, response) => {
     [request.body.serverId, request.body.memberUserNameToBan]
   );
   io.to("User_" + request.body.memberUserNameToBan).emit("bannedFromServer");
+  const getServerMembersArray = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  for (let index = 0; index < getServerMembersArray.rows[0].server_members_array.length; index++) {
+    io.to("User_" + getServerMembersArray.rows[0].server_members_array[index]).emit("bannedFromServer");
+  };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
@@ -1321,6 +1387,134 @@ App.post("/banMember", async (request, response) => {
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
   console.log("[SERVER] Banned Member Successfully!");
+});
+
+/*
+==================================================
+UnBan Member API
+==================================================
+*/
+App.post("/unBanMember", async (request, response) => {
+  console.log("[SERVER] API: /unBanMember");
+  console.log("REQUEST BODY:", request.body);
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  if (getServerData.rows.length != 1){
+    console.log("[SERVER] Server Not Found!");
+    response.status(401).json({
+      error: "[ERROR] Server Not Found!"
+    });
+    return;
+  };
+  if (getServerData.rows[0].server_owner != request.body.adminUserName) {
+    console.log("[SERVER] You Are Not The Server Owner!");
+    response.status(401).json({
+      error: "[ERROR] You Are Not The Server Owner!"
+    });
+    return;
+  };
+  const removeMemberFromBanList = await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_banned_array = array_remove(server_members_banned_array, $1) WHERE server_id = $2 RETURNING *",
+    [request.body.memberToUnBan, request.body.serverId]
+  )
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.adminUserName]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.adminUserName, true);
+  console.log("[SERVER] Banned Member Successfully!");
+});
+
+/*
+==================================================
+Delete Server API
+==================================================
+*/
+App.post("/deleteServer", async (request, response) => {
+  console.log("[SERVER] API: /deleteServer");
+  console.log("REQUEST BODY:", request.body);
+  const getServerData = await PostgreSQLPool.query(
+    "SELECT * FROM servers WHERE server_id = $1",
+    [request.body.serverId]
+  );
+  if (getServerData.rows.length != 1){
+    console.log("[SERVER] Server To Delete Not Found!");
+    response.status(401).json({
+      error: "[ERROR] Server To Delete Not Found!"
+    });
+    return;
+  };
+  if (getServerData.rows[0].server_owner != request.body.adminUserName) {
+    console.log("[SERVER] You Are Not The Server Owner And Therefore Cannot Delete The Server!");
+    response.status(401).json({
+      error: "[ERROR] You Are Not The Server Owner And Therefore Cannot Delete The Server!"
+    });
+    return;
+  };
+  for (let index = 0; index < getServerData.rows[0].server_channel_array.length; index++) {
+    const deleteAllChannelMessages = await PostgreSQLPool.query(
+      "DELETE FROM messages WHERE messages_channel_id = $1 RETURNING *",
+      [getServerData.rows[0].server_channel_array[index]]
+    );
+    const deleteChannel = await PostgreSQLPool.query(
+      "DELETE FROM channels WHERE channel_id = $1 RETURNING *",
+      [getServerData.rows[0].server_channel_array[index]]
+    );
+  };
+  for (let index = 0; index < getServerData.rows[0].server_roles_array.length; index++) {
+    const deleteRole = await PostgreSQLPool.query(
+      "DELETE FROM roles WHERE role_server_id = $1 AND role_id = $2 RETURNING *",
+      [request.body.serverId, getServerData.rows[0].server_roles_array[index]]
+    );
+  };
+  const deleteMemberRoles = await PostgreSQLPool.query(
+    "DELETE FROM member_roles WHERE member_roles_server_id = $1 RETURNING *",
+    [request.body.serverId]
+  );
+  const deleteServerIconPath = path.join(__dirname, "..", getServerData.rows[0].server_icon);
+  if (fs.existsSync(deleteServerIconPath)) {
+    fs.unlinkSync(deleteServerIconPath);
+    console.log("[SERVER] Deleted Server Icon Image!");
+  };
+  const deleteServerThumbnailPath = path.join(__dirname, "..", getServerData.rows[0].server_thumbnail);
+  if (fs.existsSync(deleteServerThumbnailPath)) {
+    fs.unlinkSync(deleteServerThumbnailPath);
+    console.log("[SERVER] Deleted Server Thumbnail Image!");
+  };
+  let allServerMembers = getServerData.rows[0].server_members_array;
+  for (let index = 0; index < allServerMembers.length; index++) {
+    const getCurrentMemberData = await PostgreSQLPool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [allServerMembers[index]]
+    );
+    if (getCurrentMemberData.rows.length == 1 && getCurrentMemberData.rows[0].servers.includes(request.body.serverId)) {
+      const updateUserServers = await PostgreSQLPool.query(
+        "UPDATE users SET number_of_servers = number_of_servers - 1, servers = array_remove(servers, $1) WHERE username = $2 RETURNING *",
+        [request.body.serverId, allServerMembers[index]]
+      );
+    };
+  };
+  const deleteServerFinalQuery = await PostgreSQLPool.query(
+    "DELETE FROM servers WHERE server_id = $1 RETURNING *",
+    [request.body.serverId]
+  );
+  for (let index = 0; index < allServerMembers.length; index++) {
+    io.to("User_" + allServerMembers[index]).emit("serverDeleted");
+  };
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.adminUserName]
+  );
+  let userData = returnUserData.rows[0];
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.adminUserName, true);
+  console.log("[SERVER] Deleted Server Successfully!");
 });
 
 /*

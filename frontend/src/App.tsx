@@ -157,6 +157,7 @@ function Main() {
   const [messageDataToDelete, setMessageDataToDelete] = useState(null);
   const [displayDeleteMessageScreen, setDisplayDeleteMessageScreen] = useState(false);
   const [displayBansListScreen, setDisplayBansListScreen] = useState(false);
+  const [displayLeaveServerScreen, setDisplayLeaveServerScreen] = useState(false);
   async function RetrieveLatestData(hasDeletedChannel: any, kickedOrBanned: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -192,7 +193,6 @@ function Main() {
           };
         };
       };
-      console.log("kickedOrBanned:", kickedOrBanned);
       if (kickedOrBanned == true) {
         if (data.serverData.length > 0) {
           setCurrentServerFunction(data.serverData[0]);
@@ -244,11 +244,26 @@ function Main() {
       console.log("[CLIENT] Banned From Server, Retrieving Latest Data!");
       RetrieveLatestData(false, true);
     });
+    socket.on("newMemberJoinedServer", () => {
+      console.log("[CLIENT] New Member Joined Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+    socket.on("leftServer", () => {
+      console.log("[CLIENT] Member Left Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+    socket.on("serverDeleted", () => {
+      console.log("[CLIENT] Server Deleted, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    })
     return () => {
       socket.off("recieveMessage");
       socket.off("retrieveLatestData");
       socket.off("kickedFromServer");
       socket.off("bannedFromServer");
+      socket.off("newMemberJoinedServer");
+      socket.off("leftServer");
+      socket.off("serverDeleted");
     };
   }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray]);
   async function Login() {
@@ -923,7 +938,78 @@ function Main() {
     };
   };
   async function UnBanMember(UnBanMember: any) {
-    console.log("UN BAN MEMBER:", UnBanMember);
+    const unBanMemberResponse = await fetch("http://localhost:5000/unBanMember", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminUserName: userData.username,
+        memberToUnBan: UnBanMember,
+        serverId: (currentServerInfo as any).server_id
+      })
+    });
+    if (unBanMemberResponse.ok) {
+      alert("[CLIENT] Unbanned Member Successfully!");
+      const data = await unBanMemberResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      for (let index = 0; index < data.serverData.length; index++) {
+        if (data.serverData[index].server_id == (currentServerInfo as any).server_id) {
+          setCurrentServerFunction(data.serverData[index]);
+          break;
+        };
+      };
+    } else {
+      const errorCode = await unBanMemberResponse.json();
+      alert(errorCode.error);
+    };
+  };
+  async function LeaveServerFunction() {
+    const leaveServerResponse = await fetch("http://localhost:5000/leaveServer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: userData.username,
+        serverId: (currentServerInfo as any).server_id
+      })
+    });
+    if (leaveServerResponse.ok) {
+      alert("[CLIENT] Left Server Successfully!");
+      const data = await leaveServerResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      setDisplayLeaveServerScreen(false);
+      setCurrentServerFunction(data.serverData[0]);
+    } else {
+      const errorCode = await leaveServerResponse.json();
+      alert(errorCode.error);
+    };
+  };
+  async function DeleteServerFunction() {
+    const deleteServerResponse = await fetch("http://localhost:5000/deleteServer", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        adminUserName: userData.username,
+        serverId: (currentServerInfo as any).server_id
+      })
+    });
+    if (deleteServerResponse.ok) {
+      alert("[CLIENT] Successfully Deleted The Server!");
+      const data = await deleteServerResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+      setCurrentServerFunction(data.serverData[0]);
+      setDisplayUpdateServerSettings(false);
+    } else {
+      const errorCode = await deleteServerResponse.json();
+      alert(errorCode.error);
+    };
   };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
@@ -1138,7 +1224,7 @@ function Main() {
       setUpdatedServerIcon(currentServerIcon);
       setUpdatedServerThumbnail(currentServerThumbnail);
     } else {
-      alert("[ERROR] You Cannot Edit This Server Since You Are Not The Server Owner!");
+      setDisplayLeaveServerScreen(true);
     };
   };
   function displayCreateNewChannelsPanel() {
@@ -1423,6 +1509,9 @@ function Main() {
     setDisplayBansListScreen(false);
     setDisplayUpdateServerSettings(true);
   };
+  function ExitLeaveServer() {
+    setDisplayLeaveServerScreen(false);
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -1562,19 +1651,19 @@ function Main() {
               </div>
             </div>
           </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
+          {displayLeaveServerScreen == true && (
+            <div id="LeaveServerScreenDiv">
+              <div id="LeaveServerMainContainerDiv">
+                <div id="LeaveServerHeaderDiv">
+                  Server Info
+                  <img id="LeaveServerExitButton" src={ExitIcon} onClick={ExitLeaveServer} alt="Exit Leave Server"></img>
+                </div>
+                <div className="LeaveServerLabelClass">Server Id</div>
+                <div id="LeaveServerIdLabel" className="LeaveServerLabelClass">{(currentServerInfo as any).server_id}</div>
+                <button className="LeaveServerButtonClass" id="LeaveServerButton" onClick={LeaveServerFunction}>Exit Server</button>
+              </div>
+            </div>
+          )}
           {displayBansListScreen == true && (
             <div id="BansListScreenDiv">
               <div id="BansListMainContainerDiv">
@@ -1585,10 +1674,7 @@ function Main() {
                 <div className="BansListLabelClass">Click 'Unban' Button To Unban Member</div>
                 <div id="BansListMemberMainContainerDiv">
                   {currentServerInfo != null && (currentServerInfo as any).server_members_banned_array.map((memberUserName: any) => (
-                    <div key={memberUserName} className="BansListMemberContainerDiv">
-                      <div className="BansListMemberUserName">{memberUserName}</div>
-                      <button className="BansListMemberUnBanButton" onClick={() => UnBanMember(memberUserName)}>Bans List</button>
-                    </div>
+                    <button key={memberUserName} className="BansListMemberUnBanButton" onClick={() => UnBanMember(memberUserName)}>{"Unban Member: " + memberUserName}</button>
                   ))}
                 </div>
               </div>
@@ -1872,6 +1958,7 @@ function Main() {
                 <button className="ServerSettingsButtonClass" id="CreateNewRolesButton" onClick={displayCreateNewRolesPannel}>Create New Roles</button>
                 <button className="ServerSettingsButtonClass" id="CreateNewServerButton" onClick={UpdateServerSettings}>Update Server Settings</button>
                 <button className="ServerSettingsButtonClass" id="DisplayBansListButton" onClick={DisplayBansListPannel}>Bans List</button>
+                <button className="ServerSettingsButtonClass" id="DeleteServerButton" onClick={DeleteServerFunction}>Delete Server</button>
               </div>
             </div>
           )}
