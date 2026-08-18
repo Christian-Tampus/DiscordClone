@@ -19,19 +19,15 @@ CREATE TABLE users (
     displayName VARCHAR(99) NOT NULL,
     username VARCHAR(99) UNIQUE NOT NULL,
     password VARCHAR(99) NOT NULL
+    biography VARCHAR(500),
+    status VARCHAR(99) DEFAULT 'Online',
+    profile_picture VARCHAR(999) DEFAULT '';
+    number_of_servers INTEGER DEFAULT 0;
+    servers TEXT[] NOT NULL DEFAULT '{}';
 );
 
-ALTER TABLE users
-ADD COLUMN biography VARCHAR(500),
-ADD COLUMN status VARCHAR(99) DEFAULT 'Online',
-ADD COLUMN profile_picture VARCHAR(999) DEFAULT '';
-ADD COLUMN number_of_servers INTEGER DEFAULT 0;
-
-ALTER TABLE users
-DROP COLUMN servers;
-
-ALTER TABLE users
-ADD COLUMN servers TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE servers
+ADD COLUMN server_members_banned_array TEXT[] NOT NULL DEFAULT '{}';
 
 STATUS: Online, Do Not Disturb, Idle, Invisible
 
@@ -52,6 +48,7 @@ CREATE TABLE servers (
     server_roles_array TEXT[] NOT NULL DEFAULT '{}',
     server_roles INTEGER DEFAULT 0,
     server_members_array TEXT[] NOT NULL DEFAULT '{}',
+    server_members_banned_array TEXT[] NOT NULL DEFAULT '{}',
 );
 
 CREATE TABLE member_roles (

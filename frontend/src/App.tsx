@@ -156,7 +156,8 @@ function Main() {
   const [notifyServerIdArray, setNotifyServerIdArray] = useState<string[]>([]);
   const [messageDataToDelete, setMessageDataToDelete] = useState(null);
   const [displayDeleteMessageScreen, setDisplayDeleteMessageScreen] = useState(false);
-  async function RetrieveLatestData(hasDeletedChannel: any) {
+  const [displayBansListScreen, setDisplayBansListScreen] = useState(false);
+  async function RetrieveLatestData(hasDeletedChannel: any, kickedOrBanned: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
       headers: {
@@ -189,6 +190,14 @@ function Main() {
           for (let index = 0; index < data.serverData[0].channelsData.length; index++) {
             socket.emit("joinChannel", data.serverData[0].channelsData[index].channel_id, false);
           };
+        };
+      };
+      console.log("kickedOrBanned:", kickedOrBanned);
+      if (kickedOrBanned == true) {
+        if (data.serverData.length > 0) {
+          setCurrentServerFunction(data.serverData[0]);
+        } else {
+          setCurrentServerFunction(null);
         };
       };
     } else {
@@ -224,12 +233,22 @@ function Main() {
     socket.on("retrieveLatestData", (latestData) => {
       console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
       if (latestData.usernameToIgnore != username) {
-        RetrieveLatestData(latestData.hasDeletedChannel);
+        RetrieveLatestData(latestData.hasDeletedChannel, false);
       };
+    });
+    socket.on("kickedFromServer", () => {
+      console.log("[CLIENT] Kicked From Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+    socket.on("bannedFromServer", () => {
+      console.log("[CLIENT] Banned From Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
     });
     return () => {
       socket.off("recieveMessage");
       socket.off("retrieveLatestData");
+      socket.off("kickedFromServer");
+      socket.off("bannedFromServer");
     };
   }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray]);
   async function Login() {
@@ -249,6 +268,7 @@ function Main() {
         setSocket(newSocket);
         newSocket.on("connect", () => {
           console.log("[CLIENT] Socket Connected:", newSocket.id);
+          newSocket.emit("userLogin", username);
         });
         const data = await response.json();
         console.log("[CLIENT] User Data:", data);
@@ -902,6 +922,9 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function UnBanMember(UnBanMember: any) {
+    console.log("UN BAN MEMBER:", UnBanMember);
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -1032,63 +1055,79 @@ function Main() {
     document.getElementById("ServerSettingsThumbnailInput")?.click();
   };
   function setCurrentServerFunction(serverInfo: any) {
-    if (notifyServerIdArray.includes(serverInfo.server_id)) {
-      setNotifyServerIdArray((previous) => previous.filter((server_id) => server_id != serverInfo.server_id));
-    };
-    if (userData != null) {
-      let tempCanEditRoles = false;
-      for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
-        if (serverInfo.server_members_array_data[index].username == userData.username) {
-          for (let index2 = 0; index2 < serverInfo.server_members_array_data[index].roles_array.length; index2++) {
-            if (serverInfo.server_members_array_data[index].roles_array[index2].can_edit_lower_rank_member_roles == true) {
-              setCanEditRoles(true);
-              tempCanEditRoles = true;
-              let currentRoleData = structuredClone(serverInfo.server_members_array_data[index].roles_array[index2]);
-              if (userData.username == serverInfo.server_owner) {
-                currentRoleData.isServerOwner = true;
-              } else {
-                currentRoleData.isServerOwner = false;
+    if (serverInfo != null) {
+      if (notifyServerIdArray.includes(serverInfo.server_id)) {
+        setNotifyServerIdArray((previous) => previous.filter((server_id) => server_id != serverInfo.server_id));
+      };
+      if (userData != null) {
+        let tempCanEditRoles = false;
+        for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
+          if (serverInfo.server_members_array_data[index].username == userData.username) {
+            for (let index2 = 0; index2 < serverInfo.server_members_array_data[index].roles_array.length; index2++) {
+              if (serverInfo.server_members_array_data[index].roles_array[index2].can_edit_lower_rank_member_roles == true) {
+                setCanEditRoles(true);
+                tempCanEditRoles = true;
+                let currentRoleData = structuredClone(serverInfo.server_members_array_data[index].roles_array[index2]);
+                if (userData.username == serverInfo.server_owner) {
+                  currentRoleData.isServerOwner = true;
+                } else {
+                  currentRoleData.isServerOwner = false;
+                };
+                setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
+                break;
               };
-              setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
-              break;
             };
           };
         };
-      };
-      if (tempCanEditRoles == false) {
-        setCanEditRoles(false);
-      };
-      for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
-        if (serverInfo.server_members_array_data[index].username == userData.username) {
-          setCurrentUserRolesArray(serverInfo.server_members_array_data[index].roles_array);
+        if (tempCanEditRoles == false) {
+          setCanEditRoles(false);
+        };
+        for (let index = 0; index < serverInfo.server_members_array_data.length; index++) {
+          if (serverInfo.server_members_array_data[index].username == userData.username) {
+            setCurrentUserRolesArray(serverInfo.server_members_array_data[index].roles_array);
+          };
         };
       };
-    };
-    setCurrentServer(serverInfo.server_name);
-    setCurrentServerInfo(serverInfo);
-    setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
-    setCurrentServerDescription(serverInfo.server_description);
-    serverInfo.rolesData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
-    setCurrentRoleData(serverInfo.rolesData);
-    setMembersDataArray(serverInfo.server_members_array_data);
-    if (serverInfo.server_thumbnail != "") {
-      setCurrentServerThumbnail("http://localhost:5000" + serverInfo.server_thumbnail);
-    } else {
-      setCurrentServerThumbnail(PlaceHolderServerThumbnail);
-    };
-    setCurrentChannelData(serverInfo.channelsData);
-    if (serverInfo.channelsData.length > 0) {
-      changeChannel(serverInfo.channelsData[0]);
-    } else {
-      changeChannel(null);
-    };
-    if (socket != null) {
-      socket.emit("joinServer", serverInfo.server_id);
-    };
-    if (socket != null) {
-      for (let index = 0; index < serverInfo.channelsData.length; index++) {
-        socket.emit("joinChannel", serverInfo.channelsData[index].channel_id, false);
+      setCurrentServer(serverInfo.server_name);
+      setCurrentServerInfo(serverInfo);
+      setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
+      setCurrentServerDescription(serverInfo.server_description);
+      serverInfo.rolesData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
+      setCurrentRoleData(serverInfo.rolesData);
+      setMembersDataArray(serverInfo.server_members_array_data);
+      if (serverInfo.server_thumbnail != "") {
+        setCurrentServerThumbnail("http://localhost:5000" + serverInfo.server_thumbnail);
+      } else {
+        setCurrentServerThumbnail(PlaceHolderServerThumbnail);
       };
+      setCurrentChannelData(serverInfo.channelsData);
+      if (serverInfo.channelsData.length > 0) {
+        changeChannel(serverInfo.channelsData[0]);
+      } else {
+        changeChannel(null);
+      };
+      if (socket != null) {
+        socket.emit("joinServer", serverInfo.server_id);
+      };
+      if (socket != null) {
+        for (let index = 0; index < serverInfo.channelsData.length; index++) {
+          socket.emit("joinChannel", serverInfo.channelsData[index].channel_id, false);
+        };
+      };
+    } else {
+      setNotifyServerIdArray([]);
+      setCanEditRoles(false);
+      setCurrentHighestRoleThatCanEditLowerRankMembers(null);
+      setCurrentUserRolesArray([]);
+      setCurrentServer("Welcome To Discard!");
+      setCurrentServerInfo(null);
+      setCurrentServerIcon("");
+      setCurrentServerDescription("");
+      setCurrentServerThumbnail(PlaceHolderServerThumbnail);
+      setCurrentRoleData([]);
+      setMembersDataArray([]);
+      setCurrentChannelData([]);
+      changeChannel(null);
     };
   };
   function displayServerSettings() {
@@ -1376,6 +1415,14 @@ function Main() {
     };
     return true;
   };
+  function DisplayBansListPannel() {
+    setDisplayBansListScreen(true);
+    setDisplayUpdateServerSettings(false);
+  };
+  function ExitBansListPannel() {
+    setDisplayBansListScreen(false);
+    setDisplayUpdateServerSettings(true);
+  };
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -1528,7 +1575,25 @@ function Main() {
 
 
 
-
+          {displayBansListScreen == true && (
+            <div id="BansListScreenDiv">
+              <div id="BansListMainContainerDiv">
+                <div id="BansListHeaderDiv">
+                  Bans List
+                  <img id="BansListExitButton" src={ExitIcon} onClick={ExitBansListPannel} alt="Exit Bans List"></img>
+                </div>
+                <div className="BansListLabelClass">Click 'Unban' Button To Unban Member</div>
+                <div id="BansListMemberMainContainerDiv">
+                  {currentServerInfo != null && (currentServerInfo as any).server_members_banned_array.map((memberUserName: any) => (
+                    <div key={memberUserName} className="BansListMemberContainerDiv">
+                      <div className="BansListMemberUserName">{memberUserName}</div>
+                      <button className="BansListMemberUnBanButton" onClick={() => UnBanMember(memberUserName)}>Bans List</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
           {displayDeleteMessageScreen == true && (
             <div id="DeleteMessageScreenDiv">
               <div id="DeleteMessageScreenMainContainerDiv">
@@ -1585,6 +1650,8 @@ function Main() {
                   Edit Member
                   <img id="EditMemberExitButton" src={ExitIcon} alt="Exit Edit Role" onClick={ExitEditMemberButton}></img>
                 </div>
+                {displayKickMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="KickMemberButton" onClick={KickMemberFunction}>Kick Member</button>)}
+                {displayBanMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="BanMemberButton" onClick={BanMemberFunction}>Ban Member</button>)}
                 <div className="EditMemberLabelClass">Profile Picture</div>
                 <div>
                   <img id="EditMemberPFP" title="Member Profile Picture" className={(currentMemberDataToEdit as any).status == "Online" ? "OnlineBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvislbeBackgroundPFPColor"} src={"http://localhost:5000" + (currentMemberDataToEdit as any).profile_picture} alt="Profile Picture"></img>
@@ -1612,8 +1679,6 @@ function Main() {
                     </div>
                   )}
                 </div>
-                {displayKickMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="KickMemberButton" onClick={KickMemberFunction}>Kick Member</button>)}
-                {displayBanMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="BanMemberButton" onClick={BanMemberFunction}>Ban Member</button>)}
               </div>
             </div>
           )}
@@ -1806,6 +1871,7 @@ function Main() {
                 <button className="ServerSettingsButtonClass" id="CreateNewChannelsButton" onClick={displayCreateNewChannelsPanel}>Create New Channels</button>
                 <button className="ServerSettingsButtonClass" id="CreateNewRolesButton" onClick={displayCreateNewRolesPannel}>Create New Roles</button>
                 <button className="ServerSettingsButtonClass" id="CreateNewServerButton" onClick={UpdateServerSettings}>Update Server Settings</button>
+                <button className="ServerSettingsButtonClass" id="DisplayBansListButton" onClick={DisplayBansListPannel}>Bans List</button>
               </div>
             </div>
           )}

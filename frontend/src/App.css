@@ -216,6 +216,19 @@ h1 {
     height:50px;
 }
 
+.BansListMemberUnBanButton {
+    background-color:#616fff;
+    border:none;
+    width:40%;
+    margin:25px auto 25px auto;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    font-size:15px;
+    border-radius:10px;
+    height:50px;
+}
+
 .EditMemberLabelButtonClass {
     width:80%;
 }
@@ -248,7 +261,7 @@ h1 {
     height:50px;
 }
 
-.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover, .ServerSettingsButtonClass:hover, .CreateChannelButtonClass:hover, .EditMemberLabelButtonClass:hover, .UpdateChannelButtonClass:hover, .CreateRoleButtonClass:hover, .EditRoleButtonClass:hover, .UpdatedRoleButtonClass:hover, .AddRoleToMemberButtonClass:hover, .JoinServerButtonClass:hover, .DeleteMessageButtonClass:hover {
+.LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover, .ServerSettingsButtonClass:hover, .BansListMemberUnBanButton:hover, .CreateChannelButtonClass:hover, .EditMemberLabelButtonClass:hover, .UpdateChannelButtonClass:hover, .CreateRoleButtonClass:hover, .EditRoleButtonClass:hover, .UpdatedRoleButtonClass:hover, .AddRoleToMemberButtonClass:hover, .JoinServerButtonClass:hover, .DeleteMessageButtonClass:hover {
     cursor:pointer;
     background-color:#4f56c2;
     transition:background-color 0.5s ease;
@@ -422,7 +435,7 @@ h1 {
     transform: translate(0px, -50%);
 }
 
-#UserSettingsScreenDiv, #CreateNewServerScreenDiv, #ServerSettingsScreenDiv, #CreateChannelsScreenDiv, #EditChannelScreenDiv, #CreateRolesScreenDiv, #EditRolesScreenDiv, #EditMemberScreenDiv, #AddRoleToMemberScreenDiv, #JoinServerScreenDiv, #DeleteMessageScreenDiv {
+#UserSettingsScreenDiv, #CreateNewServerScreenDiv, #ServerSettingsScreenDiv, #BansListScreenDiv, #CreateChannelsScreenDiv, #EditChannelScreenDiv, #CreateRolesScreenDiv, #EditRolesScreenDiv, #EditMemberScreenDiv, #AddRoleToMemberScreenDiv, #JoinServerScreenDiv, #DeleteMessageScreenDiv {
     position:fixed;
     top:35px;
     left:0;
@@ -435,13 +448,17 @@ h1 {
     align-items:center;
 }
 
-#UserSettingsMainContainerDiv, #ServerSettingsMainContainerDiv {
+#UserSettingsMainContainerDiv, #ServerSettingsMainContainerDiv, #BansListMainContainerDiv {
     background-color:#232325;
     height:80%;
     width:600px;
     margin:auto;
     display:block;
     border-radius:10px;
+}
+
+#ServerSettingsMainContainerDiv {
+    height:85%;
 }
 
 #CreateNewServerScreenMainContainerDiv {
@@ -516,7 +533,7 @@ h1 {
     border-radius:10px;
 }
 
-#UserSettingsHeaderDiv, #CreateNewServerScreenHeaderDiv, #ServerSettingsHeaderDiv, #CreateChannelHeaderDiv, #EditChannelHeaderDiv, #CreateRolesHeaderDiv, #EditRolesHeaderDiv, #EditMemberHeaderDiv, #AddRoleToMemberHeaderDiv, #JoinServerScreenHeaderDiv, #DeleteMessageScreenHeaderDiv {
+#UserSettingsHeaderDiv, #CreateNewServerScreenHeaderDiv, #ServerSettingsHeaderDiv, #BansListHeaderDiv, #CreateChannelHeaderDiv, #EditChannelHeaderDiv, #CreateRolesHeaderDiv, #EditRolesHeaderDiv, #EditMemberHeaderDiv, #AddRoleToMemberHeaderDiv, #JoinServerScreenHeaderDiv, #DeleteMessageScreenHeaderDiv {
     width:100%;
     height:50px;
     border-bottom:1px solid white;
@@ -530,7 +547,7 @@ h1 {
     position:relative;
 }
 
-#UserSettingsExitButton, #CreateNewServerExitButton, #ServerSettingsExitButton, #CreateChannelExitButton, #EditChannelExitButton, #CreateRolesExitButton, #EditRoleExitButton, #EditMemberExitButton, #AddRoleToMemberExitButton, #JoinServerScreenExitButton, #DeleteMessageScreenExitButton {
+#UserSettingsExitButton, #CreateNewServerExitButton, #ServerSettingsExitButton, #BansListExitButton, #CreateChannelExitButton, #EditChannelExitButton, #CreateRolesExitButton, #EditRoleExitButton, #EditMemberExitButton, #AddRoleToMemberExitButton, #JoinServerScreenExitButton, #DeleteMessageScreenExitButton {
     position:absolute;
     right:0px;
     width:20px;
@@ -541,7 +558,7 @@ h1 {
     background-color:#3a3b3c;
 }
 
-#UserSettingsExitButton:hover, #CreateNewServerExitButton:hover, #ServerSettingsExitButton:hover, #CreateChannelExitButton:hover, #EditChannelExitButton:hover, #CreateRolesExitButton:hover, #EditRoleExitButton:hover, #EditMemberExitButton:hover, #AddRoleToMemberExitButton:hover, #JoinServerScreenExitButton:hover, #DeleteMessageScreenExitButton:hover {
+#UserSettingsExitButton:hover, #CreateNewServerExitButton:hover, #ServerSettingsExitButton:hover, #BansListExitButton:hover, #CreateChannelExitButton:hover, #EditChannelExitButton:hover, #CreateRolesExitButton:hover, #EditRoleExitButton:hover, #EditMemberExitButton:hover, #AddRoleToMemberExitButton:hover, #JoinServerScreenExitButton:hover, #DeleteMessageScreenExitButton:hover {
     cursor:pointer;
     background-color:#2684FF;
     transition:background-color 0.5s ease;
@@ -557,6 +574,19 @@ h1 {
     height:25px;
     line-height:25px;
     text-align:left;
+    border-bottom:1px solid white;
+}
+
+.BansListLabelClass {
+    color:white;
+    font-size:15px;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    width:80%;
+    margin:auto;
+    height:25px;
+    line-height:25px;
+    text-align:center;
     border-bottom:1px solid white;
 }
 
@@ -610,7 +640,7 @@ h1 {
     text-align:center;
 }
 
-#UserSettingsSaveChangesButton, #UserSettingsLogOutButton, #CreateNewServerButton, #CreateNewChannelsButton, #CreateChannelButton, #UpdateChannelButton, #DeleteChannelButton, #CreateNewRolesButton, #CreateRoleButton, .EditRoleButtonClass, #UpdateRoleButton, .AddRoleToMemberButtonClass, #CreateNewServerJoinServerButton, #JoinServerButton, #DeleteMessageButton {
+#UserSettingsSaveChangesButton, #UserSettingsLogOutButton, #CreateNewServerButton, #DisplayBansListButton, #CreateNewChannelsButton, #CreateChannelButton, #UpdateChannelButton, #DeleteChannelButton, #CreateNewRolesButton, #CreateRoleButton, .EditRoleButtonClass, #UpdateRoleButton, .AddRoleToMemberButtonClass, #CreateNewServerJoinServerButton, #JoinServerButton, #DeleteMessageButton {
     width:80%;
     margin:15px auto 15px auto;
 }
@@ -1270,6 +1300,31 @@ h1 {
     justify-content:center;
     border-radius:100%;
     cursor:pointer;
+    font-size:15px;
+    text-align:center;
+    font-weight:bold;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+}
+
+#BansListMemberMainContainerDiv {
+    background-color:blue;
+    width:80%;
+    margin:auto;
+    display:block;
+    height:90%;
+}
+
+.BansListMemberContainerDiv {
+    display:grid;
+    grid-template-columns:50% 50%;
+    width:100%;
+    border-bottom:1px solid white;
+}
+
+.BansListMemberUserName {
+    display:flex;
+    align-items:center;
+    color:white;
     font-size:15px;
     text-align:center;
     font-weight:bold;

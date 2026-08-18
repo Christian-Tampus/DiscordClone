@@ -769,10 +769,20 @@ App.post("/addRoleToMember", async(request, response) => {
   if (getServerData.rows[0].server_owner == adminUsername) {
     isServerOwner = true;
   };
-  const getAdminMemberRoles = await PostgreSQLPool.query(
+  let getAdminMemberRoles = await PostgreSQLPool.query(
     "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
     [serverId, adminUsername]
   );
+  if (getAdminMemberRoles.rows.length == 0) {
+    const initialMemberRolesCreation = await PostgreSQLPool.query(
+      "INSERT INTO member_roles (member_roles_server_id, member_roles_username) VALUES ($1, $2) RETURNING *",
+      [serverId, adminUsername]
+    );
+    getAdminMemberRoles = await PostgreSQLPool.query(
+      "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
+      [serverId, adminUsername]
+    );
+  };
   if (getAdminMemberRoles.rows.length != 1 && isServerOwner == false) {
     console.log("[SERVER] Admin Does Not Have Any Member Roles Data!");
     response.status(401).json({
@@ -1186,13 +1196,19 @@ App.post("/kickMember", async (request, response) => {
       return;
     };
   };
-
-
-
-  console.log("YOU CAN NOW KICK THIS MEMBER!");
-
-
-  
+  const deleteMemberRoles = await PostgreSQLPool.query(
+    "DELETE FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2 RETURNING *",
+    [request.body.serverId, request.body.memberUserNameToKick]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_array = array_remove(server_members_array, $1) WHERE server_id = $2",
+    [request.body.memberUserNameToKick, request.body.serverId]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE users SET number_of_servers = number_of_servers - 1, servers = array_remove(servers, $1) WHERE username = $2",
+    [request.body.serverId, request.body.memberUserNameToKick]
+  );
+  io.to("User_" + request.body.memberUserNameToKick).emit("kickedFromServer");
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
@@ -1279,48 +1295,23 @@ App.post("/banMember", async (request, response) => {
       return;
     };
   };
-
-
-
-  console.log("YOU CAN NOW BAN THIS MEMBER!");
-
-  /*
-  HOW TO KICK OR BAN A MEMBER:
-  1. REMOVE member_roles WHERE member_roles_server_id = serverId AND member_roles_username = memberUserNameToKick OR memberUserNameToBan
-  2. REMOVE userId FROM server_members_array WHERE server_id = serverId IN servers TABLE
-  3. (APPLIES TO BAN ONLY) APPEND memberUserNameToBan TO server_members_banned_array
-  4. UPDATE SERVER BANS LIST DISPLAY ON CLIENT
-
-  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
-  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
-  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
-  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
-  IMPORTANT, YOU MUST CREATE A NEW ATTRIBUTE IN SERVERS server_members_banned_array
-
-  CREATE TABLE servers (
-      id SERIAL PRIMARY KEY,
-      server_name VARCHAR(99) NOT NULL,
-      server_icon VARCHAR(999) NOT NULL,
-      server_id VARCHAR(999) UNIQUE NOT NULL,
-      server_owner VARCHAR(99) NOT NULL,
-      server_description VARCHAR(500),
-      server_thumbnail VARCHAR(999),
-      server_channels INTEGER DEFAULT 0,
-      server_channel_array TEXT[] NOT NULL DEFAULT '{}',
-      server_roles_array TEXT[] NOT NULL DEFAULT '{}',
-      server_roles INTEGER DEFAULT 0,
-      server_members_array TEXT[] NOT NULL DEFAULT '{}',
+  const deleteMemberRoles = await PostgreSQLPool.query(
+    "DELETE FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2 RETURNING *",
+    [request.body.serverId, request.body.memberUserNameToBan]
   );
-  CREATE TABLE member_roles (
-      id SERIAL PRIMARY KEY,
-      member_roles_server_id VARCHAR(999) UNIQUE NOT NULL,
-      member_roles_username VARCHAR(999) UNIQUE NOT NULL,
-      member_roles_array TEXT[] NOT NULL DEFAULT '{}'
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_array = array_remove(server_members_array, $1) WHERE server_id = $2",
+    [request.body.memberUserNameToBan, request.body.serverId]
   );
-*/
-
-
-
+  await PostgreSQLPool.query(
+    "UPDATE servers SET server_members_banned_array = array_append(server_members_banned_array, $1) WHERE server_id = $2",
+    [request.body.memberUserNameToBan, request.body.serverId]
+  );
+  await PostgreSQLPool.query(
+    "UPDATE users SET number_of_servers = number_of_servers - 1, servers = array_remove(servers, $1) WHERE username = $2",
+    [request.body.serverId, request.body.memberUserNameToBan]
+  );
+  io.to("User_" + request.body.memberUserNameToBan).emit("bannedFromServer");
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
@@ -1339,6 +1330,10 @@ Socket.IO Real Time Chat
 */
 io.on("connection", (socket) => {
   console.log("[SOCKET] User Connected:", socket.id);
+  socket.on("userLogin", (username) => {
+    socket.join("User_" + username);
+    console.log("[SOCKET] " + username + " Login!");
+  });
   socket.on("joinChannel", async (channelId, retrieveMessageData) => {
     socket.join(channelId);
     console.log("[SOCKET] Joined Channel:", channelId);
