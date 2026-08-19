@@ -18,16 +18,18 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     displayName VARCHAR(99) NOT NULL,
     username VARCHAR(99) UNIQUE NOT NULL,
-    password VARCHAR(99) NOT NULL
+    password VARCHAR(99) NOT NULL,
     biography VARCHAR(500),
     status VARCHAR(99) DEFAULT 'Online',
-    profile_picture VARCHAR(999) DEFAULT '';
-    number_of_servers INTEGER DEFAULT 0;
-    servers TEXT[] NOT NULL DEFAULT '{}';
+    profile_picture VARCHAR(999) DEFAULT '',
+    number_of_servers INTEGER DEFAULT 0,
+    servers TEXT[] NOT NULL DEFAULT '{}',
+    direct_messages_username_array TEXT[] NOT NULL DEFAULT '{}'
+    direct_messages_id_array TEXT[] NOT NULL DEFAULT '{}'
 );
 
-ALTER TABLE servers
-ADD COLUMN server_members_banned_array TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE users
+ADD COLUMN direct_messages_id_array TEXT[] NOT NULL DEFAULT '{}';
 
 STATUS: Online, Do Not Disturb, Idle, Invisible
 

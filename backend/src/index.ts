@@ -1161,7 +1161,6 @@ Leave Server API
 */
 App.post("/leaveServer", async (request, response) => {
   console.log("[SERVER] API: /leaveServer");
-  console.log("REQUEST BODY:", request.body);
   const deleteMemberRoles = await PostgreSQLPool.query(
     "DELETE FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2 RETURNING *",
     [request.body.serverId, request.body.username]
@@ -1200,7 +1199,6 @@ Kick Member API
 */
 App.post("/kickMember", async (request, response) => {
   console.log("[SERVER] API: /kickMember");
-  console.log("REQUEST BODY:", request.body);
   if (request.body.adminUserName == request.body.memberUserNameToKick) {
     console.log("[SERVER] Cannot Kick Yourself!");
     response.status(401).json({
@@ -1307,7 +1305,6 @@ Ban Member API
 */
 App.post("/banMember", async (request, response) => {
   console.log("[SERVER] API: /banMember");
-  console.log("REQUEST BODY:", request.body);
   if (request.body.adminUserName == request.body.memberUserNameToBan) {
     console.log("[SERVER] Cannot Ban Yourself!");
     response.status(401).json({
@@ -1418,7 +1415,6 @@ UnBan Member API
 */
 App.post("/unBanMember", async (request, response) => {
   console.log("[SERVER] API: /unBanMember");
-  console.log("REQUEST BODY:", request.body);
   const getServerData = await PostgreSQLPool.query(
     "SELECT * FROM servers WHERE server_id = $1",
     [request.body.serverId]
@@ -1440,7 +1436,7 @@ App.post("/unBanMember", async (request, response) => {
   const removeMemberFromBanList = await PostgreSQLPool.query(
     "UPDATE servers SET server_members_banned_array = array_remove(server_members_banned_array, $1) WHERE server_id = $2 RETURNING *",
     [request.body.memberToUnBan, request.body.serverId]
-  )
+  );
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.adminUserName]
@@ -1460,7 +1456,6 @@ Delete Server API
 */
 App.post("/deleteServer", async (request, response) => {
   console.log("[SERVER] API: /deleteServer");
-  console.log("REQUEST BODY:", request.body);
   const getServerData = await PostgreSQLPool.query(
     "SELECT * FROM servers WHERE server_id = $1",
     [request.body.serverId]
@@ -1539,6 +1534,64 @@ App.post("/deleteServer", async (request, response) => {
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
   console.log("[SERVER] Deleted Server Successfully!");
+});
+
+/*
+==================================================
+Add User To Direct Messages API
+==================================================
+*/
+App.post("/addUserToDirectMessages", async (request, response) => {
+  console.log("[SERVER] API: /addUserToDirectMessages");
+  const checkIfUserExists = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.directMessageUserName]
+  );
+  if (checkIfUserExists.rows.length != 1) {
+    console.log("[SERVER] Username Not Found To Add Into Direct Messages!");
+    response.status(401).json({
+      error: "[ERROR] Username Not Found To Add Into Direct Messages!"
+    });
+    return;
+  };
+  const getUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  if (getUserData.rows[0].direct_messages_username_array.includes(request.body.directMessageUserName)) {
+    console.log("[SERVER] User Already Added To Direct Messages!");
+    response.status(401).json({
+      error: "[ERROR] User Already Added To Direct Messages!"
+    });
+    return;
+  };
+  const directMessageId = "DIRECT_MESSAGE-" + request.body.username + "-" + request.body.directMessageUserName + "-" + Date.now();
+  const updateDirectMessagesArray1 = await PostgreSQLPool.query(
+    "UPDATE users SET direct_messages_username_array = array_append(direct_messages_username_array, $1) WHERE username = $2 RETURNING *",
+    [request.body.directMessageUserName, request.body.username]
+  );
+  const updateDirectMessagesArray2 = await PostgreSQLPool.query(
+    "UPDATE users SET direct_messages_username_array = array_append(direct_messages_username_array, $1) WHERE username = $2 RETURNING *",
+    [request.body.username, request.body.directMessageUserName]
+  );
+  const updateDirectMessagesIdArray1 = await PostgreSQLPool.query(
+    "UPDATE users SET direct_messages_id_array = array_append(direct_messages_id_array, $1) WHERE username = $2 RETURNING *",
+    [directMessageId, request.body.username]
+  );
+  const updateDirectMessagesIdArray2 = await PostgreSQLPool.query(
+    "UPDATE users SET direct_messages_id_array = array_append(direct_messages_id_array, $1) WHERE username = $2 RETURNING *",
+    [directMessageId, request.body.directMessageUserName]
+  );
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.username, true);
+  console.log("[SERVER] Added User To Direct Messages Successfully!");
 });
 
 /*

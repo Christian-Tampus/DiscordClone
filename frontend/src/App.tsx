@@ -1036,6 +1036,27 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function addUserToDirectMessagesArrayFunction() {
+    const addUserToDirectMessagesResponse = await fetch("http://localhost:5000/addUserToDirectMessages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: userData.username,
+        directMessageUserName: directMessageUserName
+      })
+    });
+    if (addUserToDirectMessagesResponse.ok) {
+      alert("[CLIENT] Successfully Added User To Direct Messages!");
+      const data = await addUserToDirectMessagesResponse.json();
+      setUserData(data);
+      UpdateServerDataToLatest(data);
+    } else {
+      const errorCode = await addUserToDirectMessagesResponse.json();
+      alert(errorCode.error);
+    };
+  };
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
@@ -1707,10 +1728,14 @@ function Main() {
             <div id="DirectMessagesMainContainerDiv">
               <div id="DirectMessagesUserListDiv">
                 <div id="DirectMessagesSearchContainerDiv">
-                  <input id="DirectMessagesDMUserInput" type="text" placeholder="Enter Username Here..." value={directMessageUserName}></input>
-                  <button id="DirectMessagesDMUserButton">DM User</button>
+                  <input id="DirectMessagesDMUserInput" type="text" placeholder="Enter Username Here..." value={directMessageUserName} onChange={(event) => setDirectMessageUserName(event.target.value)}></input>
+                  <button id="DirectMessagesDMUserButton" onClick={addUserToDirectMessagesArrayFunction}>DM User</button>
                 </div>
                 <div>
+
+
+
+
 
                 </div>
               </div>

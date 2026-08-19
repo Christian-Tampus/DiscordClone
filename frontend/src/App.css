@@ -133,7 +133,7 @@ h1 {
 }
 
 #DirectMessagesDMUserInput {
-    flex:1;
+    flex:3;
     width:100%;
     height:100%;
     box-sizing:border-box;
@@ -152,19 +152,40 @@ h1 {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
 
-#DirectMessagesSearchContainerDiv {
-    display:grid;
-    grid-template-columns:75% 25%;
-    height:60px;
-    padding:5px;
+#DirectMessagesDMUserInput:focus {
+    outline:none;
 }
 
 #DirectMessagesDMUserButton {
-    color:white;
-    background-color:#3f3f46;
-    border:none;
-    border-radius:10px;
+    flex:1;
+    width:100%;
+    height:100%;
     cursor:pointer;
+    background-color:#616fff;
+    border:none;
+    display:block;
+    color:white;
+    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    font-weight:bold;
+    font-size:15px;
+    border-radius:10px;
+}
+
+#DirectMessagesDMUserButton:hover {
+    cursor:pointer;
+    background-color:#4f56c2;
+    transition:background-color 0.5s ease;
+}
+
+#DirectMessagesDMUserButton:focus {
+    outline:none;
+}
+
+#DirectMessagesSearchContainerDiv {
+    display:flex;
+    gap:5px;
+    height:60px;
+    padding:5px;
 }
 
 .LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder, .CreateNewServerInputClass::placeholder, .ServerSettingsInputClass::placeholder, #ServerSettingsDescriptionTextArea::placeholder, .CreateChannelInputClass::placeholder, #CreateChannelDescriptionTextArea::placeholder, .EditChannelInputClass::placeholder, #EditChannelDescriptionTextArea::placeholder, .CreateRolesInputClass::placeholder, .EditRolesInputClass::placeholder, .JoinServerInputClass::placeholder {
