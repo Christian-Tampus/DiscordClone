@@ -158,6 +158,16 @@ function Main() {
   const [displayDeleteMessageScreen, setDisplayDeleteMessageScreen] = useState(false);
   const [displayBansListScreen, setDisplayBansListScreen] = useState(false);
   const [displayLeaveServerScreen, setDisplayLeaveServerScreen] = useState(false);
+  const [displayDirectMessagesScreen, setDisplayDirectMessagesScreen] = useState(false);
+  const [directMessageChatName, setDirectMessageChatName] = useState("Direct Message Chat Name");
+  const [directMessageUserName, setDirectMessageUserName] = useState("");
+  /*
+  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
+  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
+  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
+  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
+  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
+  */
   async function RetrieveLatestData(hasDeletedChannel: any, kickedOrBanned: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -288,9 +298,11 @@ function Main() {
         const data = await response.json();
         console.log("[CLIENT] User Data:", data);
         setUserData(data);
-        for (let index = 0; index < data.serverData[0].server_members_array_data.length; index++) {
-          if (data.serverData[0].server_members_array_data[index].username == data.username) {
-            setCurrentUserRolesArray(data.serverData[0].server_members_array_data[index].roles_array);
+        if (data.serverData.length > 0) {
+          for (let index = 0; index < data.serverData[0].server_members_array_data.length; index++) {
+            if (data.serverData[0].server_members_array_data[index].username == data.username) {
+              setCurrentUserRolesArray(data.serverData[0].server_members_array_data[index].roles_array);
+            };
           };
         };
         if (data.profile_picture != "") {
@@ -315,6 +327,19 @@ function Main() {
                   setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
                   break;
                 };
+              };
+              if (data.username == data.serverData[0].server_owner && data.serverData[0].server_members_array_data[index].roles_array.length == 0) {
+                setCanEditRoles(true);
+                tempCanEditRoles = true;
+                let currentRoleData = {
+                  role_rank: -999,
+                  can_kick_lower_rank_members: true,
+                  can_ban_lower_rank_members: true,
+                  can_edit_lower_rank_member_roles: true,
+                  isServerOwner: true
+                }
+                setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData as any);
+                break;
               };
             };
           };
@@ -1020,7 +1045,7 @@ function Main() {
     setCreateNewAccountScreen(false);
   };
   function DirectMessagesButton() {
-    console.log("DIRECT MESSAGES BUTTON!");
+    setDisplayDirectMessagesScreen(true);
   };
   function CreateNewServerButton() {
     setDisplayCreateNewServer(true);
@@ -1141,6 +1166,7 @@ function Main() {
     document.getElementById("ServerSettingsThumbnailInput")?.click();
   };
   function setCurrentServerFunction(serverInfo: any) {
+    setDisplayDirectMessagesScreen(false);
     if (serverInfo != null) {
       if (notifyServerIdArray.includes(serverInfo.server_id)) {
         setNotifyServerIdArray((previous) => previous.filter((server_id) => server_id != serverInfo.server_id));
@@ -1162,6 +1188,19 @@ function Main() {
                 setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
                 break;
               };
+            };
+            if (userData.username == serverInfo.server_owner && serverInfo.server_members_array_data[index].roles_array.length == 0) {
+              setCanEditRoles(true);
+              tempCanEditRoles = true;
+              let currentRoleData = {
+                role_rank: -999,
+                can_kick_lower_rank_members: true,
+                can_ban_lower_rank_members: true,
+                can_edit_lower_rank_member_roles: true,
+                isServerOwner: true
+              }
+              setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData as any);
+              break;
             };
           };
         };
@@ -1277,6 +1316,17 @@ function Main() {
                   setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData);
                   break;
                 };
+              };
+              if (lastestData.username == lastestData.serverData[0].server_owner && lastestData.serverData[index].server_members_array_data[member_index].roles_array.length == 0) {
+                let currentRoleData = {
+                  role_rank: -999,
+                  can_kick_lower_rank_members: true,
+                  can_ban_lower_rank_members: true,
+                  can_edit_lower_rank_member_roles: true,
+                  isServerOwner: true
+                }
+                setCurrentHighestRoleThatCanEditLowerRankMembers(currentRoleData as any);
+                break;
               };
             };
           };
@@ -1544,113 +1594,177 @@ function Main() {
               <div className="toolTip">User Settings</div>
             </div>
           </div>
-          <div id="CurrentServerMainContainerDiv">
-            <div id="ChannelsMainContainerDiv">
-              {currentServerInfo != null && (
-                <div id="ServerIconSettingNameDiv">
-                  <img id="ServerIcon" src={currentServerIcon}></img>
-                  <div id="ServerNameDiv">{currentServer}</div>
-                  <img id="ServerSettingIcon" src={GearsIcon} onClick={displayServerSettings}></img>
-                </div>
-              )}
-              {currentServerInfo != null && (
-                <div id="ServerThumbnailIconDiv">
-                  <img id="ServerThumbnailIcon" src={currentServerThumbnail}></img>
-                </div>
-              )}
-              {currentServerInfo != null && (
-                <div id="ServerDescriptionDiv">
-                  <textarea id="ServerDescriptionTextArea" placeholder="Server Description Here..." readOnly value={currentServerDescription}></textarea>
-                </div>
-              )}
-              {currentServerInfo != null && (
-                <div id="ChannelsMainDiv">
-                  <div id="CreateNewChannelMainDiv">
-                    {
-                      currentChannelData.map((channelInfo: any) => (
-                        <div id={channelInfo.channel_id} key={channelInfo.channel_id} className="channelRowDiv" onClick={() => changeChannel(channelInfo)}>
-                          <img src={HashTagIcon} className="hashTagIcon"></img>
-                          <div className={"channelNameDiv " + ((notifyChannelIdArray.length > 0 && notifyChannelIdArray.includes(channelInfo.channel_id)) ? "ChannelNotification" : "")}>{channelInfo.channel_name}</div>
-                          <img src={GearsIcon} className="channelEditButton" onClick={() => displayEditChannelFunction(channelInfo)}></img>
+          {displayDirectMessagesScreen == false && (
+            <div id="CurrentServerMainContainerDiv">
+              <div id="ChannelsMainContainerDiv">
+                {currentServerInfo != null && (
+                  <div id="ServerIconSettingNameDiv">
+                    <img id="ServerIcon" src={currentServerIcon}></img>
+                    <div id="ServerNameDiv">{currentServer}</div>
+                    <img id="ServerSettingIcon" src={GearsIcon} onClick={displayServerSettings}></img>
+                  </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="ServerThumbnailIconDiv">
+                    <img id="ServerThumbnailIcon" src={currentServerThumbnail}></img>
+                  </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="ServerDescriptionDiv">
+                    <textarea id="ServerDescriptionTextArea" placeholder="Server Description Here..." readOnly value={currentServerDescription}></textarea>
+                  </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="ChannelsMainDiv">
+                    <div id="CreateNewChannelMainDiv">
+                      {
+                        currentChannelData.map((channelInfo: any) => (
+                          <div id={channelInfo.channel_id} key={channelInfo.channel_id} className="channelRowDiv" onClick={() => changeChannel(channelInfo)}>
+                            <img src={HashTagIcon} className="hashTagIcon"></img>
+                            <div className={"channelNameDiv " + ((notifyChannelIdArray.length > 0 && notifyChannelIdArray.includes(channelInfo.channel_id)) ? "ChannelNotification" : "")}>{channelInfo.channel_name}</div>
+                            <img src={GearsIcon} className="channelEditButton" onClick={() => displayEditChannelFunction(channelInfo)}></img>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div id="TextChatMainContainerDiv">
+                {currentServerInfo != null && (
+                  <div id="TextChatHeaderDiv">
+                    <div id="TextChatChannelNameDiv">{currentChannelName}</div>
+                    <textarea id="TextChatChannelDescriptionDiv" placeholder="Channel Description" readOnly value={currentChannelDescription}></textarea>
+                  </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="TextChatMainDisplayDiv">
+                    {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
+                      messageDataArray.map((currentMessageData: any) => (
+                        <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
+                          let roleNameNotification = "@" + roleData.role_name;
+                          if (currentMessageData.messages_message.includes(roleNameNotification)) {
+                            return true;
+                          };
+                          return false;
+                        }).length > 0 ? "RoleNotification" : "" : "")}>
+                          <div className="messagePFPContainer">
+                            <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                            <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
+                          </div>
+                          <div className="messageContainerDiv">
+                            <div className="messageHeaderDiv">
+                              <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
+                              <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
+                              {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
+                              {(currentMessageData.message_sender_data.username == userData.username || checkMessageSenderRole(currentMessageData)) && (<button className="deleteMessageButton" onClick={() => deleteMessageFunction(currentMessageData)}>🗑️</button>)}
+                            </div>
+                            {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                            {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
+                            {messageIdToEdit != null && messageIdToEdit != currentMessageData.id && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                          </div>
                         </div>
                       ))
-                    }
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-            <div id="TextChatMainContainerDiv">
-              {currentServerInfo != null && (
-                <div id="TextChatHeaderDiv">
-                  <div id="TextChatChannelNameDiv">{currentChannelName}</div>
-                  <textarea id="TextChatChannelDescriptionDiv" placeholder="Channel Description" readOnly value={currentChannelDescription}></textarea>
-                </div>
-              )}
-              {currentServerInfo != null && (
-                <div id="TextChatMainDisplayDiv">
-                  {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
-                    messageDataArray.map((currentMessageData: any) => (
-                      <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
-                        let roleNameNotification = "@" + roleData.role_name;
-                        if (currentMessageData.messages_message.includes(roleNameNotification)) {
-                          return true;
-                        };
-                        return false;
-                      }).length > 0 ? "RoleNotification" : "" : "")}>
-                        <div className="messagePFPContainer">
-                          <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
-                          <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
-                        </div>
-                        <div className="messageContainerDiv">
-                          <div className="messageHeaderDiv">
-                            <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
-                            <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
-                            {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
-                            {(currentMessageData.message_sender_data.username == userData.username || checkMessageSenderRole(currentMessageData)) && (<button className="deleteMessageButton" onClick={() => deleteMessageFunction(currentMessageData)}>🗑️</button>)}
-                          </div>
-                          {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
-                          {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
-                          {messageIdToEdit != null && messageIdToEdit != currentMessageData.id && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
-                        </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="TextChatMainTextBoxDiv">
+                    {displayEmojiPicker && (
+                      <div id="EmojiPickerDiv">
+                        {WEB_SAFE_EMOJIS.map((emoji) => (
+                          <button key={emoji} className="EmojiPickerButton" onClick={() => addEmojiToTextBox(emoji)}>{emoji}</button>
+                        ))}
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
-              {currentServerInfo != null && (
-                <div id="TextChatMainTextBoxDiv">
-                  {displayEmojiPicker && (
-                    <div id="EmojiPickerDiv">
-                      {WEB_SAFE_EMOJIS.map((emoji) => (
-                        <button key={emoji} className="EmojiPickerButton" onClick={() => addEmojiToTextBox(emoji)}>{emoji}</button>
-                      ))}
-                    </div>
-                  )}
-                  <input id="TextChatInput" type="text" placeholder={currentChannelName} value={messageText} onChange={(event) => setMessageText(event.target.value)} onKeyDown={sendMessageFunction}></input>
-                  <button id="EmojiButton" onClick={DisplayEmojiPicker}>😀</button>
-                </div>
-              )}
-            </div>
-            <div id="PlayerListMainContainerDiv">
-              <div id="membersListDivLabel">Members List</div>
-              <div id="memberListMainContainerDiv">
-                {membersDataArray.sort((memberDataA: any, memberDataB: any) => {
-                  let memberDataRankA = memberDataA.roles_array.length > 0 ? memberDataA.roles_array[0].role_rank : Infinity;
-                  let memberDataRankB = memberDataB.roles_array.length > 0 ? memberDataB.roles_array[0].role_rank : Infinity;
-                  return memberDataRankA - memberDataRankB;
-                }).map((memberData: any) => (
-                  <div id={memberData.username} key={memberData.username} className="membersListDiv" onClick={() => displayEditMemberScreen(memberData)}>
-                    <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
-                    <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
-                    <div className="membersListUserNameAndDisplayDiv">
-                      <div className="membersListUserNameDiv" style={{color:memberData.text_color}}>@{memberData.username}</div>
-                      <div className="membersListDisplayNameDiv">{memberData.displayname}</div>
-                    </div>
+                    )}
+                    <input id="TextChatInput" type="text" placeholder={currentChannelName} value={messageText} onChange={(event) => setMessageText(event.target.value)} onKeyDown={sendMessageFunction}></input>
+                    <button id="EmojiButton" onClick={DisplayEmojiPicker}>😀</button>
                   </div>
-                ))}
+                )}
+              </div>
+              <div id="PlayerListMainContainerDiv">
+                <div id="membersListDivLabel">Members List</div>
+                <div id="memberListMainContainerDiv">
+                  {membersDataArray.sort((memberDataA: any, memberDataB: any) => {
+                    let memberDataRankA = memberDataA.roles_array.length > 0 ? memberDataA.roles_array[0].role_rank : Infinity;
+                    let memberDataRankB = memberDataB.roles_array.length > 0 ? memberDataB.roles_array[0].role_rank : Infinity;
+                    return memberDataRankA - memberDataRankB;
+                  }).map((memberData: any) => (
+                    <div id={memberData.username} key={memberData.username} className="membersListDiv" onClick={() => displayEditMemberScreen(memberData)}>
+                      <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                      <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
+                      <div className="membersListUserNameAndDisplayDiv">
+                        <div className="membersListUserNameDiv" style={{color:memberData.text_color}}>@{memberData.username}</div>
+                        <div className="membersListDisplayNameDiv">{memberData.displayname}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+          {displayDirectMessagesScreen == true && (
+            <div id="DirectMessagesMainContainerDiv">
+              <div id="DirectMessagesUserListDiv">
+                <div id="DirectMessagesSearchContainerDiv">
+                  <input id="DirectMessagesDMUserInput" type="text" placeholder="Enter Username Here..." value={directMessageUserName}></input>
+                  <button id="DirectMessagesDMUserButton">DM User</button>
+                </div>
+                <div>
+
+                </div>
+              </div>
+              <div id="DirectMessagesTextChatMainContainerDiv">
+                {currentServerInfo != null && (
+                  <div id="DirectMessagesTextChatHeaderDiv">{directMessageChatName}</div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="TextChatMainDisplayDiv">
+                    {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
+                      messageDataArray.map((currentMessageData: any) => (
+                        <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
+                          let roleNameNotification = "@" + roleData.role_name;
+                          if (currentMessageData.messages_message.includes(roleNameNotification)) {
+                            return true;
+                          };
+                          return false;
+                        }).length > 0 ? "RoleNotification" : "" : "")}>
+                          <div className="messagePFPContainer">
+                            <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                            <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
+                          </div>
+                          <div className="messageContainerDiv">
+                            <div className="messageHeaderDiv">
+                              <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
+                              <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
+                              {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
+                              {(currentMessageData.message_sender_data.username == userData.username || checkMessageSenderRole(currentMessageData)) && (<button className="deleteMessageButton" onClick={() => deleteMessageFunction(currentMessageData)}>🗑️</button>)}
+                            </div>
+                            {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                            {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
+                            {messageIdToEdit != null && messageIdToEdit != currentMessageData.id && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+                {currentServerInfo != null && (
+                  <div id="TextChatMainTextBoxDiv">
+                    {displayEmojiPicker && (
+                      <div id="EmojiPickerDiv">
+                        {WEB_SAFE_EMOJIS.map((emoji) => (
+                          <button key={emoji} className="EmojiPickerButton" onClick={() => addEmojiToTextBox(emoji)}>{emoji}</button>
+                        ))}
+                      </div>
+                    )} 
+                    <input id="TextChatInput" type="text" placeholder={currentChannelName} value={messageText} onChange={(event) => setMessageText(event.target.value)} onKeyDown={sendMessageFunction}></input>
+                    <button id="EmojiButton" onClick={DisplayEmojiPicker}>😀</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {displayLeaveServerScreen == true && (
             <div id="LeaveServerScreenDiv">
               <div id="LeaveServerMainContainerDiv">

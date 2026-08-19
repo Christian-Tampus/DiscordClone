@@ -26,6 +26,7 @@ import { channel } from "diagnostics_channel";
 Constants
 ==================================================
 */
+const PASSWORD_BLOCK = "********";
 const PORT = process.env.PORT || 5000;
 dotenv.config();
 const App = express();
@@ -107,6 +108,7 @@ async function RetrieveServerData(servers) {
         "SELECT * FROM users WHERE username = $1",
         [memberUsername]
       );
+      memberData.rows[0].password = PASSWORD_BLOCK;
       const getMemberRoles = await PostgreSQLPool.query(
         "SELECT * FROM member_roles WHERE member_roles_server_id = $1 AND member_roles_username = $2",
         [servers[index], memberData.rows[0].username]
@@ -202,6 +204,7 @@ App.post("/retrieveLatestData", async(request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] Retrieved Latest Data Successfully!");
@@ -230,6 +233,7 @@ App.post("/login", async (request, response) => {
     if (checkIfPasswordIsCorrect.rows.length > 0) {
       console.log("[SERVER] Rows:",checkIfPasswordIsCorrect.rows);
       let userData = checkIfPasswordIsCorrect.rows[0];
+      userData.password = PASSWORD_BLOCK;
       userData.serverData = await RetrieveServerData(userData.servers);
       response.json(userData);
     } else {
@@ -267,6 +271,7 @@ App.post("/createAccount", async (request, response) => {
       [displayName, username, password]
     );
     let userData = createNewAccount.rows[0];
+    userData.password = PASSWORD_BLOCK;
     userData.serverData = await RetrieveServerData(userData.servers);
     response.json(userData);
     console.log("[SERVER] Created New Account Successfully!");
@@ -320,6 +325,7 @@ App.post("/updateUserSettings", async (request, response) => {
     [UserSettingsToUpdate.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   if (request.body.channelId != "") {
@@ -365,6 +371,7 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -425,6 +432,7 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
     [serverOwner]
   );
   let updatedUserData = returnUserData.rows[0];
+  updatedUserData.password = PASSWORD_BLOCK;
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -458,6 +466,7 @@ App.post("/updateServerSettings", async (request, response) => {
     [ServerSettingsToUpdate.username]
   );
   let updatedUserData = returnUserData.rows[0];
+  updatedUserData.password = PASSWORD_BLOCK;
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   EmitAllClients(updatedUserData.servers, updatedUserData.username, false);
@@ -533,6 +542,7 @@ App.post("/updateServerImages", upload.fields([
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -587,6 +597,7 @@ App.post("/createNewChannel", async (request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -643,6 +654,7 @@ App.post("/updateChannelSettings", async (request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -689,6 +701,7 @@ App.post("/createNewRole", async(request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -744,6 +757,7 @@ App.post("/updateRole", async(request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -875,6 +889,7 @@ App.post("/addRoleToMember", async(request, response) => {
     [request.body.adminUsername]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUsername, false);
@@ -975,6 +990,7 @@ App.post("/removeRoleFromMember", async(request, response) => {
     [request.body.adminUsername]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, adminUsername, false);
@@ -1059,6 +1075,7 @@ App.post("/joinServer", async(request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, username, false);
@@ -1081,6 +1098,7 @@ App.post("/deleteMessage", async(request, response) => {
     [request.body.messageDataToDelete.id, request.body.messageDataToDelete.messages_channel_id, request.body.messageDataToDelete.messages_message]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, false);
@@ -1129,6 +1147,7 @@ App.post("/deleteChannel", async (request, response) => {
     [request.body.adminUserName]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1167,6 +1186,7 @@ App.post("/leaveServer", async (request, response) => {
     [request.body.username]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, true);
@@ -1273,6 +1293,7 @@ App.post("/kickMember", async (request, response) => {
     [request.body.adminUserName]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1383,6 +1404,7 @@ App.post("/banMember", async (request, response) => {
     [request.body.adminUserName]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1424,6 +1446,7 @@ App.post("/unBanMember", async (request, response) => {
     [request.body.adminUserName]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1511,6 +1534,7 @@ App.post("/deleteServer", async (request, response) => {
     [request.body.adminUserName]
   );
   let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
