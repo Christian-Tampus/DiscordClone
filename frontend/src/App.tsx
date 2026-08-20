@@ -1727,17 +1727,48 @@ function Main() {
           {displayDirectMessagesScreen == true && (
             <div id="DirectMessagesMainContainerDiv">
               <div id="DirectMessagesUserListDiv">
+                <div id="DirectMessagesMembersListDivLabel">Direct Messages Members List</div>
                 <div id="DirectMessagesSearchContainerDiv">
                   <input id="DirectMessagesDMUserInput" type="text" placeholder="Enter Username Here..." value={directMessageUserName} onChange={(event) => setDirectMessageUserName(event.target.value)}></input>
                   <button id="DirectMessagesDMUserButton" onClick={addUserToDirectMessagesArrayFunction}>DM User</button>
                 </div>
-                <div>
 
 
 
 
-
+                {
+                  /*
+                  FIX THE CLASSNAMES & STATUS HOVER!
+                  FIX THE CLASSNAMES & STATUS HOVER!
+                  FIX THE CLASSNAMES & STATUS HOVER!
+                  FIX THE CLASSNAMES & STATUS HOVER!
+                  FIX THE CLASSNAMES & STATUS HOVER!
+                  */
+                }
+                <div id="DirectMessagesMembersListMainContainerDiv">
+                  {userData.direct_messages_data.map((directMessageData: any) => (
+                    <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="membersListDiv">
+                      <img src={"http://localhost:5000" + directMessageData.userData.profile_picture} className={"membersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                      <div className={"userStatusPopup2 " + (directMessageData.userData.status == "Online" ? "OnlineStatusLabelColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : directMessageData.userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.userData.status}</div>
+                      <div className="membersListUserNameAndDisplayDiv">
+                        <div className="membersListUserNameDiv" style={{color:directMessageData.userData.text_color}}>@{directMessageData.userData.username}</div>
+                        <div className="membersListDisplayNameDiv">{directMessageData.userData.displayname}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+
+
+
+
+
+
+
+
+
+
+
               </div>
               <div id="DirectMessagesTextChatMainContainerDiv">
                 {currentServerInfo != null && (

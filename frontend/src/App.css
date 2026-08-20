@@ -1287,7 +1287,7 @@ h1 {
     cursor:pointer;
 }
 
-#memberListMainContainerDiv {
+#memberListMainContainerDiv, #DirectMessagesMembersListMainContainerDiv {
     height:100%;
     overflow-y:auto;
 }
@@ -1323,7 +1323,7 @@ h1 {
     line-height:1.5;
 }
 
-#membersListDivLabel {
+#membersListDivLabel, #DirectMessagesMembersListDivLabel {
     color:white;
     font-size:15px;
     font-weight:bold;

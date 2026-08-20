@@ -75,6 +75,14 @@ CREATE TABLE messages (
     messages_created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE direct_messages (
+    id SERIAL PRIMARY KEY,
+    direct_messages_id VARCHAR (999) NOT NULL,
+    direct_messages_username VARCHAR(99) NOT NULL,
+    direct_messages_message TEXT,
+    direct_messages_create_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE roles (
     id SERIAL PRIMARY KEY,
     role_id VARCHAR(999) UNIQUE NOT NULL,

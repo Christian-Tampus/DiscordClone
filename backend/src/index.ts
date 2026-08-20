@@ -72,6 +72,37 @@ function EmitAllClients(serverIdArray, username, deletedChannel) {
 
 /*
 ==================================================
+Retrieve Direct Messages Data
+==================================================
+*/
+async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messages_username_array) {
+  if (direct_messages_id_array.length != direct_messages_username_array.length) {
+    console.log("[ERROR] direct_messages_id_array & direct_messages_username_array Are Not The Same Size!");
+    return null;
+  };
+  let directMessagesData = [];
+  for (let index = 0; index < direct_messages_username_array.length; index++) {
+    const getDirectMessageUserData = await PostgreSQLPool.query(
+      "SELECT * FROM users WHERE username = $1",
+      [direct_messages_username_array[index]]
+    );
+    if (getDirectMessageUserData.rows.length == 1) {
+      const getDirectMessages = await PostgreSQLPool.query(
+        "SELECT * FROM direct_messages WHERE direct_messages_id = $1",
+        [direct_messages_id_array[index]]
+      );
+      getDirectMessageUserData.rows[0].password = PASSWORD_BLOCK;
+      directMessagesData.push({
+        userData: getDirectMessageUserData.rows[0],
+        messages: getDirectMessages.rows
+      });
+    };
+  };
+  return directMessagesData;
+};
+
+/*
+==================================================
 Retrieve Server Data
 ==================================================
 */
@@ -205,6 +236,7 @@ App.post("/retrieveLatestData", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   console.log("[SERVER] Retrieved Latest Data Successfully!");
@@ -234,6 +266,7 @@ App.post("/login", async (request, response) => {
       console.log("[SERVER] Rows:",checkIfPasswordIsCorrect.rows);
       let userData = checkIfPasswordIsCorrect.rows[0];
       userData.password = PASSWORD_BLOCK;
+      userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
       userData.serverData = await RetrieveServerData(userData.servers);
       response.json(userData);
     } else {
@@ -272,6 +305,7 @@ App.post("/createAccount", async (request, response) => {
     );
     let userData = createNewAccount.rows[0];
     userData.password = PASSWORD_BLOCK;
+    userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
     userData.serverData = await RetrieveServerData(userData.servers);
     response.json(userData);
     console.log("[SERVER] Created New Account Successfully!");
@@ -326,6 +360,7 @@ App.post("/updateUserSettings", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   if (request.body.channelId != "") {
@@ -372,6 +407,7 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -433,6 +469,7 @@ App.post("/createNewServer", upload.single("serverIcon"), async(request, respons
   );
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.password = PASSWORD_BLOCK;
+  updatedUserData.direct_messages_data = await RetrieveDirectMessagesData(updatedUserData.direct_messages_id_array, updatedUserData.direct_messages_username_array);
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -467,6 +504,7 @@ App.post("/updateServerSettings", async (request, response) => {
   );
   let updatedUserData = returnUserData.rows[0];
   updatedUserData.password = PASSWORD_BLOCK;
+  updatedUserData.direct_messages_data = await RetrieveDirectMessagesData(updatedUserData.direct_messages_id_array, updatedUserData.direct_messages_username_array);
   updatedUserData.serverData = await RetrieveServerData(updatedUserData.servers);
   response.json(updatedUserData);
   EmitAllClients(updatedUserData.servers, updatedUserData.username, false);
@@ -543,6 +581,7 @@ App.post("/updateServerImages", upload.fields([
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -598,6 +637,7 @@ App.post("/createNewChannel", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -655,6 +695,7 @@ App.post("/updateChannelSettings", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -702,6 +743,7 @@ App.post("/createNewRole", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -758,6 +800,7 @@ App.post("/updateRole", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
@@ -890,6 +933,7 @@ App.post("/addRoleToMember", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUsername, false);
@@ -991,6 +1035,7 @@ App.post("/removeRoleFromMember", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, adminUsername, false);
@@ -1076,6 +1121,7 @@ App.post("/joinServer", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, username, false);
@@ -1099,6 +1145,7 @@ App.post("/deleteMessage", async(request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, false);
@@ -1148,6 +1195,7 @@ App.post("/deleteChannel", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1186,6 +1234,7 @@ App.post("/leaveServer", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, true);
@@ -1292,6 +1341,7 @@ App.post("/kickMember", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1402,6 +1452,7 @@ App.post("/banMember", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1443,6 +1494,7 @@ App.post("/unBanMember", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1530,6 +1582,7 @@ App.post("/deleteServer", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.adminUserName, true);
@@ -1588,6 +1641,7 @@ App.post("/addUserToDirectMessages", async (request, response) => {
   );
   let userData = returnUserData.rows[0];
   userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array);
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, true);
