@@ -164,6 +164,7 @@ function Main() {
   const [directMessageDataArray, setDirectMessageDataArray] = useState([]);
   const [directMessageText, setDirectMessageText] = useState("");
   const [displayDirectMessagesEmojiPicker, setDisplayDirectMessagesEmojiPicker] = useState(false);
+  const [directMessageChatId, setDirectMessageChatId] = useState(null);
   /*
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
@@ -1071,6 +1072,11 @@ function Main() {
   function DirectMessagesButton() {
     setDisplayDirectMessagesScreen(true);
     setDirectMessageDataArray([]);
+    if (userData != null && socket != null) {
+      for (let index = 0; index < userData.direct_messages_id_array.length; index++) {
+        socket.emit("joinDirectMessageChat", userData.direct_messages_id_array[index]);
+      };
+    };
   };
   function CreateNewServerButton() {
     setDisplayCreateNewServer(true);
@@ -1458,7 +1464,27 @@ function Main() {
   };
   function sendDirectMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key == "Enter") {
-      console.log("sendDirectMessageFunction!:", directMessageText);
+      const currentDirectMessage = directMessageText.trim();
+      if (currentDirectMessage.length > 0) {
+        if (socket != null) {
+          /*
+          IMPLEMENT DIRECT MESSAGE EDITING HERE!
+          IMPLEMENT DIRECT MESSAGE EDITING HERE!
+          IMPLEMENT DIRECT MESSAGE EDITING HERE!
+          IMPLEMENT DIRECT MESSAGE EDITING HERE!
+          IMPLEMENT DIRECT MESSAGE EDITING HERE!
+          */
+          socket.emit("sendDirectMessage", {
+            directMessageChannelId: directMessageChatId,
+            username: userData.username,
+            directMessage: currentDirectMessage,
+          });
+        };
+      } else {
+        alert("[ERROR] You Have No Direct Message To Send!");
+      };
+      event.currentTarget.value = "";
+      setDirectMessageText("");
     };
   };
   function editMessageFunction(messageId: any) {
@@ -1598,11 +1624,13 @@ function Main() {
   function ExitLeaveServer() {
     setDisplayLeaveServerScreen(false);
   };
-  function ChangeUserToDirectMessage(directMessageData: any) {
-    console.log(directMessageData);
+  function ChangeUserToDirectMessage(directMessageData: any, directMessageChatId: any) {
     setDirectMessageChatName("Direct Message With " + directMessageData.userData.username);
     setDirectMessageDataArray(directMessageData.messages);
-    console.log("directMessageData.messages:",directMessageData.messages);
+    setDirectMessageChatId(directMessageChatId);
+    if (socket != null) {
+      socket.emit("joinDirectMessageChat", directMessageChatId);
+    };
   };
   if (userData) {
     return (
@@ -1754,8 +1782,8 @@ function Main() {
                   <button id="DirectMessagesDMUserButton" onClick={addUserToDirectMessagesArrayFunction}>DM User</button>
                 </div>
                 <div id="DirectMessagesMembersListMainContainerDiv">
-                  {userData.direct_messages_data.map((directMessageData: any) => (
-                    <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="DirectMessagesMembersListDiv" onClick={() => ChangeUserToDirectMessage(directMessageData)}>
+                  {userData.direct_messages_data.map((directMessageData: any, index: any) => (
+                    <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="DirectMessagesMembersListDiv" onClick={() => ChangeUserToDirectMessage(directMessageData, userData.direct_messages_id_array[index])}>
                       <img src={"http://localhost:5000" + directMessageData.userData.profile_picture} className={"DirectMessagesMembersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                       <div className={"userStatusPopup2 " + (directMessageData.userData.status == "Online" ? "OnlineStatusLabelColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : directMessageData.userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.userData.status}</div>
                       <div className="DirectMessagesMembersListUserNameAndDisplayDiv">

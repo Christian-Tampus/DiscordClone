@@ -1659,6 +1659,11 @@ io.on("connection", (socket) => {
     socket.join("User_" + username);
     console.log("[SOCKET] " + username + " Login!");
   });
+  socket.on("joinDirectMessageChat", async(directMessageChatId) => {
+    socket.join(directMessageChatId);
+    console.log("[SOCKET] Joined Direct Message Chat:", directMessageChatId);
+    console.log("directMessageChatId:",directMessageChatId);
+  });
   socket.on("joinChannel", async (channelId, retrieveMessageData) => {
     socket.join(channelId);
     console.log("[SOCKET] Joined Channel:", channelId);
@@ -1689,6 +1694,22 @@ io.on("connection", (socket) => {
     };
     const getMessagesData = await RetrieveMessageData(messageData.channelId);
     io.to(messageData.channelId).emit("recieveMessage", getMessagesData, messageData.channelId, false);
+  });
+  socket.on("sendDirectMessage", async(directMessageData) => {
+    console.log("[SOCKET] Direct Message:", directMessageData);
+    /*
+      TEST ME!
+      TEST ME!
+      TEST ME!
+      TEST ME!
+      TEST ME!
+    */
+    const createNewDirectMessage = await PostgreSQLPool.query(
+      "INSERT INTO direct_messages (direct_messages_id, direct_messages_username, direct_messages_message) VALUES ($1, $2, $3) RETURNING *",
+      [directMessageData.directMessageChannelId, directMessageData.username, directMessageData.directMessage]
+    );
+    console.log("createNewDirectMessage:", createNewDirectMessage.rows[0]);
+    console.log("[SOCKET] New Direct Message Created Successfully!");
   });
   socket.on("disconnect", () => {
     console.log("[SOCKET] User Disconnected:", socket.id);
