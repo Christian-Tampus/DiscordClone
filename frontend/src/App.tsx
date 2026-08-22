@@ -161,6 +161,9 @@ function Main() {
   const [displayDirectMessagesScreen, setDisplayDirectMessagesScreen] = useState(false);
   const [directMessageChatName, setDirectMessageChatName] = useState("Direct Message Chat Name");
   const [directMessageUserName, setDirectMessageUserName] = useState("");
+  const [directMessageDataArray, setDirectMessageDataArray] = useState([]);
+  const [directMessageText, setDirectMessageText] = useState("");
+  const [displayDirectMessagesEmojiPicker, setDisplayDirectMessagesEmojiPicker] = useState(false);
   /*
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
@@ -1067,6 +1070,7 @@ function Main() {
   };
   function DirectMessagesButton() {
     setDisplayDirectMessagesScreen(true);
+    setDirectMessageDataArray([]);
   };
   function CreateNewServerButton() {
     setDisplayCreateNewServer(true);
@@ -1420,9 +1424,15 @@ function Main() {
   function DisplayEmojiPicker() {
     setDisplayEmojiPicker(!displayEmojiPicker);
   };
+  function DisplayDirectMessagesEmojiPicker() {
+    setDisplayDirectMessagesEmojiPicker(!displayDirectMessagesEmojiPicker);
+  };
   function addEmojiToTextBox(emoji: any) {
     setMessageText(messageText + emoji);
   };
+  function addEmojiToDirectMessageTextBox(emoji: any) {
+    setDirectMessageText(directMessageText + emoji);
+  }
   function sendMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key == "Enter") {
       const currentMessage = messageText.trim();
@@ -1444,6 +1454,11 @@ function Main() {
       };
       event.currentTarget.value = "";
       setMessageText("");
+    };
+  };
+  function sendDirectMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key == "Enter") {
+      console.log("sendDirectMessageFunction!:", directMessageText);
     };
   };
   function editMessageFunction(messageId: any) {
@@ -1582,6 +1597,12 @@ function Main() {
   };
   function ExitLeaveServer() {
     setDisplayLeaveServerScreen(false);
+  };
+  function ChangeUserToDirectMessage(directMessageData: any) {
+    console.log(directMessageData);
+    setDirectMessageChatName("Direct Message With " + directMessageData.userData.username);
+    setDirectMessageDataArray(directMessageData.messages);
+    console.log("directMessageData.messages:",directMessageData.messages);
   };
   if (userData) {
     return (
@@ -1732,90 +1753,50 @@ function Main() {
                   <input id="DirectMessagesDMUserInput" type="text" placeholder="Enter Username Here..." value={directMessageUserName} onChange={(event) => setDirectMessageUserName(event.target.value)}></input>
                   <button id="DirectMessagesDMUserButton" onClick={addUserToDirectMessagesArrayFunction}>DM User</button>
                 </div>
-
-
-
-
-                {
-                  /*
-                  FIX THE CLASSNAMES & STATUS HOVER!
-                  FIX THE CLASSNAMES & STATUS HOVER!
-                  FIX THE CLASSNAMES & STATUS HOVER!
-                  FIX THE CLASSNAMES & STATUS HOVER!
-                  FIX THE CLASSNAMES & STATUS HOVER!
-                  */
-                }
                 <div id="DirectMessagesMembersListMainContainerDiv">
                   {userData.direct_messages_data.map((directMessageData: any) => (
-                    <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="membersListDiv">
-                      <img src={"http://localhost:5000" + directMessageData.userData.profile_picture} className={"membersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                    <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="DirectMessagesMembersListDiv" onClick={() => ChangeUserToDirectMessage(directMessageData)}>
+                      <img src={"http://localhost:5000" + directMessageData.userData.profile_picture} className={"DirectMessagesMembersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                       <div className={"userStatusPopup2 " + (directMessageData.userData.status == "Online" ? "OnlineStatusLabelColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : directMessageData.userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.userData.status}</div>
-                      <div className="membersListUserNameAndDisplayDiv">
-                        <div className="membersListUserNameDiv" style={{color:directMessageData.userData.text_color}}>@{directMessageData.userData.username}</div>
-                        <div className="membersListDisplayNameDiv">{directMessageData.userData.displayname}</div>
+                      <div className="DirectMessagesMembersListUserNameAndDisplayDiv">
+                        <div className="DirectMessagesMembersListUserNameDiv" style={{color:directMessageData.userData.text_color}}>@{directMessageData.userData.username}</div>
+                        <div className="DirectMessagesListDisplayNameDiv">{directMessageData.userData.displayname}</div>
                       </div>
                     </div>
                   ))}
                 </div>
-
-
-
-
-
-
-
-
-
-
-
-
               </div>
               <div id="DirectMessagesTextChatMainContainerDiv">
                 {currentServerInfo != null && (
                   <div id="DirectMessagesTextChatHeaderDiv">{directMessageChatName}</div>
                 )}
                 {currentServerInfo != null && (
-                  <div id="TextChatMainDisplayDiv">
-                    {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
-                      messageDataArray.map((currentMessageData: any) => (
-                        <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
-                          let roleNameNotification = "@" + roleData.role_name;
-                          if (currentMessageData.messages_message.includes(roleNameNotification)) {
-                            return true;
-                          };
-                          return false;
-                        }).length > 0 ? "RoleNotification" : "" : "")}>
-                          <div className="messagePFPContainer">
-                            <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
-                            <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
-                          </div>
-                          <div className="messageContainerDiv">
-                            <div className="messageHeaderDiv">
-                              <div className="messageUserNameDiv" style={{color:(membersDataArray as any).find((memberData: any) => memberData.username == currentMessageData.message_sender_data.username)?.text_color ?? "white"}}>{currentMessageData.message_sender_data.username}</div>
-                              <div className="messageTimeStampDiv">{currentMessageData.messages_created_at}</div>
-                              {currentMessageData.message_sender_data.username == userData.username && (<button className="editMessageButton" onClick={() => editMessageFunction(currentMessageData.id)}>📝</button>)}
-                              {(currentMessageData.message_sender_data.username == userData.username || checkMessageSenderRole(currentMessageData)) && (<button className="deleteMessageButton" onClick={() => deleteMessageFunction(currentMessageData)}>🗑️</button>)}
-                            </div>
-                            {messageIdToEdit == null && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
-                            {messageIdToEdit != null && messageIdToEdit == currentMessageData.id && (<textarea className="messageTextArea" value={messageText} readOnly></textarea>)}
-                            {messageIdToEdit != null && messageIdToEdit != currentMessageData.id && (<textarea className="messageTextArea" value={currentMessageData.messages_message} readOnly></textarea>)}
-                          </div>
+                  <div id="DirectMessagesTextChatMainDisplayDiv">
+                    {directMessageDataArray.length > 0 && (
+                      directMessageDataArray.map(() => (
+                        <div>
                         </div>
                       ))
                     )}
                   </div>
                 )}
-                {currentServerInfo != null && (
-                  <div id="TextChatMainTextBoxDiv">
-                    {displayEmojiPicker && (
-                      <div id="EmojiPickerDiv">
+
+
+
+
+
+
+                {displayDirectMessagesScreen == true && (
+                  <div id="DirectMessagesTextChatMainTextBoxDiv">
+                    {displayDirectMessagesEmojiPicker && (
+                      <div id="DirectMessagesEmojiPickerDiv">
                         {WEB_SAFE_EMOJIS.map((emoji) => (
-                          <button key={emoji} className="EmojiPickerButton" onClick={() => addEmojiToTextBox(emoji)}>{emoji}</button>
+                          <button key={emoji} className="DirectMessagesEmojiPickerButton" onClick={() => addEmojiToDirectMessageTextBox(emoji)}>{emoji}</button>
                         ))}
                       </div>
                     )} 
-                    <input id="TextChatInput" type="text" placeholder={currentChannelName} value={messageText} onChange={(event) => setMessageText(event.target.value)} onKeyDown={sendMessageFunction}></input>
-                    <button id="EmojiButton" onClick={DisplayEmojiPicker}>😀</button>
+                    <input id="DirectMessageTextChatInput" type="text" placeholder={directMessageChatName} value={directMessageText} onChange={(event) => setDirectMessageText(event.target.value)} onKeyDown={sendDirectMessageFunction}></input>
+                    <button id="DirectMessageEmojiButton" onClick={DisplayDirectMessagesEmojiPicker}>😀</button>
                   </div>
                 )}
               </div>
