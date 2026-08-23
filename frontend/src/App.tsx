@@ -224,7 +224,7 @@ function Main() {
       return;
     };
     socket.on("recieveMessage", (messageData, recieveMessageChannelId, isInitialMessage) => {
-      console.log("[CLIENT] Received:", messageData);
+      console.log("[CLIENT] Received messageData:", messageData);
       if (isInitialMessage == false && userData != null) {
         let server_id = null;
         for (let index = 0; index < userData.serverData.length; index++) {
@@ -242,6 +242,13 @@ function Main() {
       };
       if (currentChannelInfo != null && (currentChannelInfo as any).channel_id == recieveMessageChannelId) {
         setMessageDataArray(messageData);
+      };
+    });
+    socket.on("recieveDirectMessage", (directMessageData, recieveDirectMessageChannelId) => {
+      console.log("[CLIENT] Received directMessageData:", directMessageData);
+      if (directMessageChatId == recieveDirectMessageChannelId) {
+        setDirectMessageDataArray(directMessageData);
+        console.log("directMessageData:",directMessageData);
       };
     });
     socket.on("retrieveLatestData", (latestData) => {
@@ -1801,8 +1808,18 @@ function Main() {
                 {currentServerInfo != null && (
                   <div id="DirectMessagesTextChatMainDisplayDiv">
                     {directMessageDataArray.length > 0 && (
-                      directMessageDataArray.map(() => (
-                        <div>
+                      directMessageDataArray.map((directMessage: any) => (
+                        <div id={directMessage.id} key = {directMessage.id} className="">
+                          {
+                            /*
+                            NEED TO STYLE THIS!
+                            NEED TO STYLE THIS!
+                            NEED TO STYLE THIS!
+                            NEED TO STYLE THIS!
+                            NEED TO STYLE THIS!
+                            */
+                          }
+                          {directMessage.direct_messages_message}
                         </div>
                       ))
                     )}
