@@ -1130,7 +1130,7 @@ h1 {
     transition:background-color 0.5s ease;
 }
 
-.messageMainDiv {
+.messageMainDiv, .directMessageMainDiv {
     display:flex;
     align-items:flex-start;
     width:100%;
@@ -1140,11 +1140,11 @@ h1 {
     border-bottom:1px solid #3f3f46;
 }
 
-.messageMainDiv:hover {
+.messageMainDiv:hover, .directMessageMainDiv:hover {
     background-color:#3a3b3c;
 }
 
-.messagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
+.messagePFP, .directMessagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
     background-color:#3f3f46;
     border-radius:100%;
     border:1px solid white;
@@ -1155,7 +1155,7 @@ h1 {
     cursor:pointer;
 }
 
-.messageContainerDiv {
+.messageContainerDiv, .directMessageContainerDiv {
     flex:1;
     display:flex;
     flex-direction:column;
@@ -1166,23 +1166,23 @@ h1 {
     min-height:100%;
 }
 
-.messageHeaderDiv {
+.messageHeaderDiv, .directMessageHeaderDiv {
     display:flex;
     align-items:baseline;
     gap:10px;
 }
 
-.messageUserNameDiv {
+.messageUserNameDiv, .directMessageUserNameDiv {
     font-weight:bold;
     font-size:20px;
 }
 
-.messageTimeStampDiv {
+.messageTimeStampDiv, .directMessageTimeStampDiv {
     font-size:10px;
     color:gray;
 }
 
-.messageTextArea {
+.messageTextArea, .directMessageTextArea {
     flex:1;
     color:white;
     font-size:15px;
@@ -1212,11 +1212,11 @@ h1 {
     margin:auto;
 }
 
-.messageTextArea:focus, .DeleteMessageTextArea:focus {
+.messageTextArea:focus, .DeleteMessageTextArea:focus, .directMessageTextArea:focus {
     outline:none;
 }
 
-.editMessageButton, .deleteMessageButton {
+.editMessageButton, .deleteMessageButton, .editDirectMessageButton, .deleteDirectMessageButton {
     border:none;
     background-color:#616fff;
     text-align:center;
@@ -1227,7 +1227,7 @@ h1 {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
 
-.editMessageButton:hover, .deleteMessageButton:hover {
+.editMessageButton:hover, .deleteMessageButton:hover, .editDirectMessageButton:hover, .deleteDirectMessageButton:hover {
     cursor:pointer;
     background-color:#4f56c2;
     transition:background-color 0.5s ease;
@@ -1250,7 +1250,7 @@ h1 {
     background:none;
 }
 
-.messagePFPContainer {
+.messagePFPContainer, .directMessagePFPContainer {
     position:relative;
     flex-shrink:0;
 }
@@ -1302,7 +1302,7 @@ h1 {
     cursor:pointer;
 }
 
-.messagePFPContainer:hover .userStatusPopup {
+.messagePFPContainer:hover .userStatusPopup, .directMessagePFPContainer:hover .userStatusPopup {
     opacity:1;
     transform:translateY(-10px);
     cursor:pointer;

@@ -165,6 +165,8 @@ function Main() {
   const [directMessageText, setDirectMessageText] = useState("");
   const [displayDirectMessagesEmojiPicker, setDisplayDirectMessagesEmojiPicker] = useState(false);
   const [directMessageChatId, setDirectMessageChatId] = useState(null);
+  const [directMessageUserData, setDirectMessageUserData] = useState(null);
+  const [directMessageIdToEdit, setDirectMessageIdToEdit] = useState(null);
   /*
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
@@ -246,6 +248,8 @@ function Main() {
     });
     socket.on("recieveDirectMessage", (directMessageData, recieveDirectMessageChannelId) => {
       console.log("[CLIENT] Received directMessageData:", directMessageData);
+      console.log("directMessageChatId:", directMessageChatId);
+      console.log("recieveDirectMessageChannelId:", recieveDirectMessageChannelId);
       if (directMessageChatId == recieveDirectMessageChannelId) {
         setDirectMessageDataArray(directMessageData);
         console.log("directMessageData:",directMessageData);
@@ -279,6 +283,7 @@ function Main() {
     })
     return () => {
       socket.off("recieveMessage");
+      socket.off("recieveDirectMessage");
       socket.off("retrieveLatestData");
       socket.off("kickedFromServer");
       socket.off("bannedFromServer");
@@ -286,7 +291,7 @@ function Main() {
       socket.off("leftServer");
       socket.off("serverDeleted");
     };
-  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray]);
+  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray, directMessageChatId]);
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -1079,6 +1084,7 @@ function Main() {
   function DirectMessagesButton() {
     setDisplayDirectMessagesScreen(true);
     setDirectMessageDataArray([]);
+    setDirectMessageUserData(null);
     if (userData != null && socket != null) {
       for (let index = 0; index < userData.direct_messages_id_array.length; index++) {
         socket.emit("joinDirectMessageChat", userData.direct_messages_id_array[index]);
@@ -1497,9 +1503,15 @@ function Main() {
   function editMessageFunction(messageId: any) {
     setMessageIdToEdit(messageId);
   };
+  function editDirectMessageFunction(directMesageId: any) {
+    console.log("editDirectMessageFunction! directMesageId:", directMesageId);
+  };
   function deleteMessageFunction(messageData: any) {
     setMessageDataToDelete(messageData);
     setDisplayDeleteMessageScreen(true);
+  };
+  function deleteDirectMessageFunction(directMessageData: any) {
+    console.log("deleteDirectMessageFunction! directMessageData:", directMessageData);
   };
   function updateRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setCreateNewRoleColor(event.target.value);
@@ -1635,6 +1647,7 @@ function Main() {
     setDirectMessageChatName("Direct Message With " + directMessageData.userData.username);
     setDirectMessageDataArray(directMessageData.messages);
     setDirectMessageChatId(directMessageChatId);
+    setDirectMessageUserData(directMessageData.userData);
     if (socket != null) {
       socket.emit("joinDirectMessageChat", directMessageChatId);
     };
@@ -1718,7 +1731,7 @@ function Main() {
                   <div id="TextChatMainDisplayDiv">
                     {messageDataArray.length > 0 && membersDataArray.length > 0 && currentChannelData.length > 0 && (
                       messageDataArray.map((currentMessageData: any) => (
-                        <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@"+userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
+                        <div key={currentMessageData.id} className={"messageMainDiv " + (currentMessageData.messages_message.includes("@" + userData.username) ? "UserNotification " : "") + (currentUserRolesArray.length > 0 ? currentUserRolesArray.filter((roleData: any) => {
                           let roleNameNotification = "@" + roleData.role_name;
                           if (currentMessageData.messages_message.includes(roleNameNotification)) {
                             return true;
@@ -1807,19 +1820,24 @@ function Main() {
                 )}
                 {currentServerInfo != null && (
                   <div id="DirectMessagesTextChatMainDisplayDiv">
-                    {directMessageDataArray.length > 0 && (
-                      directMessageDataArray.map((directMessage: any) => (
-                        <div id={directMessage.id} key = {directMessage.id} className="">
-                          {
-                            /*
-                            NEED TO STYLE THIS!
-                            NEED TO STYLE THIS!
-                            NEED TO STYLE THIS!
-                            NEED TO STYLE THIS!
-                            NEED TO STYLE THIS!
-                            */
-                          }
-                          {directMessage.direct_messages_message}
+                    {directMessageDataArray.length > 0 && directMessageUserData != null && (
+                      directMessageDataArray.map((directMessageData: any) => (
+                        <div key={directMessageData.id} id={directMessageData.id} className={"directMessageMainDiv " + (directMessageData.direct_messages_message.includes("@" + userData.username) ? "UserNotification " : "")}>
+                          <div className="directMessagePFPContainer">
+                            <img src={"http://localhost:5000" + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).profile_picture : userData.profile_picture)} className={"directMessagePFP " + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status == "Online" ? "OnlineBackgroundPFPColor" : (directMessageUserData as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (directMessageUserData as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor" : userData.status == "Online" ? "OnlineBackgroundPFPColor" : userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                            <div className={"userStatusPopup " + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status == "Online" ? "OnlineStatusLabelColor" : (directMessageUserData as any).status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : (directMessageUserData as any).status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor" : userData.status == "Online" ? "OnlineStatusLabelColor" : userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status : userData.status}</div>
+                          </div>
+                          <div className="directMessageContainerDiv">
+                            <div className="directMessageHeaderDiv">
+                              <div className="directMessageUserNameDiv" style={{color:"white"}}>{directMessageData.direct_messages_username}</div>
+                              <div className="directMessageTimeStampDiv">{directMessageData.direct_messages_create_at}</div>
+                              {directMessageData.direct_messages_username == userData.username && (<button className="editDirectMessageButton" onClick={() => editDirectMessageFunction(directMessageData.id)}>📝</button>)}
+                              {directMessageData.direct_messages_username == userData.username && (<button className="deleteDirectMessageButton" onClick={() => deleteDirectMessageFunction(directMessageData)}>🗑️</button>)}
+                            </div>
+                            {directMessageIdToEdit == null && (<textarea className="directMessageTextArea" value={directMessageData.direct_messages_message} readOnly></textarea>)}
+                            {directMessageIdToEdit != null && directMessageIdToEdit == directMessageData.id && (<textarea className="directMessageTextArea" value={directMessageText} readOnly></textarea>)}
+                            {directMessageIdToEdit != null && directMessageIdToEdit != directMessageData.id && (<textarea className="directMessageTextArea" value={directMessageData.direct_messages_message} readOnly></textarea>)}
+                          </div>
                         </div>
                       ))
                     )}
