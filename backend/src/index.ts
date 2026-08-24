@@ -1662,6 +1662,22 @@ App.post("/addUserToDirectMessages", async (request, response) => {
   console.log("[SERVER] Added User To Direct Messages Successfully!");
 });
 
+
+/*
+==================================================
+Delete Direct Message API
+==================================================
+*/
+App.post("/deleteDirectMessage", async(request, response) => {
+  console.log("[SERVER] API: /deleteDirectMessage");
+
+
+
+
+  
+  console.log("[SERVER] Deleted Direct Message Successfully!");
+});
+
 /*
 ==================================================
 Socket.IO Real Time Chat

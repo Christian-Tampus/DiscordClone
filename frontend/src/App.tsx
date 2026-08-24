@@ -221,7 +221,7 @@ function Main() {
       alert(errorCode.error);
     };
   };
-  async function RetrieveLatestDataViaDirectMessage() {
+  async function RetrieveLatestDataViaDirectMessage(settingDirectMessageUserDataArray: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
       headers: {
@@ -234,11 +234,13 @@ function Main() {
     if (retrieveLatestDataResponse.ok) {
       const data = await retrieveLatestDataResponse.json();
       setUserData(data);
-      for (let index = 0; index < userData.direct_messages_data.length; index++) {
-        if (userData.direct_messages_data[index].directMessageId == directMessageChatId) {
-          setDirectMessageDataArray(userData.direct_messages_data[index].messages);
-          console.log("userData.direct_messages_data[index].userData:",userData.direct_messages_data[index].userData);
-          setDirectMessageUserData(userData.direct_messages_data[index].userData);
+      for (let index = 0; index < data.direct_messages_data.length; index++) {
+        if (data.direct_messages_data[index].directMessageId == directMessageChatId) {
+          if (settingDirectMessageUserDataArray == true) {
+            setDirectMessageDataArray(data.direct_messages_data[index].messages);
+          };
+          setDirectMessageUserData(data.direct_messages_data[index].userData);
+          break;
         };
       };
     } else {
@@ -275,8 +277,10 @@ function Main() {
       console.log("[CLIENT] Received directMessageData:", directMessageData);
       if (directMessageChatId == recieveDirectMessageChannelId) {
         setDirectMessageDataArray(directMessageData);
+        RetrieveLatestDataViaDirectMessage(false);
+      } else {
+        RetrieveLatestDataViaDirectMessage(true);
       };
-      RetrieveLatestDataViaDirectMessage();
     });
     socket.on("retrieveLatestData", (latestData) => {
       console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
