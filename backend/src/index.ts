@@ -100,6 +100,7 @@ async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messa
       );
       getDirectMessageUserData.rows[0].password = PASSWORD_BLOCK;
       directMessagesData.push({
+        directMessageId: direct_messages_id_array[index],
         userData: getDirectMessageUserData.rows[0],
         messages: getDirectMessages.rows
       });
@@ -375,6 +376,9 @@ App.post("/updateUserSettings", async (request, response) => {
     io.to(request.body.channelId).emit("recieveMessage", getMessagesData, request.body.channelId, false);
   };
   EmitAllClients(userData.servers, userData.username, false);
+  for (let index = 0; index < userData.direct_messages_id_array.length; index++) {
+    io.to(userData.direct_messages_id_array[index]).emit("recieveDirectMessage", null, null);
+  };
   console.log("[SERVER] Updated User Settings Successfully!");
 });
 
@@ -418,6 +422,9 @@ App.post("/updateProfilePicture", upload.single("userProfilePicture"), async (re
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, userData.username, false);
+  for (let index = 0; index < userData.direct_messages_id_array.length; index++) {
+    io.to(userData.direct_messages_id_array[index]).emit("recieveDirectMessage", null, null);
+  };
   console.log("[SERVER] Updated User Profile Picture Successfully!");
 });
 

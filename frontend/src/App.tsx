@@ -221,6 +221,31 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function RetrieveLatestDataViaDirectMessage() {
+    const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: username
+      })
+    });
+    if (retrieveLatestDataResponse.ok) {
+      const data = await retrieveLatestDataResponse.json();
+      setUserData(data);
+      for (let index = 0; index < userData.direct_messages_data.length; index++) {
+        if (userData.direct_messages_data[index].directMessageId == directMessageChatId) {
+          setDirectMessageDataArray(userData.direct_messages_data[index].messages);
+          console.log("userData.direct_messages_data[index].userData:",userData.direct_messages_data[index].userData);
+          setDirectMessageUserData(userData.direct_messages_data[index].userData);
+        };
+      };
+    } else {
+      const errorCode = await retrieveLatestDataResponse.json();
+      alert(errorCode.error);
+    };
+  };
   useEffect(() => {
     if (socket == null) {
       return;
@@ -248,12 +273,10 @@ function Main() {
     });
     socket.on("recieveDirectMessage", (directMessageData, recieveDirectMessageChannelId) => {
       console.log("[CLIENT] Received directMessageData:", directMessageData);
-      console.log("directMessageChatId:", directMessageChatId);
-      console.log("recieveDirectMessageChannelId:", recieveDirectMessageChannelId);
       if (directMessageChatId == recieveDirectMessageChannelId) {
         setDirectMessageDataArray(directMessageData);
-        console.log("directMessageData:",directMessageData);
       };
+      RetrieveLatestDataViaDirectMessage();
     });
     socket.on("retrieveLatestData", (latestData) => {
       console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
@@ -1478,7 +1501,7 @@ function Main() {
   function sendDirectMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key == "Enter") {
       const currentDirectMessage = directMessageText.trim();
-      if (currentDirectMessage.length > 0) {
+      if (currentDirectMessage.length > 0 && directMessageChatId != null) {
         if (socket != null) {
           /*
           IMPLEMENT DIRECT MESSAGE EDITING HERE!
@@ -1815,10 +1838,10 @@ function Main() {
                 </div>
               </div>
               <div id="DirectMessagesTextChatMainContainerDiv">
-                {currentServerInfo != null && (
+                {(
                   <div id="DirectMessagesTextChatHeaderDiv">{directMessageChatName}</div>
                 )}
-                {currentServerInfo != null && (
+                {(
                   <div id="DirectMessagesTextChatMainDisplayDiv">
                     {directMessageDataArray.length > 0 && directMessageUserData != null && (
                       directMessageDataArray.map((directMessageData: any) => (
@@ -1843,12 +1866,6 @@ function Main() {
                     )}
                   </div>
                 )}
-
-
-
-
-
-
                 {displayDirectMessagesScreen == true && (
                   <div id="DirectMessagesTextChatMainTextBoxDiv">
                     {displayDirectMessagesEmojiPicker && (
@@ -2233,7 +2250,7 @@ function Main() {
                 }}/>
                 {isUpdatedDisplayNameValid == false && (<div className="UpdateAccountErrorDiv">Alphanumerical Characters & 99 Maximum Characters Only!</div>)}
                 <div className="UserSettingsLabelClass">Biography</div>
-                <textarea placeholder="Update Biography Here..." id="UserSettingsBiographyTextArea" className={`${isUpdatedBiographyValid == true ? "" : "InvalidInput3"}`} onChange={UpdateBiography} value={updatedBiography}/>
+                <textarea placeholder="Update Biography Here..." id="UserSettingsBiographyTextArea" className={`${isUpdatedBiographyValid == true ? "" : "InvalidInput3"}`} onChange={UpdateBiography} value={updatedBiography != null ? updatedBiography : ""}/>
                 {isUpdatedBiographyValid == false && (<div className="UpdateAccountErrorDiv">Biography Can Have Up To 500 Characters Maximum!</div>)}
                 <div className="UserSettingsLabelClass">Change Password</div>
                 <input placeholder="Update Password Here..." className={`UserSettingsInputClass ${isUpdatedPasswordValid == true ? "" : "InvalidInput2"}`} value={updatedPassword} type="password" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
