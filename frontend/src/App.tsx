@@ -167,6 +167,8 @@ function Main() {
   const [directMessageChatId, setDirectMessageChatId] = useState(null);
   const [directMessageUserData, setDirectMessageUserData] = useState(null);
   const [directMessageIdToEdit, setDirectMessageIdToEdit] = useState(null);
+  const [directMessageDataToDelete, setDirectMessageDataToDelete] = useState(null);
+  const [displayDeleteDirectMessageScreen, setDisplayDeleteDirectMessageScreen] = useState(false);
   /*
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
@@ -959,6 +961,38 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  async function DeleteDirectMessage() {
+    if (directMessageDataToDelete == null) {
+      alert("[ERROR] Direct Message Data Is Null!");
+      return;
+    };
+    const deleteDirectMessage = await fetch("http://localhost:5000/deleteDirectMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username: userData.username,
+        directMessageDataToDelete: directMessageDataToDelete,
+      })
+    });
+    if (deleteDirectMessage.ok) {
+      alert("[CLIENT] Deleted Direct Message Successfully!");
+      const data = await deleteDirectMessage.json();
+      setUserData(data);
+      for (let index = 0; index < data.direct_messages_data.length; index++) {
+        if (data.direct_messages_data[index].directMessageId == directMessageChatId) {
+          setDirectMessageDataArray(data.direct_messages_data[index].messages);
+          setDirectMessageUserData(data.direct_messages_data[index].userData);
+          break;
+        };
+      };
+      ExitDeleteDirectMessageButton();
+    } else {
+      const errorCode = await deleteDirectMessage.json();
+      alert(errorCode.error);
+    };
+  };
   async function KickMemberFunction() {
     const kickMemberResponse = await fetch("http://localhost:5000/kickMember", {
       method: "POST",
@@ -1538,7 +1572,8 @@ function Main() {
     setDisplayDeleteMessageScreen(true);
   };
   function deleteDirectMessageFunction(directMessageData: any) {
-    console.log("deleteDirectMessageFunction! directMessageData:", directMessageData);
+    setDirectMessageDataToDelete(directMessageData);
+    setDisplayDeleteDirectMessageScreen(true);
   };
   function updateRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setCreateNewRoleColor(event.target.value);
@@ -1596,6 +1631,9 @@ function Main() {
   };
   function ExitDeleteMessageButton() {
     setDisplayDeleteMessageScreen(false);
+  };
+  function ExitDeleteDirectMessageButton() {
+    setDisplayDeleteDirectMessageScreen(false);
   };
   function checkMessageSenderRole(messageData: any) {
     for (let index = 0; index < userData.serverData.length; index++) {
@@ -1927,6 +1965,21 @@ function Main() {
                 <div className="DeleteMessageLabelClass">Sender Message</div>
                 <textarea className="DeleteMessageTextArea" value={(messageDataToDelete as any).messages_message} readOnly></textarea>
                 <button className="DeleteMessageButtonClass" id="DeleteMessageButton" onClick={DeleteMessage}>Delete Message</button>
+              </div>
+            </div>
+          )}
+          {displayDeleteDirectMessageScreen == true && (
+            <div id="DeleteDirectMessageScreenDiv">
+              <div id="DeleteDirectMessageScreenMainContainerDiv">
+                <div id="DeleteDirectMessageScreenHeaderDiv">
+                  Delete Direct Message
+                  <img id="DeleteDirectMessageScreenExitButton" src={ExitIcon} onClick={ExitDeleteDirectMessageButton} alt="Exit Delete Message"></img>
+                </div>
+                <div className="DeleteDirectMessageLabelClass">Sender Username</div>
+                <div id="DeleteDirectMessageMessageSenderLabel" className="DeleteDirectMessageLabelClass">{(directMessageDataToDelete as any).direct_messages_username}</div>
+                <div className="DeleteDirectMessageLabelClass">Sender Message</div>
+                <textarea className="DeleteDirectMessageTextArea" value={(directMessageDataToDelete as any).direct_messages_message} readOnly></textarea>
+                <button className="DeleteDirectMessageButtonClass" id="DeleteMessageButton" onClick={DeleteDirectMessage}>Delete Direct Message</button>
               </div>
             </div>
           )}

@@ -1670,11 +1670,31 @@ Delete Direct Message API
 */
 App.post("/deleteDirectMessage", async(request, response) => {
   console.log("[SERVER] API: /deleteDirectMessage");
-
-
-
-
-  
+  console.log("REQUEST BODY:", request.body);
+  const deletedDirectMessage = await PostgreSQLPool.query(
+    "DELETE FROM direct_messages WHERE id = $1 AND direct_messages_id = $2 AND direct_messages_message = $3 RETURNING *",
+    [request.body.directMessageDataToDelete.id, request.body.directMessageDataToDelete.direct_messages_id, request.body.directMessageDataToDelete.direct_messages_message]
+  );
+  console.log("deletedDirectMessage:", deletedDirectMessage.rows);
+  const returnUserData = await PostgreSQLPool.query(
+    "SELECT * FROM users WHERE username = $1",
+    [request.body.username]
+  );
+  let userData = returnUserData.rows[0];
+  userData.password = PASSWORD_BLOCK;
+  userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array, null);
+  userData.serverData = await RetrieveServerData(userData.servers);
+  response.json(userData);
+  EmitAllClients(userData.servers, request.body.username, false);
+  const getDirectMessagesData = await RetrieveMessageData(request.body.directMessageDataToDelete.direct_messages_id);
+  /*
+  FIX REPLICATION ISSUE HERE!
+  FIX REPLICATION ISSUE HERE!
+  FIX REPLICATION ISSUE HERE!
+  FIX REPLICATION ISSUE HERE!
+  FIX REPLICATION ISSUE HERE!
+  */
+  io.to(request.body.directMessageDataToDelete.direct_messages_id).emit("recieveDirectMessage", getDirectMessagesData, request.body.directMessageDataToDelete.direct_messages_id);
   console.log("[SERVER] Deleted Direct Message Successfully!");
 });
 
