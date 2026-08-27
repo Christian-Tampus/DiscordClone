@@ -20,6 +20,7 @@ import fs from "fs";
 import { createServer, get } from "http";
 import { Server } from "socket.io";
 import { channel } from "diagnostics_channel";
+import jwt from "jsonwebtoken";
 
 /*
 ==================================================
