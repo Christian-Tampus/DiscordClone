@@ -26,6 +26,7 @@ import { channel } from "diagnostics_channel";
 Constants
 ==================================================
 */
+const USERS_ONLINE = new Set<string>();
 const PASSWORD_BLOCK = "********";
 const PORT = process.env.PORT || 5000;
 dotenv.config();
@@ -259,6 +260,13 @@ App.post("/login", async (request, response) => {
   console.log("[SERVER] API: /login");
   const username = request.body.username;
   const password = request.body.password;
+  if (USERS_ONLINE.has(username)) {
+    console.log("[SERVER] User: " + username + " Is Already Logged In!");
+    response.status(401).json({
+      error: "[ERROR] User: " + username + " Is Already Logged In!"
+    });
+    return;
+  };
   const checkIfUsernameExists = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [username]
@@ -1700,6 +1708,9 @@ io.on("connection", (socket) => {
   console.log("[SOCKET] User Connected:", socket.id);
   socket.on("userLogin", (username) => {
     socket.join("User_" + username);
+    socket.data.username = username;
+    USERS_ONLINE.add(socket.data.username);
+    console.log("[SOCET] USERS_ONLINE:", USERS_ONLINE);
     console.log("[SOCKET] " + username + " Login!");
   });
   socket.on("joinDirectMessageChat", async(directMessageChatId) => {
@@ -1755,6 +1766,11 @@ io.on("connection", (socket) => {
     io.to(directMessageData.directMessageChannelId).emit("recieveDirectMessage", getRetrieveDirectMessagesData, directMessageData.directMessageChannelId);
   });
   socket.on("disconnect", () => {
+    if (socket.data.username != null && USERS_ONLINE.has(socket.data.username)) {
+      USERS_ONLINE.delete(socket.data.username);
+      socket.data.username = null;
+    };
+    console.log("[SOCET] USERS_ONLINE:", USERS_ONLINE);
     console.log("[SOCKET] User Disconnected:", socket.id);
   });
 });
