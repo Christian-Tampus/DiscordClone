@@ -1541,18 +1541,14 @@ function Main() {
       const currentDirectMessage = directMessageText.trim();
       if (currentDirectMessage.length > 0 && directMessageChatId != null) {
         if (socket != null) {
-          /*
-          IMPLEMENT DIRECT MESSAGE EDITING HERE!
-          IMPLEMENT DIRECT MESSAGE EDITING HERE!
-          IMPLEMENT DIRECT MESSAGE EDITING HERE!
-          IMPLEMENT DIRECT MESSAGE EDITING HERE!
-          IMPLEMENT DIRECT MESSAGE EDITING HERE!
-          */
           socket.emit("sendDirectMessage", {
             directMessageChannelId: directMessageChatId,
             username: userData.username,
             directMessage: currentDirectMessage,
+            isEditingDirectMessage: (directMessageIdToEdit != null),
+            editedDirectMessageId: directMessageIdToEdit
           });
+          setDirectMessageIdToEdit(null);
         };
       } else {
         alert("[ERROR] You Have No Direct Message To Send!");
@@ -1565,7 +1561,7 @@ function Main() {
     setMessageIdToEdit(messageId);
   };
   function editDirectMessageFunction(directMesageId: any) {
-    console.log("editDirectMessageFunction! directMesageId:", directMesageId);
+    setDirectMessageIdToEdit(directMesageId);
   };
   function deleteMessageFunction(messageData: any) {
     setMessageDataToDelete(messageData);

@@ -78,7 +78,7 @@ Retrieve Direct Messages Data
 async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messages_username_array, direct_messages_id) {
   if (direct_messages_id_array == null && direct_messages_username_array == null && direct_messages_id != null) {
     const getDirectMessages = await PostgreSQLPool.query(
-      "SELECT * FROM direct_messages WHERE direct_messages_id = $1",
+      "SELECT id, direct_messages_id, direct_messages_username, direct_messages_message, TO_CHAR(direct_messages_create_at, 'MM-DD-YYY HH12:MI AM') as direct_messages_create_at FROM direct_messages WHERE direct_messages_id = $1 ORDER BY id ASC",
       [direct_messages_id]
     );
     return getDirectMessages.rows;
@@ -95,7 +95,7 @@ async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messa
     );
     if (getDirectMessageUserData.rows.length == 1) {
       const getDirectMessages = await PostgreSQLPool.query(
-        "SELECT * FROM direct_messages WHERE direct_messages_id = $1",
+        "SELECT id, direct_messages_id, direct_messages_username, direct_messages_message, TO_CHAR(direct_messages_create_at, 'MM-DD-YYY HH12:MI AM') as direct_messages_create_at FROM direct_messages WHERE direct_messages_id = $1 ORDER BY id ASC",
         [direct_messages_id_array[index]]
       );
       getDirectMessageUserData.rows[0].password = PASSWORD_BLOCK;
@@ -1686,14 +1686,7 @@ App.post("/deleteDirectMessage", async(request, response) => {
   userData.serverData = await RetrieveServerData(userData.servers);
   response.json(userData);
   EmitAllClients(userData.servers, request.body.username, false);
-  const getDirectMessagesData = await RetrieveMessageData(request.body.directMessageDataToDelete.direct_messages_id);
-  /*
-  FIX REPLICATION ISSUE HERE!
-  FIX REPLICATION ISSUE HERE!
-  FIX REPLICATION ISSUE HERE!
-  FIX REPLICATION ISSUE HERE!
-  FIX REPLICATION ISSUE HERE!
-  */
+  const getDirectMessagesData = await RetrieveDirectMessagesData(null, null, request.body.directMessageDataToDelete.direct_messages_id);
   io.to(request.body.directMessageDataToDelete.direct_messages_id).emit("recieveDirectMessage", getDirectMessagesData, request.body.directMessageDataToDelete.direct_messages_id);
   console.log("[SERVER] Deleted Direct Message Successfully!");
 });
@@ -1745,13 +1738,21 @@ io.on("connection", (socket) => {
   });
   socket.on("sendDirectMessage", async(directMessageData) => {
     console.log("[SOCKET] Direct Message:", directMessageData);
-    const createNewDirectMessage = await PostgreSQLPool.query(
-      "INSERT INTO direct_messages (direct_messages_id, direct_messages_username, direct_messages_message) VALUES ($1, $2, $3) RETURNING *",
-      [directMessageData.directMessageChannelId, directMessageData.username, directMessageData.directMessage]
-    );
+    if (directMessageData.isEditingDirectMessage == false) {
+      await PostgreSQLPool.query(
+        "INSERT INTO direct_messages (direct_messages_id, direct_messages_username, direct_messages_message) VALUES ($1, $2, $3) RETURNING *",
+        [directMessageData.directMessageChannelId, directMessageData.username, directMessageData.directMessage]
+      );
+      console.log("[SOCKET] New Direct Message Created Successfully!");
+    } else if (directMessageData.isEditingDirectMessage == true && directMessageData.editedDirectMessageId != null) {
+      await PostgreSQLPool.query(
+        "UPDATE direct_messages SET direct_messages_message = $1 WHERE id = $2 AND direct_messages_username = $3 AND direct_messages_id = $4 RETURNING *",
+        [directMessageData.directMessage, directMessageData.editedDirectMessageId, directMessageData.username, directMessageData.directMessageChannelId]
+      );
+      console.log("[SOCKET] Direct Message Updated Successfully!");
+    };
     const getRetrieveDirectMessagesData = await RetrieveDirectMessagesData(null, null, directMessageData.directMessageChannelId);
     io.to(directMessageData.directMessageChannelId).emit("recieveDirectMessage", getRetrieveDirectMessagesData, directMessageData.directMessageChannelId);
-    console.log("[SOCKET] New Direct Message Created Successfully!");
   });
   socket.on("disconnect", () => {
     console.log("[SOCKET] User Disconnected:", socket.id);
