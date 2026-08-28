@@ -285,7 +285,19 @@ App.post("/login", async (request, response) => {
       userData.password = PASSWORD_BLOCK;
       userData.direct_messages_data = await RetrieveDirectMessagesData(userData.direct_messages_id_array, userData.direct_messages_username_array, null);
       userData.serverData = await RetrieveServerData(userData.servers);
-      response.json(userData);
+      const JWT_Token = jwt.sign(
+        {
+          userData
+        },
+        process.env.JWT_SECRET!,
+        {
+          expiresIn: "1h"
+        }
+      );
+      return response.status(200).json({
+        token: JWT_Token,
+        userData: userData
+      });
     } else {
       console.log("[SERVER] Password:",password,"Is Incorrect!");
       response.status(401).json({

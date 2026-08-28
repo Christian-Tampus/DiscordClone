@@ -3,7 +3,7 @@
 !!!!!=====PROJECT GOALS=====!!!!!
 !!!!!=====PROJECT GOALS=====!!!!!
 !!!!!=====PROJECT GOALS=====!!!!!
-1. [IN_PROGRESS] Fully Functional Discord Clone
+1. [COMPLETED] Fully Functional Discord Clone
 2. [_] Responsive Web Design (Desktop, Tablet & Mobile)
 3. [_] Source Code Documentation
 4. [_] Create README.md

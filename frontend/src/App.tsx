@@ -340,7 +340,11 @@ function Main() {
           console.log("[CLIENT] Socket Connected:", newSocket.id);
           newSocket.emit("userLogin", username);
         });
-        const data = await response.json();
+        let data = await response.json();
+        localStorage.setItem("jwtToken", data.token);
+        const getToken = localStorage.getItem("jwtToken");
+        console.log("[CLIENT] JWT Token:", getToken);
+        data = data.userData;
         console.log("[CLIENT] User Data:", data);
         setUserData(data);
         if (data.serverData.length > 0) {
@@ -1220,6 +1224,7 @@ function Main() {
     };
     setDisplayUserSettings(false);
     setUserData(null);
+    localStorage.removeItem("jwtToken");
     console.log("[CLIENT] Log Out!");
   };
   function SelectImageForUserProfilePicture(event: React.ChangeEvent<HTMLInputElement>) {
@@ -2427,7 +2432,7 @@ function Main() {
     );
   };
   return (
-    <div>THIS SHOULD NOT BE DISPLAYED!</div>
+    <div></div>
   );
 };
 

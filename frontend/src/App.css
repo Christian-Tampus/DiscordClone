@@ -1,3 +1,408 @@
+/*
+==================================================
+Responsive Web Design For Desktops
+==================================================
+*/
+@media (min-width: 1025px) {
+
+    #LoginMainDiv {
+        background-color:#42434a;
+        height:550px;
+        width:800px;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #LoginTextDiv1 {
+        font-size:25px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:15px;
+        width:90%;
+    }
+
+    #LoginTextDiv2 {
+        font-size:15px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:15px;
+        width:90%;
+    }
+
+    #LoginTextDiv3, #LoginTextDiv4, #CreateNewAcountTextDiv2, #CreateNewAcountTextDiv3, #CreateNewAcountTextDiv4 {
+        width:90%;
+        margin:auto;
+        font-size:15px;
+        display:block;
+        text-align:left;
+        padding-top:15px;
+        padding-bottom:15px;
+    }
+
+    #LoginTextDiv5 {
+        font-size:15px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:15px;
+    }
+
+    .LoginDivInputClass, .CreateNewAccountInputClass{
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:90%;
+        margin:auto;
+        display:block;
+        height:35px;
+        color:white;
+    }
+
+    .InvalidInput {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:90% !important;
+        margin:auto !important;
+        display:block !important;
+        height:35px !important;
+        color:white !important;
+    }
+
+    .InvalidInput2 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:35px !important;
+        color:white !important;
+    }
+
+    .InvalidInput3 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:100px !important;
+        color:white !important;
+    }
+
+    .CreateNewAccountErrorDiv {
+        font-size:15px;
+        text-align:center;
+        width:90%;
+        display:block;
+        margin:15px auto 15px auto;
+    }
+
+    .LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass, .CreateChannelButtonClass, .EditMemberLabelButtonClass, .UpdateChannelButtonClass, .CreateRoleButtonClass, .UpdatedRoleButtonClass, .JoinServerButtonClass, .DeleteMessageButtonClass, .DeleteDirectMessageButtonClass, .LeaveServerButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:25px auto 25px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+        height:50px;
+    }
+
+    .InvalidInputButton {
+        background-color:red;
+        border:none;
+        width:90%;
+        display:block;
+        margin:25px auto 25px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+        height:50px;
+    }
+
+}
+
+/*
+==================================================
+Responsive Web Design For Tablets
+==================================================
+*/
+@media (max-width: 1024px) {
+
+    #LoginMainDiv {
+        background-color:#42434a;
+        height:475px;
+        width:70%;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #LoginTextDiv1 {
+        font-size:20px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:10px;
+        width:90%;
+    }
+
+    #LoginTextDiv2 {
+        font-size:12px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:10px;
+        width:90%;
+    }
+
+    #LoginTextDiv3, #LoginTextDiv4, #CreateNewAcountTextDiv2, #CreateNewAcountTextDiv3, #CreateNewAcountTextDiv4 {
+        width:90%;
+        margin:auto;
+        font-size:12px;
+        display:block;
+        text-align:left;
+        padding-top:10px;
+        padding-bottom:10px;
+    }
+
+    #LoginTextDiv5 {
+        font-size:12px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:10px;
+    }
+
+    .LoginDivInputClass, .CreateNewAccountInputClass{
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:90%;
+        margin:auto;
+        display:block;
+        height:30px;
+        color:white;
+    }
+
+    .InvalidInput {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:90% !important;
+        margin:auto !important;
+        display:block !important;
+        height:30px !important;
+        color:white !important;
+    }
+
+    .InvalidInput2 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:30px !important;
+        color:white !important;
+    }
+
+    .InvalidInput3 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:90px !important;
+        color:white !important;
+    }
+
+    .CreateNewAccountErrorDiv {
+        font-size:12px;
+        text-align:center;
+        width:90%;
+        display:block;
+        margin:10px auto 10px auto;
+    }
+
+    .LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass, .CreateChannelButtonClass, .EditMemberLabelButtonClass, .UpdateChannelButtonClass, .CreateRoleButtonClass, .UpdatedRoleButtonClass, .JoinServerButtonClass, .DeleteMessageButtonClass, .DeleteDirectMessageButtonClass, .LeaveServerButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:20px auto 20px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:12px;
+        border-radius:10px;
+        height:40px;
+    }
+
+    .InvalidInputButton {
+        background-color:red;
+        border:none;
+        width:90%;
+        display:block;
+        margin:20px auto 20px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:12px;
+        border-radius:10px;
+        height:40px;
+    }
+
+}
+
+/*
+==================================================
+Responsive Web Design For Phones
+==================================================
+*/
+@media (max-width: 480px) {
+
+    #LoginMainDiv {
+        background-color:#42434a;
+        height:430px;
+        width:90%;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #LoginTextDiv1 {
+        font-size:18px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:5px;
+        width:90%;
+    }
+
+    #LoginTextDiv2 {
+        font-size:10px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:5px;
+        width:90%;
+    }
+
+    #LoginTextDiv3, #LoginTextDiv4, #CreateNewAcountTextDiv2, #CreateNewAcountTextDiv3, #CreateNewAcountTextDiv4 {
+        width:90%;
+        margin:auto;
+        font-size:10px;
+        display:block;
+        text-align:left;
+        padding-top:5px;
+        padding-bottom:5px;
+    }
+
+    #LoginTextDiv5 {
+        font-size:10px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:5px;
+    }
+
+    .LoginDivInputClass, .CreateNewAccountInputClass{
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:90%;
+        margin:auto;
+        display:block;
+        height:25px;
+        color:white;
+    }
+
+    .InvalidInput {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:90% !important;
+        margin:auto !important;
+        display:block !important;
+        height:25px !important;
+        color:white !important;
+    }
+
+    .InvalidInput2 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:25px !important;
+        color:white !important;
+    }
+
+    .InvalidInput3 {
+        background-color:#3f3f46 !important;
+        border:1px solid red !important;
+        border-radius:10px !important;
+        width:80% !important;
+        margin:25px auto 25px auto !important;
+        display:block !important;
+        height:80px !important;
+        color:white !important;
+    }
+
+    .CreateNewAccountErrorDiv {
+        font-size:10px;
+        text-align:center;
+        width:90%;
+        display:block;
+        margin:5px auto 5px auto;
+    }
+
+    .LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass, .CreateChannelButtonClass, .EditMemberLabelButtonClass, .UpdateChannelButtonClass, .CreateRoleButtonClass, .UpdatedRoleButtonClass, .JoinServerButtonClass, .DeleteMessageButtonClass, .DeleteDirectMessageButtonClass, .LeaveServerButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:15px auto 15px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:10px;
+        border-radius:10px;
+        height:30px;
+    }
+
+    .InvalidInputButton {
+        background-color:red;
+        border:none;
+        width:90%;
+        display:block;
+        margin:15px auto 15px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:10px;
+        border-radius:10px;
+        height:30px;
+    }
+
+}
+
 html, body, #root {
     width:100%;
     height:100%;
@@ -29,28 +434,10 @@ h1 {
     position:absolute;
 }
 
-#LoginMainDiv {
-    background-color:#42434a;
-    height:550px;
-    width:800px;
-    border-radius:10px;
-    box-shadow:0px 0px 10px black;
-    margin:auto;
-    display:block;
-}
-
 .LoginTextDivClass, .CreateNewAccountTextDivClass, .CreateNewAccountErrorDiv, .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
     color:white;
     font-weight:bold;
-}
-
-.CreateNewAccountErrorDiv {
-    font-size:15px;
-    text-align:center;
-    width:90%;
-    display:block;
-    margin:15px auto 15px auto;
 }
 
 .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
@@ -59,43 +446,6 @@ h1 {
     width:80%;
     display:block;
     margin:15px auto 15px auto;
-}
-
-#LoginTextDiv1 {
-    font-size:25px;
-    margin:auto;
-    display:block;
-    text-align:center;
-    padding-top:15px;
-}
-
-#LoginTextDiv2 {
-    font-size:15px;
-    margin:auto;
-    display:block;
-    text-align:center;
-    padding-top:15px;
-}
-
-#LoginTextDiv3, #LoginTextDiv4, #CreateNewAcountTextDiv2, #CreateNewAcountTextDiv3, #CreateNewAcountTextDiv4 {
-    width:90%;
-    margin:auto;
-    font-size:15px;
-    display:block;
-    text-align:left;
-    padding-top:15px;
-    padding-bottom:15px;
-}
-
-.LoginDivInputClass, .CreateNewAccountInputClass{
-    background-color:#3f3f46;
-    border:1px solid white;
-    border-radius:10px;
-    width:90%;
-    margin:auto;
-    display:block;
-    height:35px;
-    color:white;
 }
 
 .UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass, .CreateRolesInputClass, .EditRolesInputClass, .JoinServerInputClass {
@@ -193,47 +543,6 @@ h1 {
     font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
 }
 
-.InvalidInput {
-    background-color:#3f3f46 !important;
-    border:1px solid red !important;
-    border-radius:10px !important;
-    width:90% !important;
-    margin:auto !important;
-    display:block !important;
-    height:35px !important;
-    color:white !important;
-}
-
-.InvalidInput2 {
-    background-color:#3f3f46 !important;
-    border:1px solid red !important;
-    border-radius:10px !important;
-    width:80% !important;
-    margin:25px auto 25px auto !important;
-    display:block !important;
-    height:35px !important;
-    color:white !important;
-}
-
-.InvalidInput3 {
-    background-color:#3f3f46 !important;
-    border:1px solid red !important;
-    border-radius:10px !important;
-    width:80% !important;
-    margin:25px auto 25px auto !important;
-    display:block !important;
-    height:100px !important;
-    color:white !important;
-}
-
-#LoginTextDiv5 {
-    font-size:15px;
-    margin:auto;
-    display:block;
-    text-align:center;
-    padding-top:15px;
-}
-
 .LoginDivInputClass:focus, .CreateNewAccountInputClass:focus, .UserSettingsInputClass:focus, #UserSettingsBiographyTextArea:focus, .CreateNewServerInputClass:focus, .ServerSettingsInputClass:focus, #ServerSettingsDescriptionTextArea:focus, .CreateChannelInputClass:focus, #CreateChannelDescriptionTextArea:focus, .EditChannelInputClass:focus, #EditChannelDescriptionTextArea:focus, .CreateRolesInputClass:focus, .EditRolesInputClass:focus, .JoinServerInputClass:focus {
     border-color:#2684FF;
     outline:none;
@@ -256,20 +565,6 @@ h1 {
     border-color:red !important;
     outline:none !important;
     box-shadow:0px 0px 10px red !important;
-}
-
-.LoginScreenDivButtonClass, .CreateNewAccountButtonClass, .CreateNewServerButtonClass, .ServerSettingsButtonClass, .CreateChannelButtonClass, .EditMemberLabelButtonClass, .UpdateChannelButtonClass, .CreateRoleButtonClass, .UpdatedRoleButtonClass, .JoinServerButtonClass, .DeleteMessageButtonClass, .DeleteDirectMessageButtonClass, .LeaveServerButtonClass {
-    background-color:#616fff;
-    border:none;
-    width:90%;
-    display:block;
-    margin:25px auto 25px auto;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:15px;
-    border-radius:10px;
-    height:50px;
 }
 
 .BansListMemberUnBanButton {
@@ -321,20 +616,6 @@ h1 {
     cursor:pointer;
     background-color:#4f56c2;
     transition:background-color 0.5s ease;
-}
-
-.InvalidInputButton {
-    background-color:red;
-    border:none;
-    width:90%;
-    display:block;
-    margin:25px auto 25px auto;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:15px;
-    border-radius:10px;
-    height:50px;
 }
 
 .InvalidInputButton:hover {
