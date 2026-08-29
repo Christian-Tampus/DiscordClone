@@ -1,5 +1,11 @@
 /*
 ==================================================
+Update Version [34] @ 8/29/2026
+==================================================
+*/
+
+/*
+==================================================
 Responsive Web Design For Desktops
 ==================================================
 */
@@ -129,6 +135,173 @@ Responsive Web Design For Desktops
         font-size:15px;
         border-radius:10px;
         height:50px;
+    }
+
+    #CreateNewAccountMainDiv {
+        background-color:#42434a;
+        height:600px;
+        width:500px;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #CreateNewAcountTextDiv1 {
+        font-size:25px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:15px;
+    }
+
+    .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
+        font-size:15px;
+        text-align:center;
+        width:80%;
+        display:block;
+        margin:15px auto 15px auto;
+    }
+
+    .UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass, .CreateRolesInputClass, .EditRolesInputClass, .JoinServerInputClass {
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:80%;
+        margin:25px auto 25px auto;
+        display:block;
+        height:35px;
+        color:white;
+    }
+
+    #UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea, #CreateChannelDescriptionTextArea, #EditChannelDescriptionTextArea, #EditMemberBiographyTextArea {
+        width:80%;
+        height:100px;
+        margin:25px auto 25px auto;
+        display:block;
+        resize:none;
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+    }
+
+    #DirectMessagesDMUserInput {
+        flex:3;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:15px;
+        border:none;
+        border-radius:10px;
+        padding-left:10px;
+    }
+
+    #DirectMessagesDMUserButton {
+        flex:1;
+        width:100%;
+        height:100%;
+        cursor:pointer;
+        background-color:#616fff;
+        border:none;
+        display:block;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+    }
+
+    #DirectMessagesSearchContainerDiv {
+        display:flex;
+        gap:5px;
+        height:60px;
+        padding:5px;
+    }
+
+    .BansListMemberUnBanButton {
+        background-color:#616fff;
+        border:none;
+        width:100%;
+        margin:5px auto 5px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+        height:50px;
+    }
+
+    .EditRoleButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:25px auto 25px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:20px;
+        border-radius:10px;
+        height:30px;
+    }
+
+    .AddRoleToMemberButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:25px auto 25px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:25px;
+        border-radius:10px;
+        height:50px;
+    }
+
+    #HeaderBar {
+        width:100%;
+        background-color:#232325;
+        height:35px;
+        text-align:center;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        color:white;
+        line-height:35px;
+        font-size:20px;
+    }
+
+    #MainContainerDiv {
+        flex:1;
+        width:100%;
+        height:calc(100% - 35px);
+        display:flex;
+    }
+
+    #ServersContainerDiv {
+        width:75px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:12.5px 0;
+        gap:10px;
+    }
+
+    #DirectMessageButtonDivContainer, .serverIconDiv, #UserSettingsDiv, #CreateNewServerDivContainer {
+        width:50px;
+        height:50px;
+        background-color:#3a3b3c;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        border-radius:15px;
     }
 
 }
@@ -266,6 +439,173 @@ Responsive Web Design For Tablets
         height:40px;
     }
 
+    #CreateNewAccountMainDiv {
+        background-color:#42434a;
+        height:525px;
+        width:70%;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #CreateNewAcountTextDiv1 {
+        font-size:20px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:10px;
+    }
+
+    .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
+        font-size:12px;
+        text-align:center;
+        width:80%;
+        display:block;
+        margin:10px auto 10px auto;
+    }
+
+    .UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass, .CreateRolesInputClass, .EditRolesInputClass, .JoinServerInputClass {
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:80%;
+        margin:20px auto 20px auto;
+        display:block;
+        height:30px;
+        color:white;
+    }
+
+    #UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea, #CreateChannelDescriptionTextArea, #EditChannelDescriptionTextArea, #EditMemberBiographyTextArea {
+        width:80%;
+        height:90px;
+        margin:20px auto 20px auto;
+        display:block;
+        resize:none;
+        color:white;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+    }
+
+    #DirectMessagesDMUserInput {
+        flex:3;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:12px;
+        border:none;
+        border-radius:10px;
+        padding-left:10px;
+    }
+
+    #DirectMessagesDMUserButton {
+        flex:1;
+        width:100%;
+        height:100%;
+        cursor:pointer;
+        background-color:#616fff;
+        border:none;
+        display:block;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:12px;
+        border-radius:10px;
+    }
+
+    #DirectMessagesSearchContainerDiv {
+        display:flex;
+        gap:5px;
+        height:50px;
+        padding:5px;
+    }
+
+    .BansListMemberUnBanButton {
+        background-color:#616fff;
+        border:none;
+        width:100%;
+        margin:5px auto 5px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:12px;
+        border-radius:10px;
+        height:40px;
+    }
+
+    .EditRoleButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:20px auto 20px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+        height:25px;
+    }
+
+    .AddRoleToMemberButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:20px auto 20px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:20px;
+        border-radius:10px;
+        height:40px;
+    }
+
+    #HeaderBar {
+        width:100%;
+        background-color:#232325;
+        height:30px;
+        text-align:center;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        color:white;
+        line-height:30px;
+        font-size:18px;
+    }
+
+    #MainContainerDiv {
+        flex:1;
+        width:100%;
+        height:calc(100% - 30px);
+        display:flex;
+    }
+
+    #ServersContainerDiv {
+        width:70px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:10px 0;
+        gap:7.5px;
+    }
+
+    #DirectMessageButtonDivContainer, .serverIconDiv, #UserSettingsDiv, #CreateNewServerDivContainer {
+        width:45px;
+        height:45px;
+        background-color:#3a3b3c;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        border-radius:12.5px;
+    }
+
 }
 
 /*
@@ -401,6 +741,173 @@ Responsive Web Design For Phones
         height:30px;
     }
 
+    #CreateNewAccountMainDiv {
+        background-color:#42434a;
+        height:475px;
+        width:90%;
+        border-radius:10px;
+        box-shadow:0px 0px 10px black;
+        margin:auto;
+        display:block;
+    }
+
+    #CreateNewAcountTextDiv1 {
+        font-size:15px;
+        margin:auto;
+        display:block;
+        text-align:center;
+        padding-top:5px;
+    }
+
+    .UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
+        font-size:10px;
+        text-align:center;
+        width:80%;
+        display:block;
+        margin:5px auto 5px auto;
+    }
+
+    .UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass, .CreateRolesInputClass, .EditRolesInputClass, .JoinServerInputClass {
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+        width:80%;
+        margin:15px auto 15px auto;
+        display:block;
+        height:25px;
+        color:white;
+    }
+
+    #UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea, #CreateChannelDescriptionTextArea, #EditChannelDescriptionTextArea, #EditMemberBiographyTextArea {
+        width:80%;
+        height:80px;
+        margin:15px auto 15px auto;
+        display:block;
+        resize:none;
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        background-color:#3f3f46;
+        border:1px solid white;
+        border-radius:10px;
+    }
+
+    #DirectMessagesDMUserInput {
+        flex:3;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:10px;
+        border:none;
+        border-radius:10px;
+        padding-left:10px;
+    }
+
+    #DirectMessagesDMUserButton {
+        flex:1;
+        width:100%;
+        height:100%;
+        cursor:pointer;
+        background-color:#616fff;
+        border:none;
+        display:block;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:10px;
+        border-radius:10px;
+    }
+
+    #DirectMessagesSearchContainerDiv {
+        display:flex;
+        gap:5px;
+        height:40px;
+        padding:5px;
+    }
+
+    .BansListMemberUnBanButton {
+        background-color:#616fff;
+        border:none;
+        width:100%;
+        margin:5px auto 5px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:10px;
+        border-radius:10px;
+        height:30px;
+    }
+
+    .EditRoleButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:15px auto 15px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:10px;
+        border-radius:10px;
+        height:20px;
+    }
+
+    .AddRoleToMemberButtonClass {
+        background-color:#616fff;
+        border:none;
+        width:90%;
+        display:block;
+        margin:15px auto 15px auto;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        font-size:15px;
+        border-radius:10px;
+        height:30px;
+    }
+
+    #HeaderBar {
+        width:100%;
+        background-color:#232325;
+        height:25px;
+        text-align:center;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        color:white;
+        line-height:25px;
+        font-size:15px;
+    }
+
+    #MainContainerDiv {
+        flex:1;
+        width:100%;
+        height:calc(100% - 25px);
+        display:flex;
+    }
+
+    #ServersContainerDiv {
+        width:65px;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:7.5px 0;
+        gap:5px;
+    }
+
+    #DirectMessageButtonDivContainer, .serverIconDiv, #UserSettingsDiv, #CreateNewServerDivContainer {
+        width:40px;
+        height:40px;
+        background-color:#3a3b3c;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        border-radius:10px;
+    }
+
 }
 
 html, body, #root {
@@ -440,39 +947,6 @@ h1 {
     font-weight:bold;
 }
 
-.UpdateAccountErrorDiv, .CreateNewServerErrorDiv, .ServerSettingsErrorDiv, .CreateChannelErrorDiv, .EditChannelErrorDiv, .CreateNewRoleErrorDiv, .UpdateRoleErrorDiv {
-    font-size:15px;
-    text-align:center;
-    width:80%;
-    display:block;
-    margin:15px auto 15px auto;
-}
-
-.UserSettingsInputClass, .CreateNewServerInputClass, .ServerSettingsInputClass, .CreateChannelInputClass, .EditChannelInputClass, .CreateRolesInputClass, .EditRolesInputClass, .JoinServerInputClass {
-    background-color:#3f3f46;
-    border:1px solid white;
-    border-radius:10px;
-    width:80%;
-    margin:25px auto 25px auto;
-    display:block;
-    height:35px;
-    color:white;
-}
-
-#UserSettingsBiographyTextArea, #ServerSettingsDescriptionTextArea, #CreateChannelDescriptionTextArea, #EditChannelDescriptionTextArea, #EditMemberBiographyTextArea {
-    width:80%;
-    height:100px;
-    margin:25px auto 25px auto;
-    display:block;
-    resize:none;
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    background-color:#3f3f46;
-    border:1px solid white;
-    border-radius:10px;
-}
-
 #EditMemberBiographyTextArea:hover {
     cursor:default;
     outline:none;
@@ -480,21 +954,6 @@ h1 {
 
 #EditMemberBiographyTextArea:focus {
     outline:none;
-}
-
-#DirectMessagesDMUserInput {
-    flex:3;
-    width:100%;
-    height:100%;
-    box-sizing:border-box;
-    background-color:#3f3f46;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    font-size:15px;
-    border:none;
-    border-radius:10px;
-    padding-left:10px;
 }
 
 #DirectMessagesDMUserInput::placeholder {
@@ -506,21 +965,6 @@ h1 {
     outline:none;
 }
 
-#DirectMessagesDMUserButton {
-    flex:1;
-    width:100%;
-    height:100%;
-    cursor:pointer;
-    background-color:#616fff;
-    border:none;
-    display:block;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:15px;
-    border-radius:10px;
-}
-
 #DirectMessagesDMUserButton:hover {
     cursor:pointer;
     background-color:#4f56c2;
@@ -529,13 +973,6 @@ h1 {
 
 #DirectMessagesDMUserButton:focus {
     outline:none;
-}
-
-#DirectMessagesSearchContainerDiv {
-    display:flex;
-    gap:5px;
-    height:60px;
-    padding:5px;
 }
 
 .LoginDivInputClass::placeholder, .CreateNewAccountInputClass::placeholder, .UserSettingsInputClass::placeholder, #UserSettingsBiographyTextArea::placeholder, .CreateNewServerInputClass::placeholder, .ServerSettingsInputClass::placeholder, #ServerSettingsDescriptionTextArea::placeholder, .CreateChannelInputClass::placeholder, #CreateChannelDescriptionTextArea::placeholder, .EditChannelInputClass::placeholder, #EditChannelDescriptionTextArea::placeholder, .CreateRolesInputClass::placeholder, .EditRolesInputClass::placeholder, .JoinServerInputClass::placeholder {
@@ -567,49 +1004,8 @@ h1 {
     box-shadow:0px 0px 10px red !important;
 }
 
-.BansListMemberUnBanButton {
-    background-color:#616fff;
-    border:none;
-    width:100%;
-    margin:5px auto 5px auto;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:15px;
-    border-radius:10px;
-    height:50px;
-}
-
 .EditMemberLabelButtonClass {
     width:80%;
-}
-
-.EditRoleButtonClass {
-    background-color:#616fff;
-    border:none;
-    width:90%;
-    display:block;
-    margin:25px auto 25px auto;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:20px;
-    border-radius:10px;
-    height:30px;
-}
-
-.AddRoleToMemberButtonClass {
-    background-color:#616fff;
-    border:none;
-    width:90%;
-    display:block;
-    margin:25px auto 25px auto;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    font-size:25px;
-    border-radius:10px;
-    height:50px;
 }
 
 .LoginScreenDivButtonClass:hover, .CreateNewAccountButtonClass:hover, .CreateNewServerButtonClass:hover, .ServerSettingsButtonClass:hover, .BansListMemberUnBanButton:hover, .CreateChannelButtonClass:hover, .EditMemberLabelButtonClass:hover, .UpdateChannelButtonClass:hover, .CreateRoleButtonClass:hover, .EditRoleButtonClass:hover, .UpdatedRoleButtonClass:hover, .AddRoleToMemberButtonClass:hover, .JoinServerButtonClass:hover, .DeleteMessageButtonClass:hover, .DeleteDirectMessageButtonClass:hover, .LeaveServerButtonClass:hover {
@@ -624,68 +1020,12 @@ h1 {
     transition:background-color 0.5s ease;
 }
 
-#CreateNewAccountMainDiv {
-    background-color:#42434a;
-    height:600px;
-    width:500px;
-    border-radius:10px;
-    box-shadow:0px 0px 10px black;
-    margin:auto;
-    display:block;
-}
-
-#CreateNewAcountTextDiv1 {
-    font-size:25px;
-    margin:auto;
-    display:block;
-    text-align:center;
-    padding-top:15px;
-}
-
 #MainPageDiv {
     background-color:#232325;
     width:100vw;
     height:100vh;
     display:flex;
     flex-direction:column;
-}
-
-#HeaderBar {
-    width:100%;
-    background-color:#232325;
-    height:35px;
-    text-align:center;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    color:white;
-    line-height:35px;
-    font-size:20px;
-}
-
-#MainContainerDiv {
-    flex:1;
-    width:100%;
-    height:calc(100% - 35px);
-    display:flex;
-}
-
-#ServersContainerDiv {
-    width:75px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:12.5px 0;
-    gap:10px;
-}
-
-#DirectMessageButtonDivContainer, .serverIconDiv, #UserSettingsDiv, #CreateNewServerDivContainer {
-    width:50px;
-    height:50px;
-    background-color:#3a3b3c;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    border-radius:15px;
 }
 
 #DirectMessageButton, #UserSettingsButton, .serverIconImage {
@@ -703,6 +1043,61 @@ h1 {
 #DirectMessageButtonDivContainer:hover #DirectMessageButton, .serverIconDiv:hover .serverIconImage {
     animation:rotateOnHover 1s ease-in-out;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .serverNotificationIcon {
     position:absolute;
