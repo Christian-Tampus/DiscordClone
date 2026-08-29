@@ -1,24 +1,14 @@
 /*
 ==================================================
-Update Version [34] @ 8/29/2026
+Update Version [35] @ 8/29/2026
 ==================================================
 */
 
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
 1. [COMPLETED] Fully Functional Discord Clone
 2. [IN_PROGRESS] Responsive Web Design (Desktop, Tablet & Mobile)
 3. [_] Source Code Documentation
-4. [_] Deploy Application On Render
-5. [_] Create README.md
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
-!!!!!=====PROJECT GOALS=====!!!!!
+4. [_] Create README.md
+5. [_] Deploy Application On Render
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
