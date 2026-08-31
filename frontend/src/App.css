@@ -1,6 +1,6 @@
 /*
 ==================================================
-Update Version [36] @ 8/30/2026
+Update Version [37] @ 8/31/2026
 ==================================================
 */
 
@@ -623,6 +623,263 @@ Responsive Web Design For Desktops
         margin:5px;
         padding:5px;
         flex-shrink:0;
+    }
+
+    #ServerNameDiv {
+        color:white;
+        font-size:20px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        flex:1;
+        min-width:0;
+        text-align:center;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #ServerSettingIcon {
+        width:40px;
+        height:40px;
+        margin:5px;
+        padding:5px;
+        border-radius:100%;
+        flex-shrink:0;
+    }
+
+    #ServerThumbnailIconDiv {
+        width:100%;
+        height:150px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionDiv {
+        width:100%;
+        height:100px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionTextArea {
+        cursor:default;
+        resize:none;
+        border:1px solid #3f3f46;
+        background-color:#232325;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-size:15px;
+    }
+
+    .hashTagIcon, .channelEditButton {
+        width:40px;
+        height:40px;
+        margin:5px;
+        padding:5px;
+    }
+
+    .channelNameDiv {
+        flex:1;
+        min-width:0;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:center;
+        font-size:20px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #TextChatInput, #DirectMessageTextChatInput {
+        flex:1;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:15px;
+        border:none;
+        border-radius:15px;
+        padding-left:10px;
+    }
+
+    #TextChatInput::placeholder, #DirectMessageTextChatInput::placeholder {
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:15px;
+    }
+
+    #EmojiButton, #DirectMessageEmojiButton {
+        width:50px;
+        height:100%;
+        border:none;
+        border-radius:15px;
+        background-color:#616fff;
+        color:white;
+        font-size:25px;
+        text-align:center;
+        cursor:pointer;
+        flex-shrink: 0;
+    }
+
+    #EmojiPickerDiv, #DirectMessagesEmojiPickerDiv {
+        position:absolute;
+        right:250px;
+        bottom:70px;
+        width:400px;
+        height:200px;
+        display:grid;
+        grid-template-columns:repeat(10, 1fr);
+        gap:5px;
+        padding:10px;
+        box-sizing:border-box;
+        overflow-y:auto;
+        scrollbar-width:none;
+        background-color:#3f3f46;
+        border-radius:10px;
+    }
+
+    .EmojiPickerButton, .DirectMessagesEmojiPickerButton {
+        width:30px;
+        height:30px;
+        border:none;
+        font-size:15px;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+    }
+
+    .messageMainDiv, .directMessageMainDiv {
+        display:flex;
+        align-items:flex-start;
+        width:100%;
+        height:100px;
+        padding:10px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    .messagePFP, .directMessagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
+        background-color:#3f3f46;
+        border-radius:100%;
+        border:1px solid white;
+        width:50px;
+        height:50px;
+        margin-right:10px;
+        flex-shrink:0;
+        cursor:pointer;
+    }
+
+    .messageContainerDiv, .directMessageContainerDiv {
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        min-height:100%;
+    }
+
+    .messageHeaderDiv, .directMessageHeaderDiv {
+        display:flex;
+        align-items:baseline;
+        gap:10px;
+    }
+
+    .messageUserNameDiv, .directMessageUserNameDiv {
+        font-weight:bold;
+        font-size:20px;
+    }
+
+    .messageTimeStampDiv, .directMessageTimeStampDiv {
+        font-size:10px;
+        color:gray;
+    }
+
+    .messageTextArea, .directMessageTextArea {
+        flex:1;
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:100%;
+    }
+
+    .DeleteMessageTextArea, .DeleteDirectMessageTextArea {
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:80%;
+        height:95px;
+        display:block;
+        margin:auto;
+    }
+
+    .editMessageButton, .deleteMessageButton, .editDirectMessageButton, .deleteDirectMessageButton {
+        border:none;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup {
+        position:absolute;
+        left:0px;
+        bottom:50px;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup2 {
+        position:absolute;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        width:110px;
     }
 
 }
@@ -1248,6 +1505,263 @@ Responsive Web Design For Tablets
         flex-shrink:0;
     }
 
+    #ServerNameDiv {
+        color:white;
+        font-size:15px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        flex:1;
+        min-width:0;
+        text-align:center;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #ServerSettingIcon {
+        width:30px;
+        height:30px;
+        margin:5px;
+        padding:5px;
+        border-radius:100%;
+        flex-shrink:0;
+    }
+
+    #ServerThumbnailIconDiv {
+        width:100%;
+        height:100px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionDiv {
+        width:100%;
+        height:90px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionTextArea {
+        cursor:default;
+        resize:none;
+        border:1px solid #3f3f46;
+        background-color:#232325;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-size:12px;
+    }
+
+    .hashTagIcon, .channelEditButton {
+        width:30px;
+        height:30px;
+        margin:5px;
+        padding:5px;
+    }
+
+    .channelNameDiv {
+        flex:1;
+        min-width:0;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:center;
+        font-size:15px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #TextChatInput, #DirectMessageTextChatInput {
+        flex:1;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:12px;
+        border:none;
+        border-radius:15px;
+        padding-left:10px;
+    }
+
+    #TextChatInput::placeholder, #DirectMessageTextChatInput::placeholder {
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:12px;
+    }
+
+    #EmojiButton, #DirectMessageEmojiButton {
+        width:50px;
+        height:100%;
+        border:none;
+        border-radius:15px;
+        background-color:#616fff;
+        color:white;
+        font-size:20px;
+        text-align:center;
+        cursor:pointer;
+        flex-shrink: 0;
+    }
+
+    #EmojiPickerDiv, #DirectMessagesEmojiPickerDiv {
+        position:absolute;
+        right:190px;
+        bottom:70px;
+        width:300px;
+        height:150px;
+        display:grid;
+        grid-template-columns:repeat(10, 1fr);
+        gap:4px;
+        padding:8px;
+        box-sizing:border-box;
+        overflow-y:auto;
+        scrollbar-width:none;
+        background-color:#3f3f46;
+        border-radius:8px;
+    }
+
+    .EmojiPickerButton, .DirectMessagesEmojiPickerButton {
+        width:25px;
+        height:25px;
+        border:none;
+        font-size:10px;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+    }
+
+    .messageMainDiv, .directMessageMainDiv {
+        display:flex;
+        align-items:flex-start;
+        width:100%;
+        height:90px;
+        padding:10px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    .messagePFP, .directMessagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
+        background-color:#3f3f46;
+        border-radius:100%;
+        border:1px solid white;
+        width:40px;
+        height:40px;
+        margin-right:8px;
+        flex-shrink:0;
+        cursor:pointer;
+    }
+
+    .messageContainerDiv, .directMessageContainerDiv {
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        color:white;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        min-height:100%;
+    }
+
+    .messageHeaderDiv, .directMessageHeaderDiv {
+        display:flex;
+        align-items:baseline;
+        gap:8px;
+    }
+
+    .messageUserNameDiv, .directMessageUserNameDiv {
+        font-weight:bold;
+        font-size:15px;
+    }
+
+    .messageTimeStampDiv, .directMessageTimeStampDiv {
+        font-size:8px;
+        color:gray;
+    }
+
+    .messageTextArea, .directMessageTextArea {
+        flex:1;
+        color:white;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:100%;
+    }
+
+    .DeleteMessageTextArea, .DeleteDirectMessageTextArea {
+        color:white;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:80%;
+        height:95px;
+        display:block;
+        margin:auto;
+    }
+
+    .editMessageButton, .deleteMessageButton, .editDirectMessageButton, .deleteDirectMessageButton {
+        border:none;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+        color:white;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup {
+        position:absolute;
+        left:0px;
+        bottom:50px;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup2 {
+        position:absolute;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:12px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        width:110px;
+    }
+
 }
 
 /*
@@ -1871,6 +2385,263 @@ Responsive Web Design For Phones
         flex-shrink:0;
     }
 
+    #ServerNameDiv {
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-weight:bold;
+        flex:1;
+        min-width:0;
+        text-align:center;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #ServerSettingIcon {
+        width:20px;
+        height:20px;
+        margin:5px;
+        padding:5px;
+        border-radius:100%;
+        flex-shrink:0;
+    }
+
+    #ServerThumbnailIconDiv {
+        width:100%;
+        height:50px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionDiv {
+        width:100%;
+        height:80px;
+        padding:5px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    #ServerDescriptionTextArea {
+        cursor:default;
+        resize:none;
+        border:1px solid #3f3f46;
+        background-color:#232325;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        font-size:10px;
+    }
+
+    .hashTagIcon, .channelEditButton {
+        width:20px;
+        height:20px;
+        margin:5px;
+        padding:5px;
+    }
+
+    .channelNameDiv {
+        flex:1;
+        min-width:0;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:center;
+        font-size:10px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+    }
+
+    #TextChatInput, #DirectMessageTextChatInput {
+        flex:1;
+        width:100%;
+        height:100%;
+        box-sizing:border-box;
+        background-color:#3f3f46;
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:10px;
+        border:none;
+        border-radius:15px;
+        padding-left:10px;
+    }
+
+    #TextChatInput::placeholder, #DirectMessageTextChatInput::placeholder {
+        color:white;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        font-size:10px;
+    }
+
+    #EmojiButton, #DirectMessageEmojiButton {
+        width:50px;
+        height:100%;
+        border:none;
+        border-radius:15px;
+        background-color:#616fff;
+        color:white;
+        font-size:15px;
+        text-align:center;
+        cursor:pointer;
+        flex-shrink: 0;
+    }
+
+    #EmojiPickerDiv, #DirectMessagesEmojiPickerDiv {
+        position:absolute;
+        right:125px;
+        bottom:50px;
+        width:200px;
+        height:100px;
+        display:grid;
+        grid-template-columns:repeat(8, 1fr);
+        gap:3px;
+        padding:6px;
+        box-sizing:border-box;
+        overflow-y:auto;
+        scrollbar-width:none;
+        background-color:#3f3f46;
+        border-radius:6px;
+    }
+
+    .EmojiPickerButton, .DirectMessagesEmojiPickerButton {
+        width:20px;
+        height:20px;
+        border:none;
+        font-size:8px;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+    }
+
+    .messageMainDiv, .directMessageMainDiv {
+        display:flex;
+        align-items:flex-start;
+        width:100%;
+        height:80px;
+        padding:10px;
+        box-sizing:border-box;
+        border-bottom:1px solid #3f3f46;
+    }
+
+    .messagePFP, .directMessagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
+        background-color:#3f3f46;
+        border-radius:100%;
+        border:1px solid white;
+        width:30px;
+        height:30px;
+        margin-right:5px;
+        flex-shrink:0;
+        cursor:pointer;
+    }
+
+    .messageContainerDiv, .directMessageContainerDiv {
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        min-height:100%;
+    }
+
+    .messageHeaderDiv, .directMessageHeaderDiv {
+        display:flex;
+        align-items:baseline;
+        gap:5px;
+    }
+
+    .messageUserNameDiv, .directMessageUserNameDiv {
+        font-weight:bold;
+        font-size:10px;
+    }
+
+    .messageTimeStampDiv, .directMessageTimeStampDiv {
+        font-size:6px;
+        color:gray;
+    }
+
+    .messageTextArea, .directMessageTextArea {
+        flex:1;
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:100%;
+    }
+
+    .DeleteMessageTextArea, .DeleteDirectMessageTextArea {
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        text-align:left;
+        background:none;
+        box-sizing:border-box;
+        overflow:auto;
+        border:none;
+        resize:none;
+        width:80%;
+        height:95px;
+        display:block;
+        margin:auto;
+    }
+
+    .editMessageButton, .deleteMessageButton, .editDirectMessageButton, .deleteDirectMessageButton {
+        border:none;
+        background-color:#616fff;
+        text-align:center;
+        cursor:pointer;
+        border-radius:5px;
+        color:white;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup {
+        position:absolute;
+        left:0px;
+        bottom:50px;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+    }
+
+    .userStatusPopup2 {
+        position:absolute;
+        background-color:black;
+        border:1px solid #3a3b3c;
+        border-radius:5px;
+        opacity:0;
+        pointer-events:none;
+        transition:opacity 0.25s ease, transform 0.25s ease;
+        z-index:999;
+        white-space:nowrap;
+        padding:5px;
+        text-align:center;
+        font-size:10px;
+        font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
+        width:110px;
+    }
+
 }
 
 /*
@@ -2122,6 +2893,37 @@ h1 {
     width:100%;
 }
 
+#TextChatMainTextBoxDiv {
+    width:100%;
+    height:60px;
+    flex-shrink:0;
+    padding:5px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:flex;
+    gap:10px;
+}
+
+#DirectMessagesTextChatMainTextBoxDiv {
+    width:100%;
+    height:60px;
+    flex-shrink:0;
+    padding:5px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:flex;
+    gap:10px;
+}
+
+#TextChatMainDisplayDiv, #DirectMessagesTextChatMainDisplayDiv {
+    flex:1;
+    min-height:0;
+    width:100%;
+    overflow-y:auto;
+    overflow-x:hidden;
+    border-bottom:1px solid #3f3f46;
+}
+
 #TextChatChannelDescriptionDiv:hover {
     cursor:default;
 }
@@ -2150,6 +2952,12 @@ h1 {
     background-color:#2684FF;
     transition:background-color 0.5s ease;
     animation:rotateOnHover 1s ease-in-out;
+}
+
+#ServerThumbnailIcon {
+    object-fit:cover;
+    width:100%;
+    height:100%;
 }
 
 #ServerDescriptionTextArea:focus {
@@ -2450,299 +3258,23 @@ Keyframes
 
 
 
-#ServerNameDiv {
-    color:white;
-    font-size:20px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-weight:bold;
-    flex:1;
-    min-width:0;
-    text-align:center;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
 
-#ServerSettingIcon {
-    width:40px;
-    height:40px;
-    margin:5px;
-    padding:5px;
-    border-radius:100%;
-    flex-shrink:0;
-}
 
-#ServerThumbnailIconDiv {
-    width:100%;
-    height:150px;
-    padding:5px;
-    box-sizing:border-box;
-    border-bottom:1px solid #3f3f46;
-}
 
-#ServerThumbnailIcon {
-    object-fit:cover;
-    width:100%;
-    height:100%;
-}
 
-#ServerDescriptionDiv {
-    width:100%;
-    height:100px;
-    padding:5px;
-    box-sizing:border-box;
-    border-bottom:1px solid #3f3f46;
-}
 
-#ServerDescriptionTextArea {
-    cursor:default;
-    resize:none;
-    border:1px solid #3f3f46;
-    background-color:#232325;
-    width:100%;
-    height:100%;
-    box-sizing:border-box;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    font-size:15px;
-}
 
-.hashTagIcon, .channelEditButton {
-    width:40px;
-    height:40px;
-    margin:5px;
-    padding:5px;
-}
 
-.channelNameDiv {
-    flex:1;
-    min-width:0;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:center;
-    font-size:20px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-}
 
-#TextChatMainDisplayDiv, #DirectMessagesTextChatMainDisplayDiv {
-    flex:1;
-    min-height:0;
-    width:100%;
-    overflow-y:auto;
-    overflow-x:hidden;
-    border-bottom:1px solid #3f3f46;
-}
 
-#TextChatMainTextBoxDiv {
-    width:100%;
-    height:60px;
-    flex-shrink:0;
-    padding:5px;
-    box-sizing:border-box;
-    display:flex;
-    align-items:flex;
-    gap:10px;
-}
 
-#DirectMessagesTextChatMainTextBoxDiv {
-    width:100%;
-    height:60px;
-    flex-shrink:0;
-    padding:5px;
-    box-sizing:border-box;
-    display:flex;
-    align-items:flex;
-    gap:10px;
-}
 
-#TextChatInput, #DirectMessageTextChatInput {
-    flex:1;
-    width:100%;
-    height:100%;
-    box-sizing:border-box;
-    background-color:#3f3f46;
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    font-size:15px;
-    border:none;
-    border-radius:15px;
-    padding-left:10px;
-}
 
-#TextChatInput::placeholder, #DirectMessageTextChatInput::placeholder {
-    color:white;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    font-size:15px;
-}
 
-#EmojiButton, #DirectMessageEmojiButton {
-    width:50px;
-    height:100%;
-    border:none;
-    border-radius:15px;
-    background-color:#616fff;
-    color:white;
-    font-size:25px;
-    text-align:center;
-    cursor:pointer;
-    flex-shrink: 0;
-}
 
-#EmojiPickerDiv, #DirectMessagesEmojiPickerDiv {
-    position:absolute;
-    right:250px;
-    bottom:70px;
-    width:400px;
-    height:200px;
-    display:grid;
-    grid-template-columns:repeat(10, 1fr);
-    gap:5px;
-    padding:10px;
-    box-sizing:border-box;
-    overflow-y:auto;
-    scrollbar-width:none;
-    background-color:#3f3f46;
-    border-radius:10px;
-}
 
-.EmojiPickerButton, .DirectMessagesEmojiPickerButton {
-    width:30px;
-    height:30px;
-    border:none;
-    font-size:15px;
-    background-color:#616fff;
-    text-align:center;
-    cursor:pointer;
-    border-radius:5px;
-}
 
-.messageMainDiv, .directMessageMainDiv {
-    display:flex;
-    align-items:flex-start;
-    width:100%;
-    height:100px;
-    padding:10px;
-    box-sizing:border-box;
-    border-bottom:1px solid #3f3f46;
-}
 
-.messagePFP, .directMessagePFP, .membersListPFP, .DirectMessagesMembersListPFP {
-    background-color:#3f3f46;
-    border-radius:100%;
-    border:1px solid white;
-    width:50px;
-    height:50px;
-    margin-right:10px;
-    flex-shrink:0;
-    cursor:pointer;
-}
-
-.messageContainerDiv, .directMessageContainerDiv {
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    min-height:100%;
-}
-
-.messageHeaderDiv, .directMessageHeaderDiv {
-    display:flex;
-    align-items:baseline;
-    gap:10px;
-}
-
-.messageUserNameDiv, .directMessageUserNameDiv {
-    font-weight:bold;
-    font-size:20px;
-}
-
-.messageTimeStampDiv, .directMessageTimeStampDiv {
-    font-size:10px;
-    color:gray;
-}
-
-.messageTextArea, .directMessageTextArea {
-    flex:1;
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    background:none;
-    box-sizing:border-box;
-    overflow:auto;
-    border:none;
-    resize:none;
-    width:100%;
-}
-
-.DeleteMessageTextArea, .DeleteDirectMessageTextArea {
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    text-align:left;
-    background:none;
-    box-sizing:border-box;
-    overflow:auto;
-    border:none;
-    resize:none;
-    width:80%;
-    height:95px;
-    display:block;
-    margin:auto;
-}
-
-.editMessageButton, .deleteMessageButton, .editDirectMessageButton, .deleteDirectMessageButton {
-    border:none;
-    background-color:#616fff;
-    text-align:center;
-    cursor:pointer;
-    border-radius:5px;
-    color:white;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-}
-
-.userStatusPopup {
-    position:absolute;
-    left:0px;
-    bottom:50px;
-    background-color:black;
-    border:1px solid #3a3b3c;
-    border-radius:5px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity 0.25s ease, transform 0.25s ease;
-    z-index:999;
-    white-space:nowrap;
-    padding:5px;
-    text-align:center;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-}
-
-.userStatusPopup2 {
-    position:absolute;
-    background-color:black;
-    border:1px solid #3a3b3c;
-    border-radius:5px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity 0.25s ease, transform 0.25s ease;
-    z-index:999;
-    white-space:nowrap;
-    padding:5px;
-    text-align:center;
-    font-size:15px;
-    font-family:"gg sans", "Noto Sans", "Helvetica", Arial, sans-serif;
-    width:110px;
-}
 
 .membersListDiv:hover .userStatusPopup2{
     opacity:1;
