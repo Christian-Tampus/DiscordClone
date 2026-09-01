@@ -1,6 +1,6 @@
 /*
 ==================================================
-Update Version [37] @ 8/31/2026
+Update Version [38] @ 9/1/2026
 ==================================================
 */
 
@@ -65,7 +65,7 @@ const upload = multer({
 
 /*
 ==================================================
-Emitter To Get Latest Data
+EmitAllClients Function
 ==================================================
 */
 function EmitAllClients(serverIdArray, username, deletedChannel) {
@@ -80,7 +80,7 @@ function EmitAllClients(serverIdArray, username, deletedChannel) {
 
 /*
 ==================================================
-Retrieve Direct Messages Data
+RetrieveDirectMessagesData Function (Asynchronous)
 ==================================================
 */
 async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messages_username_array, direct_messages_id) {
@@ -119,7 +119,7 @@ async function RetrieveDirectMessagesData(direct_messages_id_array, direct_messa
 
 /*
 ==================================================
-Retrieve Server Data
+RetrieveServerData Function (Asynchronous)
 ==================================================
 */
 async function RetrieveServerData(servers) {
@@ -195,7 +195,7 @@ async function RetrieveServerData(servers) {
 
 /*
 ==================================================
-Retrieve Message Data
+RetrieveMessageData Function (Asynchronous)
 ==================================================
 */
 async function RetrieveMessageData(channelId) {
@@ -232,7 +232,7 @@ App.use("/imageStorage", express.static(path.join(__dirname,"../imageStorage")))
 
 /*
 ==================================================
-Test Route
+Test Home API
 ==================================================
 */
 App.get("/", (request, response) => {
@@ -278,9 +278,8 @@ App.post("/login", async (request, response) => {
     "SELECT * FROM users WHERE username = $1",
     [username]
   );
-  console.log("checkIfUsernameExists:",checkIfUsernameExists.rows);
   if (checkIfUsernameExists.rows.length > 0) {
-    console.log("[SERVER] Username:",username,"Exists!");
+    console.log("[SERVER] Username:", username, "Exists!");
     const checkIfPasswordIsCorrect = await PostgreSQLPool.query(
       "SELECT * FROM users WHERE username = $1 AND password = $2",
       [username, password]
@@ -300,6 +299,7 @@ App.post("/login", async (request, response) => {
           expiresIn: "1h"
         }
       );
+      console.log("[SERVER] Username:", username, "Logged In Successfully!");
       return response.status(200).json({
         token: JWT_Token,
         userData: userData
@@ -328,7 +328,6 @@ App.post("/createAccount", async (request, response) => {
   const displayName = request.body.displayName;
   const username = request.body.username;
   const password = request.body.password;
-  console.log("[SERVER] Request:",request.body);
   const checkIfUsernameExists = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [username]
@@ -360,7 +359,6 @@ Update User Settings API
 App.post("/updateUserSettings", async (request, response) => {
   console.log("[SERVER] API: /updateUserSettings");
   const UserSettingsToUpdate = request.body;
-  console.log("[SERVER] Request:",request.body);
   if (UserSettingsToUpdate.canUpdateDisplayName == true) {
     await PostgreSQLPool.query(
       "UPDATE users SET displayname = $1 WHERE username = $2",
@@ -554,7 +552,7 @@ App.post("/updateServerSettings", async (request, response) => {
 
 /*
 ==================================================
-Update Server Settings Icon & Thumbnail API
+Update Server Settings Images For Icon & Thumbnail API
 ==================================================
 */
 App.post("/updateServerImages", upload.fields([
@@ -602,19 +600,17 @@ App.post("/updateServerImages", upload.fields([
     const oldServerThumbnailPath = oldServerThumbnail.rows[0]?.server_thumbnail;
     if (oldServerThumbnailPath) {
       const oldServerThumbnailFullPath = path.join(__dirname, "..", oldServerThumbnailPath);
-      console.log("oldServerThumbnailFullPath:",oldServerThumbnailFullPath);
       if (fs.existsSync(oldServerThumbnailFullPath)) {
         fs.unlinkSync(oldServerThumbnailFullPath);
         console.log("[SERVER] Deleted Old Server Thumbnail Image!");
       };
     };
     const newServerThumbnailImagePath = "/imageStorage/" + serverThumbnail?.filename;
-    console.log("newServerThumbnailImagePath:",newServerThumbnailImagePath);
     await PostgreSQLPool.query(
       "UPDATE servers SET server_thumbnail = $1 WHERE server_id = $2",
       [newServerThumbnailImagePath, request.body.serverId]
     );
-    console.log("[SERVER] Updated Server Thumbnail IMage For ServerId:", request.body.serverId);
+    console.log("[SERVER] Updated Server Thumbnail Image For ServerId:", request.body.serverId);
   };
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
@@ -687,7 +683,7 @@ App.post("/createNewChannel", async (request, response) => {
 
 /*
 ==================================================
-Update Channel API
+Update Channel Settings API
 ==================================================
 */
 App.post("/updateChannelSettings", async (request, response) => {
@@ -1697,12 +1693,10 @@ Delete Direct Message API
 */
 App.post("/deleteDirectMessage", async(request, response) => {
   console.log("[SERVER] API: /deleteDirectMessage");
-  console.log("REQUEST BODY:", request.body);
   const deletedDirectMessage = await PostgreSQLPool.query(
     "DELETE FROM direct_messages WHERE id = $1 AND direct_messages_id = $2 AND direct_messages_message = $3 RETURNING *",
     [request.body.directMessageDataToDelete.id, request.body.directMessageDataToDelete.direct_messages_id, request.body.directMessageDataToDelete.direct_messages_message]
   );
-  console.log("deletedDirectMessage:", deletedDirectMessage.rows);
   const returnUserData = await PostgreSQLPool.query(
     "SELECT * FROM users WHERE username = $1",
     [request.body.username]
@@ -1725,6 +1719,12 @@ Socket.IO Real Time Chat
 */
 io.on("connection", (socket) => {
   console.log("[SOCKET] User Connected:", socket.id);
+
+  /*
+  ==================================================
+  Socket.IO User Login Connection
+  ==================================================
+  */
   socket.on("userLogin", (username) => {
     socket.join("User_" + username);
     socket.data.username = username;
@@ -1732,10 +1732,22 @@ io.on("connection", (socket) => {
     console.log("[SOCET] USERS_ONLINE:", USERS_ONLINE);
     console.log("[SOCKET] " + username + " Login!");
   });
+
+  /*
+  ==================================================
+  Socket.IO User Login Connection
+  ==================================================
+  */
   socket.on("joinDirectMessageChat", async(directMessageChatId) => {
     socket.join(directMessageChatId);
     console.log("[SOCKET] Joined Direct Message Chat:", directMessageChatId);
   });
+
+  /*
+  ==================================================
+  Socket.IO Join Channel Connection
+  ==================================================
+  */
   socket.on("joinChannel", async (channelId, retrieveMessageData) => {
     socket.join(channelId);
     console.log("[SOCKET] Joined Channel:", channelId);
@@ -1744,10 +1756,22 @@ io.on("connection", (socket) => {
       io.to(channelId).emit("recieveMessage", getMessagesData, channelId, true);
     };
   });
+
+  /*
+  ==================================================
+  Socket.IO Join Server Connection
+  ==================================================
+  */
   socket.on("joinServer", async(serverId) => {
     socket.join(serverId);
     console.log("[SOCKET] Joined Server:", serverId);
   })
+
+  /*
+  ==================================================
+  Socket.IO Send Message Connection
+  ==================================================
+  */
   socket.on("sendMessage", async(messageData) => {
     console.log("[SOCKET] Message:", messageData);
     if (messageData.isEditingMessage == false) {
@@ -1766,6 +1790,12 @@ io.on("connection", (socket) => {
     const getMessagesData = await RetrieveMessageData(messageData.channelId);
     io.to(messageData.channelId).emit("recieveMessage", getMessagesData, messageData.channelId, false);
   });
+
+  /*
+  ==================================================
+  Socket.IO Send Direct Message Connection
+  ==================================================
+  */
   socket.on("sendDirectMessage", async(directMessageData) => {
     console.log("[SOCKET] Direct Message:", directMessageData);
     if (directMessageData.isEditingDirectMessage == false) {
@@ -1784,6 +1814,12 @@ io.on("connection", (socket) => {
     const getRetrieveDirectMessagesData = await RetrieveDirectMessagesData(null, null, directMessageData.directMessageChannelId);
     io.to(directMessageData.directMessageChannelId).emit("recieveDirectMessage", getRetrieveDirectMessagesData, directMessageData.directMessageChannelId);
   });
+
+  /*
+  ==================================================
+  Socket.IO Disconnect
+  ==================================================
+  */
   socket.on("disconnect", () => {
     if (socket.data.username != null && USERS_ONLINE.has(socket.data.username)) {
       USERS_ONLINE.delete(socket.data.username);

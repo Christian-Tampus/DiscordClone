@@ -1,5 +1,11 @@
 /*
 ==================================================
+Update Version [38] @ 9/1/2026
+==================================================
+*/
+
+/*
+==================================================
 Dependencies
 ==================================================
 */
@@ -9,11 +15,7 @@ import App from "./App";
 
 /*
 ==================================================
-ReactDOM
+ReactDOM (Document Object Model)
 ==================================================
 */
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App/>
-  </React.StrictMode>
-);
+ReactDOM.createRoot(document.getElementById("root")!).render(<React.StrictMode><App/></React.StrictMode>);

@@ -1,12 +1,12 @@
 /*
 ==================================================
-Update Version [37] @ 8/31/2026
+Update Version [38] @ 9/1/2026
 ==================================================
 */
 
 1. [COMPLETED] Fully Functional Discord Clone
-2. [IN_PROGRESS] Responsive Web Design (Desktop, Tablet & Mobile)
-3. [_] Source Code Documentation
+2. [COMPLETED] Responsive Web Design (Desktop, Tablet & Mobile)
+3. [IN_PROGRESS] Source Code Documentation
 4. [_] Create README.md
 5. [_] Deploy Application On Render
 
