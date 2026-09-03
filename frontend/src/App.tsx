@@ -1,6 +1,6 @@
 /*
 ==================================================
-Update Version [38] @ 9/1/2026
+Update Version [39] @ 9/2/2026
 ==================================================
 */
 
@@ -42,10 +42,15 @@ const WEB_SAFE_EMOJIS = [
 
 /*
 ==================================================
-Function App
+Main Function
 ==================================================
 */
 function Main() {
+  /*
+  ==================================================
+  React State Variables
+  ==================================================
+  */
   const [socket, setSocket] = useState<Socket | null>(null);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -182,6 +187,12 @@ function Main() {
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
   */
+
+  /*
+  ==================================================
+  RetrieveLatestData Function (Asynchronous)
+  ==================================================
+  */
   async function RetrieveLatestData(hasDeletedChannel: any, kickedOrBanned: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -229,6 +240,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+
+  /*
+  ==================================================
+  RetrieveLatestDataViaDirectMessage Function (Asynchronous)
+  ==================================================
+  */
   async function RetrieveLatestDataViaDirectMessage(settingDirectMessageUserDataArray: any) {
     const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
       method: "POST",
@@ -256,77 +273,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
-  useEffect(() => {
-    if (socket == null) {
-      return;
-    };
-    socket.on("recieveMessage", (messageData, recieveMessageChannelId, isInitialMessage) => {
-      console.log("[CLIENT] Received messageData:", messageData);
-      if (isInitialMessage == false && userData != null) {
-        let server_id = null;
-        for (let index = 0; index < userData.serverData.length; index++) {
-          if (userData.serverData[index].server_channel_array.includes(recieveMessageChannelId)) {
-            server_id = userData.serverData[index].server_id;
-            break;
-          };
-        };
-        if (server_id != null && !notifyServerIdArray.includes(server_id)) {
-          setNotifyServerIdArray(previous => [...previous, server_id]);
-        };
-      };
-      if (isInitialMessage == false) {
-        setNotifyChannelIdArray(previous => [...previous, recieveMessageChannelId]);
-      };
-      if (currentChannelInfo != null && (currentChannelInfo as any).channel_id == recieveMessageChannelId) {
-        setMessageDataArray(messageData);
-      };
-    });
-    socket.on("recieveDirectMessage", (directMessageData, recieveDirectMessageChannelId) => {
-      console.log("[CLIENT] Received directMessageData:", directMessageData);
-      if (directMessageChatId == recieveDirectMessageChannelId) {
-        setDirectMessageDataArray(directMessageData);
-        RetrieveLatestDataViaDirectMessage(false);
-      } else {
-        RetrieveLatestDataViaDirectMessage(true);
-      };
-    });
-    socket.on("retrieveLatestData", (latestData) => {
-      console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
-      if (latestData.usernameToIgnore != username) {
-        RetrieveLatestData(latestData.hasDeletedChannel, false);
-      };
-    });
-    socket.on("kickedFromServer", () => {
-      console.log("[CLIENT] Kicked From Server, Retrieving Latest Data!");
-      RetrieveLatestData(false, true);
-    });
-    socket.on("bannedFromServer", () => {
-      console.log("[CLIENT] Banned From Server, Retrieving Latest Data!");
-      RetrieveLatestData(false, true);
-    });
-    socket.on("newMemberJoinedServer", () => {
-      console.log("[CLIENT] New Member Joined Server, Retrieving Latest Data!");
-      RetrieveLatestData(false, true);
-    });
-    socket.on("leftServer", () => {
-      console.log("[CLIENT] Member Left Server, Retrieving Latest Data!");
-      RetrieveLatestData(false, true);
-    });
-    socket.on("serverDeleted", () => {
-      console.log("[CLIENT] Server Deleted, Retrieving Latest Data!");
-      RetrieveLatestData(false, true);
-    })
-    return () => {
-      socket.off("recieveMessage");
-      socket.off("recieveDirectMessage");
-      socket.off("retrieveLatestData");
-      socket.off("kickedFromServer");
-      socket.off("bannedFromServer");
-      socket.off("newMemberJoinedServer");
-      socket.off("leftServer");
-      socket.off("serverDeleted");
-    };
-  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray, directMessageChatId]);
+  
+  /*
+  ==================================================
+  Login Function (Asynchronous)
+  ==================================================
+  */
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
       const response = await fetch("http://localhost:5000/login", {
@@ -425,6 +377,12 @@ function Main() {
       alert("[CLIENT] Invalid Login, Username Or Password Is In An Invalid Format!");
     };
   };
+  
+  /*
+  ==================================================
+  CreateNewAccount Function (Asynchronous)
+  ==================================================
+  */
   async function CreateNewAccount() {
     if (isCreateNewAccountDisplayNameValid == true && isCreateNewAccountUserNameValid == true && isCreateNewAccountPasswordNameValid == true) {
       const response = await fetch("http://localhost:5000/createAccount", {
@@ -449,6 +407,12 @@ function Main() {
       alert("[CLIENT] Cannot Create New Account!");
     };
   };
+  
+  /*
+  ==================================================
+  UpdateUserSettings Function (Asynchronous)
+  ==================================================
+  */
   async function UpdateUserSettings() {
     let preventUpdatingUserSettings = false;
     let canUpdateUserSettings = false;
@@ -550,6 +514,12 @@ function Main() {
       };
     };
   };
+  
+  /*
+  ==================================================
+  UpdateServerSettings Function (Asynchronous)
+  ==================================================
+  */
   async function UpdateServerSettings() {
     if (currentServerInfo != null && userData != null) {
       let preventUpdatingServerSettings = false;
@@ -640,6 +610,12 @@ function Main() {
       };
     };
   };
+  
+  /*
+  ==================================================
+  CreateNewServer Function (Asynchronous)
+  ==================================================
+  */
   async function CreateNewServer() {
     if (hasDataForCreateNewServerIcon == true && createNewServerIconFile != null && hasDataForCreateNewServerName == true && isCreateNewServerNameValid == true) {
       const formData = new FormData();
@@ -663,6 +639,12 @@ function Main() {
       alert("[ERROR] Invalid Input For Server Name Or You Have Not Selected A Server Icon!");
     };
   };
+  
+  /*
+  ==================================================
+  CreateNewChannel Function (Asynchronous)
+  ==================================================
+  */
   async function CreateNewChannel() {
     if (hasDataForCreateChannelName == true && hasDataForCreateChannelDescription == true) {
       let canCreateNewChannel = true;
@@ -701,6 +683,12 @@ function Main() {
       alert("[ERROR] You Must Include Both Channel Name & Channel Description!");
     };
   };
+  
+  /*
+  ==================================================
+  UpdateChannel Function (Asynchronous)
+  ==================================================
+  */
   async function UpdateChannel() {
     if (hasUpdatedChannelName == false && hasUpdatedChannelDescription == false) {
       alert("[CLIENT] You Have Not Made Any Changes To The Channel Name Or Description!");
@@ -740,6 +728,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  DeleteChannel Function (Asynchronous)
+  ==================================================
+  */
   async function DeleteChannel() {
     if (currentChannelId == "") {
       alert("[ERROR] No Channel Id To Delete!");
@@ -777,6 +771,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  CreateRoleFunction Function (Asynchronous)
+  ==================================================
+  */
   async function CreateRoleFunction() {
     if (hasDataForNewRoleName == false && hasDataForNewRoleColor == false) {
       alert("[ERROR] You Must Add A New Role Name & Role Color!");
@@ -819,6 +819,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  UpdateRoleFunction Function (Asynchronous)
+  ==================================================
+  */
   async function UpdateRoleFunction() {
     if (hasUpdatedRoleName == false && hasUpdatedRoleColor == false && hasUpdatedRoleRank == false && hasUpdatedCanKickLowerRankMembers == false && hasUpdatedCanBanLowerRankMembers == false && hasUpdatedCanEditLowerRankMembers == false) {
       alert("[ERROR] You Have Not Updated Anything!");
@@ -864,6 +870,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  AddRoleToMemberFunction Function (Asynchronous)
+  ==================================================
+  */
   async function AddRoleToMemberFunction(roleData: any) {
     if (currentMemberDataToEdit == null) {
       alert("[ERROR] currentMemberDataToEdit Is Null!");
@@ -896,6 +908,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  RemoveRoleFunction Function (Asynchronous)
+  ==================================================
+  */
   async function RemoveRoleFunction(roleData: any) {
     let roleDataToRemove = {
       adminUsername: userData.username,
@@ -920,6 +938,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  JoinServer Function (Asynchronous)
+  ==================================================
+  */
   async function JoinServer() {
     if (hasDataForJoinServerId == false) {
       alert("[ERROR] You Do Not Have Any Server Id Yet!");
@@ -945,6 +969,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  DeleteMessage Function (Asynchronous)
+  ==================================================
+  */
   async function DeleteMessage() {
     if (messageDataToDelete == null) {
       alert("[ERROR] Message Data Is Null!");
@@ -971,6 +1001,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  DeleteDirectMessage Function (Asynchronous)
+  ==================================================
+  */
   async function DeleteDirectMessage() {
     if (directMessageDataToDelete == null) {
       alert("[ERROR] Direct Message Data Is Null!");
@@ -1003,6 +1039,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  KickMemberFunction Function (Asynchronous)
+  ==================================================
+  */
   async function KickMemberFunction() {
     const kickMemberResponse = await fetch("http://localhost:5000/kickMember", {
       method: "POST",
@@ -1026,6 +1068,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  BanMemberFunction Function (Asynchronous)
+  ==================================================
+  */
   async function BanMemberFunction() {
     const banMemberResponse = await fetch("http://localhost:5000/banMember", {
       method: "POST",
@@ -1049,6 +1097,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  UnBanMember Function (Asynchronous)
+  ==================================================
+  */
   async function UnBanMember(UnBanMember: any) {
     const unBanMemberResponse = await fetch("http://localhost:5000/unBanMember", {
       method: "POST",
@@ -1077,6 +1131,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  LeaveServerFunction Function (Asynchronous)
+  ==================================================
+  */
   async function LeaveServerFunction() {
     const leaveServerResponse = await fetch("http://localhost:5000/leaveServer", {
       method: "POST",
@@ -1100,6 +1160,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  DeleteServerFunction Function (Asynchronous)
+  ==================================================
+  */
   async function DeleteServerFunction() {
     const deleteServerResponse = await fetch("http://localhost:5000/deleteServer", {
       method: "POST",
@@ -1123,6 +1189,12 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+  /*
+  ==================================================
+  addUserToDirectMessagesArrayFunction Function (Asynchronous)
+  ==================================================
+  */
   async function addUserToDirectMessagesArrayFunction() {
     const addUserToDirectMessagesResponse = await fetch("http://localhost:5000/addUserToDirectMessages", {
       method: "POST",
@@ -1144,14 +1216,164 @@ function Main() {
       alert(errorCode.error);
     };
   };
+  
+
+  /*
+  ==================================================
+  useEffect For Sockets
+  ==================================================
+  */
+  useEffect(() => {
+    if (socket == null) {
+      return;
+    };
+
+    /*
+    ==================================================
+    recieveMessage Socket Client End Point
+    ==================================================
+    */
+    socket.on("recieveMessage", (messageData, recieveMessageChannelId, isInitialMessage) => {
+      console.log("[CLIENT] Received messageData:", messageData);
+      if (isInitialMessage == false && userData != null) {
+        let server_id = null;
+        for (let index = 0; index < userData.serverData.length; index++) {
+          if (userData.serverData[index].server_channel_array.includes(recieveMessageChannelId)) {
+            server_id = userData.serverData[index].server_id;
+            break;
+          };
+        };
+        if (server_id != null && !notifyServerIdArray.includes(server_id)) {
+          setNotifyServerIdArray(previous => [...previous, server_id]);
+        };
+      };
+      if (isInitialMessage == false) {
+        setNotifyChannelIdArray(previous => [...previous, recieveMessageChannelId]);
+      };
+      if (currentChannelInfo != null && (currentChannelInfo as any).channel_id == recieveMessageChannelId) {
+        setMessageDataArray(messageData);
+      };
+    });
+
+    /*
+    ==================================================
+    recieveDirectMessage Socket Client End Point
+    ==================================================
+    */
+    socket.on("recieveDirectMessage", (directMessageData, recieveDirectMessageChannelId) => {
+      console.log("[CLIENT] Received directMessageData:", directMessageData);
+      if (directMessageChatId == recieveDirectMessageChannelId) {
+        setDirectMessageDataArray(directMessageData);
+        RetrieveLatestDataViaDirectMessage(false);
+      } else {
+        RetrieveLatestDataViaDirectMessage(true);
+      };
+    });
+
+    /*
+    ==================================================
+    retrieveLatestData Socket Client End Point
+    ==================================================
+    */
+    socket.on("retrieveLatestData", (latestData) => {
+      console.log("[CLIENT] retrieveLatestData Update Data To Latest:", latestData);
+      if (latestData.usernameToIgnore != username) {
+        RetrieveLatestData(latestData.hasDeletedChannel, false);
+      };
+    });
+
+    /*
+    ==================================================
+    kickedFromServer Socket Client End Point
+    ==================================================
+    */
+    socket.on("kickedFromServer", () => {
+      console.log("[CLIENT] Kicked From Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+
+    /*
+    ==================================================
+    bannedFromServer Socket Client End Point
+    ==================================================
+    */
+    socket.on("bannedFromServer", () => {
+      console.log("[CLIENT] Banned From Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+
+    /*
+    ==================================================
+    newMemberJoinedServer Socket Client End Point
+    ==================================================
+    */
+    socket.on("newMemberJoinedServer", () => {
+      console.log("[CLIENT] New Member Joined Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+
+    /*
+    ==================================================
+    leftServer Socket Client End Point
+    ==================================================
+    */
+    socket.on("leftServer", () => {
+      console.log("[CLIENT] Member Left Server, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    });
+
+    /*
+    ==================================================
+    serverDeleted Socket Client End Point
+    ==================================================
+    */
+    socket.on("serverDeleted", () => {
+      console.log("[CLIENT] Server Deleted, Retrieving Latest Data!");
+      RetrieveLatestData(false, true);
+    })
+
+    /*
+    ==================================================
+    Disconnect Sockets At Return
+    ==================================================
+    */
+    return () => {
+      socket.off("recieveMessage");
+      socket.off("recieveDirectMessage");
+      socket.off("retrieveLatestData");
+      socket.off("kickedFromServer");
+      socket.off("bannedFromServer");
+      socket.off("newMemberJoinedServer");
+      socket.off("leftServer");
+      socket.off("serverDeleted");
+    };
+  }, [socket, currentServerInfo, currentChannelInfo, currentMemberDataToEdit, notifyServerIdArray, directMessageChatId]);
+
+  /*
+  ==================================================
+  DisplayCreateNewAccountScreen Function
+  ==================================================
+  */
   function DisplayCreateNewAccountScreen() {
     setCreateNewAccountScreen(true);
     setLoginScreen(false);
   };
+
+  /*
+  ==================================================
+  DisplayLoginScreen Function
+  ==================================================
+  */
   function DisplayLoginScreen() {
     setLoginScreen(true);
     setCreateNewAccountScreen(false);
   };
+
+  /*
+  ==================================================
+  DirectMessagesButton Function
+  ==================================================
+  */
   function DirectMessagesButton() {
     setDisplayDirectMessagesScreen(true);
     setDirectMessageDataArray([]);
@@ -1162,9 +1384,21 @@ function Main() {
       };
     };
   };
+
+  /*
+  ==================================================
+  CreateNewServerButton Function
+  ==================================================
+  */
   function CreateNewServerButton() {
     setDisplayCreateNewServer(true);
   };
+
+  /*
+  ==================================================
+  UserSettingsButton Function
+  ==================================================
+  */
   function UserSettingsButton() {
     setDisplayUserSettings(true);
     setUpdatedDisplayName(userData.displayname);
@@ -1177,12 +1411,30 @@ function Main() {
       setCurrentPFP(PlaceHolderPFP);
     };
   };
+
+  /*
+  ==================================================
+  ExitUserSettingsButton Function
+  ==================================================
+  */
   function ExitUserSettingsButton() {
     setDisplayUserSettings(false);
   };
+
+  /*
+  ==================================================
+  ExitCreateNewServerButton Function
+  ==================================================
+  */
   function ExitCreateNewServerButton() {
     setDisplayCreateNewServer(false);
   };
+
+  /*
+  ==================================================
+  UpdateBiography Function
+  ==================================================
+  */
   function UpdateBiography(event: React.ChangeEvent<HTMLTextAreaElement>) {
     let currentBiography = event.target.value;
     setUpdatedBiography(currentBiography);
@@ -1193,6 +1445,12 @@ function Main() {
     };
     setHasUpdatedBiography(true);
   };
+
+  /*
+  ==================================================
+  UpdateServerDescription Function
+  ==================================================
+  */
   function UpdateServerDescription(event: React.ChangeEvent<HTMLTextAreaElement>) {
     let currentServerDescription = event.target.value;
     setUpdatedServerDescription(currentServerDescription);
@@ -1203,6 +1461,12 @@ function Main() {
     };
     setHasUpdatedServerDescription(true);
   };
+
+  /*
+  ==================================================
+  createNewChannelDescriptionFunction Function
+  ==================================================
+  */
   function createNewChannelDescriptionFunction(event: React.ChangeEvent<HTMLTextAreaElement>) {
     let currentChannelDescription = event.target.value;
     setCreateNewChannelDescription(currentChannelDescription);
@@ -1213,6 +1477,12 @@ function Main() {
     };
     setHasDataForCreateChannelDescription(true);
   };
+
+  /*
+  ==================================================
+  updateChannelDescriptionFunction Function
+  ==================================================
+  */
   function updateChannelDescriptionFunction(event: React.ChangeEvent<HTMLTextAreaElement>) {
     let currentUpdatedChannelDescription = event.target.value;
     setUpdatedChannelDescription(currentUpdatedChannelDescription);
@@ -1223,6 +1493,12 @@ function Main() {
     };
     setHasUpdatedChannelDescription(true);
   };
+
+  /*
+  ==================================================
+  LogoutButton Function
+  ==================================================
+  */
   function LogoutButton() {
     if (socket != null) {
       socket.disconnect();
@@ -1233,6 +1509,12 @@ function Main() {
     localStorage.removeItem("jwtToken");
     console.log("[CLIENT] Log Out!");
   };
+
+  /*
+  ==================================================
+  SelectImageForUserProfilePicture Function
+  ==================================================
+  */
   function SelectImageForUserProfilePicture(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -1242,6 +1524,12 @@ function Main() {
     setUpdatedProfilePicture(file);
     setHasUpdatedProfilePicture(true);
   };
+
+  /*
+  ==================================================
+  SelectImageForCreateNewServer Function
+  ==================================================
+  */
   function SelectImageForCreateNewServer (event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -1251,6 +1539,12 @@ function Main() {
     setCreateNewServerIconFile(file);
     setHasDataForCreateNewServerIcon(true);
   };
+
+  /*
+  ==================================================
+  SelectImageForServerIcon Function
+  ==================================================
+  */
   function SelectImageForServerIcon(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -1260,6 +1554,12 @@ function Main() {
     setUpdatedServerIconFile(file);
     setHasUpdatedServerIcon(true);
   };
+
+  /*
+  ==================================================
+  SelectImageForServerThumbnail Function
+  ==================================================
+  */
   function SelectImageForServerThumbnail(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) {
@@ -1269,18 +1569,48 @@ function Main() {
     setUpdatedServerThumbnailFile(file);
     setHasUpdatedServerThumbnail(true);
   };
+
+  /*
+  ==================================================
+  OpenFilePickerForUserProfilePicture Function
+  ==================================================
+  */
   function OpenFilePickerForUserProfilePicture() {
     document.getElementById("ProfilePictureInput")?.click();
   };
+
+  /*
+  ==================================================
+  OpenFilePickerForCreateNewServer Function
+  ==================================================
+  */
   function OpenFilePickerForCreateNewServer() {
     document.getElementById("CreateNewServerIconImageInput")?.click();
   };
+
+  /*
+  ==================================================
+  OpenFilePickerForServerSettingsIcon Function
+  ==================================================
+  */
   function OpenFilePickerForServerSettingsIcon() {
     document.getElementById("ServerSettingsIconInput")?.click();
   };
+
+  /*
+  ==================================================
+  OpenFilePickerForServerSettingsThumbnail Function
+  ==================================================
+  */
   function OpenFilePickerForServerSettingsThumbnail() {
     document.getElementById("ServerSettingsThumbnailInput")?.click();
   };
+
+  /*
+  ==================================================
+  setCurrentServerFunction Function
+  ==================================================
+  */
   function setCurrentServerFunction(serverInfo: any) {
     setDisplayDirectMessagesScreen(false);
     if (serverInfo != null) {
@@ -1371,6 +1701,12 @@ function Main() {
       changeChannel(null);
     };
   };
+
+  /*
+  ==================================================
+  displayServerSettings Function
+  ==================================================
+  */
   function displayServerSettings() {
     if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
       setDisplayUpdateServerSettings(true);
@@ -1382,29 +1718,71 @@ function Main() {
       setDisplayLeaveServerScreen(true);
     };
   };
+
+  /*
+  ==================================================
+  displayCreateNewChannelsPanel Function
+  ==================================================
+  */
   function displayCreateNewChannelsPanel() {
     setDisplayUpdateServerSettings(false);
     setDisplayCreateNewChannels(true)
   };
+
+  /*
+  ==================================================
+  displayCreateNewRolesPannel Function
+  ==================================================
+  */
   function displayCreateNewRolesPannel() {
     setDisplayUpdateServerSettings(false);
     setDisplayCreateNewRoles(true);
   };
+
+  /*
+  ==================================================
+  ExitServerSettingsButton Function
+  ==================================================
+  */
   function ExitServerSettingsButton() {
     setDisplayUpdateServerSettings(false);
   };
+
+  /*
+  ==================================================
+  ExitCreateChannelButton Function
+  ==================================================
+  */
   function ExitCreateChannelButton() {
     setDisplayUpdateServerSettings(true);
     setDisplayCreateNewChannels(false);
   };
+
+  /*
+  ==================================================
+  ExitCreateNewRoleButton Function
+  ==================================================
+  */
   function ExitCreateNewRoleButton() {
     setDisplayUpdateServerSettings(true);
     setDisplayCreateNewRoles(false);
   };
+
+  /*
+  ==================================================
+  ExitEditRoleButton Function
+  ==================================================
+  */
   function ExitEditRoleButton() {
     setDisplayEditRole(false);
     setDisplayCreateNewRoles(true);
-  }
+  };
+
+  /*
+  ==================================================
+  UpdateServerDataToLatest Function
+  ==================================================
+  */
   function UpdateServerDataToLatest(lastestData: any) {
     if (currentServerInfo != null) {
       let currentSelectedChannelDataToUse = null;
@@ -1483,6 +1861,12 @@ function Main() {
       };
     };
   };
+
+  /*
+  ==================================================
+  changeChannel Function
+  ==================================================
+  */
   function changeChannel(channelInfo: any) {
     if (channelInfo != null) {
       setNotifyChannelIdArray(previous => previous.filter(channelId => channelId != channelInfo.channel_id));
@@ -1499,6 +1883,12 @@ function Main() {
       setCurrentChannelDescription("Channel Description");
     };
   };
+
+  /*
+  ==================================================
+  displayEditChannelFunction Function
+  ==================================================
+  */
   function displayEditChannelFunction(channelInfo: any) {
     if (currentServerInfo != null && userData.username == (currentServerInfo as any).server_owner) {
       setDisplayEditChannel(true);
@@ -1509,21 +1899,57 @@ function Main() {
       alert("[ERROR] You Do Not Have Permission To Edit Channels, Only The Server Owner!");
     };
   };
+
+  /*
+  ==================================================
+  ExitEditChannelButton Function
+  ==================================================
+  */
   function ExitEditChannelButton() {
     setDisplayEditChannel(false);
   };
+
+  /*
+  ==================================================
+  DisplayEmojiPicker Function
+  ==================================================
+  */
   function DisplayEmojiPicker() {
     setDisplayEmojiPicker(!displayEmojiPicker);
   };
+
+  /*
+  ==================================================
+  DisplayDirectMessagesEmojiPicker Function
+  ==================================================
+  */
   function DisplayDirectMessagesEmojiPicker() {
     setDisplayDirectMessagesEmojiPicker(!displayDirectMessagesEmojiPicker);
   };
+
+  /*
+  ==================================================
+  addEmojiToTextBox Function
+  ==================================================
+  */
   function addEmojiToTextBox(emoji: any) {
     setMessageText(messageText + emoji);
   };
+
+  /*
+  ==================================================
+  addEmojiToDirectMessageTextBox Function
+  ==================================================
+  */
   function addEmojiToDirectMessageTextBox(emoji: any) {
     setDirectMessageText(directMessageText + emoji);
-  }
+  };
+
+  /*
+  ==================================================
+  sendMessageFunction Function
+  ==================================================
+  */
   function sendMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key == "Enter") {
       const currentMessage = messageText.trim();
@@ -1547,6 +1973,12 @@ function Main() {
       setMessageText("");
     };
   };
+
+  /*
+  ==================================================
+  sendDirectMessageFunction Function
+  ==================================================
+  */
   function sendDirectMessageFunction(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key == "Enter") {
       const currentDirectMessage = directMessageText.trim();
@@ -1568,24 +2000,60 @@ function Main() {
       setDirectMessageText("");
     };
   };
+
+  /*
+  ==================================================
+  editMessageFunction Function
+  ==================================================
+  */
   function editMessageFunction(messageId: any) {
     setMessageIdToEdit(messageId);
   };
+
+  /*
+  ==================================================
+  editDirectMessageFunction Function
+  ==================================================
+  */
   function editDirectMessageFunction(directMesageId: any) {
     setDirectMessageIdToEdit(directMesageId);
   };
+
+  /*
+  ==================================================
+  deleteMessageFunction Function
+  ==================================================
+  */
   function deleteMessageFunction(messageData: any) {
     setMessageDataToDelete(messageData);
     setDisplayDeleteMessageScreen(true);
   };
+
+  /*
+  ==================================================
+  deleteDirectMessageFunction Function
+  ==================================================
+  */
   function deleteDirectMessageFunction(directMessageData: any) {
     setDirectMessageDataToDelete(directMessageData);
     setDisplayDeleteDirectMessageScreen(true);
   };
+
+  /*
+  ==================================================
+  updateRoleColor Function
+  ==================================================
+  */
   function updateRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setCreateNewRoleColor(event.target.value);
     setHasDataForNewRoleColor(true);
   };
+
+  /*
+  ==================================================
+  EditRoleFunction Function
+  ==================================================
+  */
   function EditRoleFunction(roleData: any) {
     setCurrentRoleIdToEdit(roleData.role_id);
     setUpdatedRoleName(roleData.role_name);
@@ -1597,51 +2065,129 @@ function Main() {
     setDisplayEditRole(true);
     setDisplayCreateNewRoles(false);
   };
+
+  /*
+  ==================================================
+  updateEditRoleColor Function
+  ==================================================
+  */
   function updateEditRoleColor(event: React.ChangeEvent<HTMLInputElement>) {
     setUpdatedRoleColor(event.target.value);
     setHasUpdatedRoleColor(true);
   };
+
+  /*
+  ==================================================
+  displayEditMemberScreen Function
+  ==================================================
+  */
   function displayEditMemberScreen(memberData: any) {
     setCurrentMemberDataToEdit(memberData);
     setEditMemberScreen(true);
   };
+
+  /*
+  ==================================================
+  ExitEditMemberButton Function
+  ==================================================
+  */
   function ExitEditMemberButton() {
     setEditMemberScreen(false);
   };
+
+  /*
+  ==================================================
+  AddRoleToMemberButton Function
+  ==================================================
+  */
   function AddRoleToMemberButton() {
     setEditMemberScreen(false);
     setDisplayAddRolesToMemberScreen(true);
   };
+
+  /*
+  ==================================================
+  ExitAddRoleToMemberButton Function
+  ==================================================
+  */
   function ExitAddRoleToMemberButton() {
     setEditMemberScreen(true);
     setDisplayAddRolesToMemberScreen(false);
   };
+
+  /*
+  ==================================================
+  setUpdateRoleCanKickLowerRankMembersFunction Function
+  ==================================================
+  */
   function setUpdateRoleCanKickLowerRankMembersFunction(boolean: any) {
     setUpdateRoleCanKickLowerRankMembers(boolean);
     setHasUpdatedCanKickLowerRankMembers(true);
   };
+
+  /*
+  ==================================================
+  setUpdateRoleCanBanLowerRankMembersFunction Function
+  ==================================================
+  */
   function setUpdateRoleCanBanLowerRankMembersFunction(boolean: any) {
     setUpdateRoleCanBanLowerRankMembers(boolean);
     setHasUpdatedCanBanLowerRankMembers(true);
   };
+
+  /*
+  ==================================================
+  setUpdateRoleCanEditLowerRankMembersFunction Function
+  ==================================================
+  */
   function setUpdateRoleCanEditLowerRankMembersFunction(boolean: any) {
     setUpdateRoleCanEditLowerRankMembers(boolean);
     setHasUpdatedCanEditLowerRankMembers(true);
   };
+
+  /*
+  ==================================================
+  DisplayJoinServerButton Function
+  ==================================================
+  */
   function DisplayJoinServerButton() {
     setDisplayCreateNewServer(false);
     setDisplayJoinServerScreen(true);
   };
+
+  /*
+  ==================================================
+  ExitJoinServerButton Function
+  ==================================================
+  */
   function ExitJoinServerButton() {
     setDisplayCreateNewServer(true);
     setDisplayJoinServerScreen(false);
   };
+
+  /*
+  ==================================================
+  ExitDeleteMessageButton Function
+  ==================================================
+  */
   function ExitDeleteMessageButton() {
     setDisplayDeleteMessageScreen(false);
   };
+
+  /*
+  ==================================================
+  ExitDeleteDirectMessageButton Function
+  ==================================================
+  */
   function ExitDeleteDirectMessageButton() {
     setDisplayDeleteDirectMessageScreen(false);
   };
+
+  /*
+  ==================================================
+  checkMessageSenderRole Function
+  ==================================================
+  */
   function checkMessageSenderRole(messageData: any) {
     for (let index = 0; index < userData.serverData.length; index++) {
       if (userData.serverData[index].server_channel_array.includes(messageData.messages_channel_id)) {
@@ -1660,6 +2206,12 @@ function Main() {
     };
     return false;
   };
+
+  /*
+  ==================================================
+  displayKickMemberButton Function
+  ==================================================
+  */
   function displayKickMemberButton() {
     if (userData == null || currentMemberDataToEdit == null || userData.username == (currentMemberDataToEdit as any).username) {
       return false;
@@ -1682,6 +2234,12 @@ function Main() {
     };
     return true;
   };
+  
+  /*
+  ==================================================
+  displayBanMemberButton Function
+  ==================================================
+  */
   function displayBanMemberButton() {
     if (userData == null || currentMemberDataToEdit == null || userData.username == (currentMemberDataToEdit as any).username) {
       return false;
@@ -1704,17 +2262,41 @@ function Main() {
     };
     return true;
   };
+
+  /*
+  ==================================================
+  DisplayBansListPannel Function
+  ==================================================
+  */
   function DisplayBansListPannel() {
     setDisplayBansListScreen(true);
     setDisplayUpdateServerSettings(false);
   };
+
+  /*
+  ==================================================
+  ExitBansListPannel Function
+  ==================================================
+  */
   function ExitBansListPannel() {
     setDisplayBansListScreen(false);
     setDisplayUpdateServerSettings(true);
   };
+
+  /*
+  ==================================================
+  ExitLeaveServer Function
+  ==================================================
+  */
   function ExitLeaveServer() {
     setDisplayLeaveServerScreen(false);
   };
+
+  /*
+  ==================================================
+  ChangeUserToDirectMessage Function
+  ==================================================
+  */
   function ChangeUserToDirectMessage(directMessageData: any, directMessageChatId: any) {
     setDirectMessageChatName("Direct Message With " + directMessageData.userData.username);
     setDirectMessageDataArray(directMessageData.messages);
@@ -1724,6 +2306,12 @@ function Main() {
       socket.emit("joinDirectMessageChat", directMessageChatId);
     };
   };
+
+  /*
+  ==================================================
+  Render Main Discord Server & Direct Messages Screen
+  ==================================================
+  */
   if (userData) {
     return (
       <div id="MainPageDiv">
@@ -2355,6 +2943,12 @@ function Main() {
       </div>
     );
   };
+  
+  /*
+  ==================================================
+  Render Create New Account Screen
+  ==================================================
+  */
   if (createNewAccountScreen == true) {
     return (
       <div id="CreateNewAccountDiv">
@@ -2401,6 +2995,12 @@ function Main() {
       </div>
     );
   };
+  
+  /*
+  ==================================================
+  Render Login Screen
+  ==================================================
+  */
   if (loginScreen == true) {
     return (
       <div id="LoginScreenDiv">
@@ -2437,9 +3037,16 @@ function Main() {
       </div>
     );
   };
+  
+  /*
+  ==================================================
+  Return Main Div To Render Entire Screen
+  ==================================================
+  */
   return (
     <div></div>
   );
+
 };
 
 /*
