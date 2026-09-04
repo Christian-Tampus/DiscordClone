@@ -1,6 +1,6 @@
 /*
 ==================================================
-Update Version [41] @ 9/3/2026
+Update Version [42] @ 9/4/2026
 ==================================================
 */
 
@@ -35,8 +35,8 @@ Constants
 */
 const USERS_ONLINE = new Set<string>();
 const PASSWORD_BLOCK = "********";
-const PORT = process.env.PORT || 5000;
 dotenv.config();
+const PORT = Number(process.env.PORT) || 5000;
 const App = express();
 App.use(cors());
 App.use(express.json());
@@ -1835,7 +1835,7 @@ io.on("connection", (socket) => {
 HTTPServer Listen To Port
 ==================================================
 */
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log("[SERVER] Server Running On Port:",PORT);
 });
 

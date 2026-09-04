@@ -1,6 +1,6 @@
 /*
 ==================================================
-Update Version [41] @ 9/3/2026
+Update Version [42] @ 9/4/2026
 ==================================================
 */
 
@@ -27,6 +27,7 @@ import "./App.css";
 Global Variables
 ==================================================
 */
+const API_URL = import.meta.env.VITE_API_URL
 const WEB_SAFE_EMOJIS = [
   '😀', '😂', '🙂', '😍', '🤔', '😭', '😱', '😎', '😡', '👍',
   '👎', '👌', '✌️', '🙌', '👋', '👏', '🙏', '🙋', '🤦', '🤷',
@@ -180,13 +181,6 @@ function Main() {
   const [directMessageIdToEdit, setDirectMessageIdToEdit] = useState(null);
   const [directMessageDataToDelete, setDirectMessageDataToDelete] = useState(null);
   const [displayDeleteDirectMessageScreen, setDisplayDeleteDirectMessageScreen] = useState(false);
-  /*
-  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
-  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
-  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
-  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
-  IN PRODUCTION CHANGE await fetch(http://...) TO await fetch("https://...")
-  */
 
   /*
   ==================================================
@@ -194,7 +188,7 @@ function Main() {
   ==================================================
   */
   async function RetrieveLatestData(hasDeletedChannel: any, kickedOrBanned: any) {
-    const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
+    const retrieveLatestDataResponse = await fetch(`${API_URL}/retrieveLatestData`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -247,7 +241,7 @@ function Main() {
   ==================================================
   */
   async function RetrieveLatestDataViaDirectMessage(settingDirectMessageUserDataArray: any) {
-    const retrieveLatestDataResponse = await fetch("http://localhost:5000/retrieveLatestData", {
+    const retrieveLatestDataResponse = await fetch(`${API_URL}/retrieveLatestData`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -281,7 +275,7 @@ function Main() {
   */
   async function Login() {
     if (userNameValid == true && passwordValid == true) {
-      const response = await fetch("http://localhost:5000/login", {
+      const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -292,7 +286,7 @@ function Main() {
         })
       });
       if (response.ok) {
-        const newSocket = io("http://localhost:5000");
+        const newSocket = io(API_URL);
         setSocket(newSocket);
         newSocket.on("connect", () => {
           console.log("[CLIENT] Socket Connected:", newSocket.id);
@@ -313,7 +307,7 @@ function Main() {
           };
         };
         if (data.profile_picture != "") {
-          setCurrentPFP("http://localhost:5000" + data.profile_picture);
+          setCurrentPFP(API_URL + data.profile_picture);
         } else {
           setCurrentPFP(PlaceHolderPFP);
         };
@@ -385,7 +379,7 @@ function Main() {
   */
   async function CreateNewAccount() {
     if (isCreateNewAccountDisplayNameValid == true && isCreateNewAccountUserNameValid == true && isCreateNewAccountPasswordNameValid == true) {
-      const response = await fetch("http://localhost:5000/createAccount", {
+      const response = await fetch(`${API_URL}/createAccount`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -472,7 +466,7 @@ function Main() {
       canUpdateUserSettings = true;
     };
     if (canUpdateUserSettings == true && preventUpdatingUserSettings == false) {
-      const response = await fetch("http://localhost:5000/updateUserSettings", {
+      const response = await fetch(`${API_URL}/updateUserSettings`, {
         method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -499,7 +493,7 @@ function Main() {
       const formData = new FormData();
       formData.append("userProfilePicture", updatedProfilePicture);
       formData.append("username", userData.username);
-      const response = await fetch("http://localhost:5000/updateProfilePicture", {
+      const response = await fetch(`${API_URL}/updateProfilePicture`, {
         method: "POST",
         body: formData
       });
@@ -556,7 +550,7 @@ function Main() {
         preventUpdatingServerSettings = true;
       };
       if (canUpdateServerSettings == true && preventUpdatingServerSettings == false) {
-        const response = await fetch("http://localhost:5000/updateServerSettings", {
+        const response = await fetch(`${API_URL}/updateServerSettings`, {
           method: "POST",
             headers: {
               "Content-Type": "application/json"
@@ -592,7 +586,7 @@ function Main() {
         updateServerImages = true;
       };
       if (updateServerImages == true) {
-        const serverIconAndThumbnailResponse = await fetch("http://localhost:5000/updateServerImages", {
+        const serverIconAndThumbnailResponse = await fetch(`${API_URL}/updateServerImages`, {
           method: "POST",
           body: formData
         });
@@ -622,7 +616,7 @@ function Main() {
       formData.append("serverName", createNewServerName);
       formData.append("serverIcon", createNewServerIconFile);
       formData.append("serverOwner", userData.username);
-      const response = await fetch("http://localhost:5000/createNewServer", {
+      const response = await fetch(`${API_URL}/createNewServer`, {
         method: "POST",
         body: formData
       });
@@ -657,7 +651,7 @@ function Main() {
         canCreateNewChannel = false;
       };
       if (canCreateNewChannel == true) {
-        const response = await fetch("http://localhost:5000/createNewChannel", {
+        const response = await fetch(`${API_URL}/createNewChannel`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -711,7 +705,7 @@ function Main() {
       ChannelSettingsToUpdate.canUpdateChannelDescription = true;
       ChannelSettingsToUpdate.channelDescription = updatedChannelDescription;
     };
-    const updateChannelResponse = await fetch("http://localhost:5000/updateChannelSettings", {
+    const updateChannelResponse = await fetch(`${API_URL}/updateChannelSettings`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -738,7 +732,7 @@ function Main() {
     if (currentChannelId == "") {
       alert("[ERROR] No Channel Id To Delete!");
     };
-    const deleteChannelResponse = await fetch("http://localhost:5000/deleteChannel", {
+    const deleteChannelResponse = await fetch(`${API_URL}/deleteChannel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -794,7 +788,7 @@ function Main() {
       alert("[ERROR] You Must Add A New Role Color!");
       return;
     };
-    const newRoleResponse = await fetch("http://localhost:5000/createNewRole", {
+    const newRoleResponse = await fetch(`${API_URL}/createNewRole`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -844,7 +838,7 @@ function Main() {
       canBanLowerRankMembers: updateRoleCanBanLowerRankMembers,
       canEditLowerRankMemberRoles: updateRoleCanEditLowerRankMembers,
     };
-    const updatedRoleResponse = await fetch("http://localhost:5000/updateRole", {
+    const updatedRoleResponse = await fetch(`${API_URL}/updateRole`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -891,7 +885,7 @@ function Main() {
       roleId: roleData.role_id,
       serverId: (currentServerInfo as any).server_id,
     };
-    const addRoleToMemberResponse = await fetch("http://localhost:5000/addRoleToMember", {
+    const addRoleToMemberResponse = await fetch(`${API_URL}/addRoleToMember`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -921,7 +915,7 @@ function Main() {
       roleId: roleData.role_id,
       serverId: (currentServerInfo as any).server_id,
     };
-    const removeRoleFromMemberResponse = await fetch("http://localhost:5000/removeRoleFromMember", {
+    const removeRoleFromMemberResponse = await fetch(`${API_URL}/removeRoleFromMember`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -949,7 +943,7 @@ function Main() {
       alert("[ERROR] You Do Not Have Any Server Id Yet!");
       return;
     };
-    const joinServerResponse = await fetch("http://localhost:5000/joinServer", {
+    const joinServerResponse = await fetch(`${API_URL}/joinServer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -980,7 +974,7 @@ function Main() {
       alert("[ERROR] Message Data Is Null!");
       return;
     };
-    const deleteMessage = await fetch("http://localhost:5000/deleteMessage", {
+    const deleteMessage = await fetch(`${API_URL}/deleteMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1012,7 +1006,7 @@ function Main() {
       alert("[ERROR] Direct Message Data Is Null!");
       return;
     };
-    const deleteDirectMessage = await fetch("http://localhost:5000/deleteDirectMessage", {
+    const deleteDirectMessage = await fetch(`${API_URL}/deleteDirectMessage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1046,7 +1040,7 @@ function Main() {
   ==================================================
   */
   async function KickMemberFunction() {
-    const kickMemberResponse = await fetch("http://localhost:5000/kickMember", {
+    const kickMemberResponse = await fetch(`${API_URL}/kickMember`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1075,7 +1069,7 @@ function Main() {
   ==================================================
   */
   async function BanMemberFunction() {
-    const banMemberResponse = await fetch("http://localhost:5000/banMember", {
+    const banMemberResponse = await fetch(`${API_URL}/banMember`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1104,7 +1098,7 @@ function Main() {
   ==================================================
   */
   async function UnBanMember(UnBanMember: any) {
-    const unBanMemberResponse = await fetch("http://localhost:5000/unBanMember", {
+    const unBanMemberResponse = await fetch(`${API_URL}/unBanMember`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1138,7 +1132,7 @@ function Main() {
   ==================================================
   */
   async function LeaveServerFunction() {
-    const leaveServerResponse = await fetch("http://localhost:5000/leaveServer", {
+    const leaveServerResponse = await fetch(`${API_URL}/leaveServer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1167,7 +1161,7 @@ function Main() {
   ==================================================
   */
   async function DeleteServerFunction() {
-    const deleteServerResponse = await fetch("http://localhost:5000/deleteServer", {
+    const deleteServerResponse = await fetch(`${API_URL}/deleteServer`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1196,7 +1190,7 @@ function Main() {
   ==================================================
   */
   async function addUserToDirectMessagesArrayFunction() {
-    const addUserToDirectMessagesResponse = await fetch("http://localhost:5000/addUserToDirectMessages", {
+    const addUserToDirectMessagesResponse = await fetch(`${API_URL}/addUserToDirectMessages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1406,7 +1400,7 @@ function Main() {
     setUpdatedPassword(userData.password);
     setUpdatedStatus(userData.status);
     if (userData.profile_picture != "") {
-      setCurrentPFP("http://localhost:5000" + userData.profile_picture);
+      setCurrentPFP(API_URL + userData.profile_picture);
     } else {
       setCurrentPFP(PlaceHolderPFP);
     };
@@ -1661,13 +1655,13 @@ function Main() {
       };
       setCurrentServer(serverInfo.server_name);
       setCurrentServerInfo(serverInfo);
-      setCurrentServerIcon("http://localhost:5000" + serverInfo.server_icon);
+      setCurrentServerIcon(API_URL + serverInfo.server_icon);
       setCurrentServerDescription(serverInfo.server_description);
       serverInfo.rolesData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
       setCurrentRoleData(serverInfo.rolesData);
       setMembersDataArray(serverInfo.server_members_array_data);
       if (serverInfo.server_thumbnail != "") {
-        setCurrentServerThumbnail("http://localhost:5000" + serverInfo.server_thumbnail);
+        setCurrentServerThumbnail(API_URL + serverInfo.server_thumbnail);
       } else {
         setCurrentServerThumbnail(PlaceHolderServerThumbnail);
       };
@@ -1790,8 +1784,8 @@ function Main() {
         if ((currentServerInfo as any).server_id == lastestData.serverData[index].server_id) {
           setCurrentServer(lastestData.serverData[index].server_name);
           setCurrentServerDescription(lastestData.serverData[index].server_description);
-          setCurrentServerIcon("http://localhost:5000" + lastestData.serverData[index].server_icon);
-          setCurrentServerThumbnail("http://localhost:5000" + lastestData.serverData[index].server_thumbnail);
+          setCurrentServerIcon(API_URL + lastestData.serverData[index].server_icon);
+          setCurrentServerThumbnail(API_URL + lastestData.serverData[index].server_thumbnail);
           lastestData.serverData[index].rolesData.sort((roleA: any, roleB: any) => roleA.role_rank - roleB.role_rank);
           setCurrentChannelData(lastestData.serverData[index].channelsData);
           setCurrentRoleData(lastestData.serverData[index].rolesData);
@@ -2327,7 +2321,7 @@ function Main() {
               {
                 userData.serverData.map((serverInfo: any) => (
                   <div id={serverInfo.server_id} key={serverInfo.server_id} className="serverIconDiv toolTipWrapper">
-                    <img className="serverIconImage" src={"http://localhost:5000" + serverInfo.server_icon} alt={serverInfo.server_name} onClick={() => setCurrentServerFunction(serverInfo)}></img>
+                    <img className="serverIconImage" src={API_URL + serverInfo.server_icon} alt={serverInfo.server_name} onClick={() => setCurrentServerFunction(serverInfo)}></img>
                     <div className="toolTip">{serverInfo.server_name}</div>
                     <img className={"serverNotificationIcon " + (notifyServerIdArray.includes(serverInfo.server_id) ? "opacityVisible" : "") } src={ServerNotificationIcon}></img>
                   </div>
@@ -2399,7 +2393,7 @@ function Main() {
                           return false;
                         }).length > 0 ? "RoleNotification" : "" : "")}>
                           <div className="messagePFPContainer">
-                            <img src={"http://localhost:5000" + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                            <img src={API_URL + currentMessageData.message_sender_data.profile_picture} className={"messagePFP " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                             <div className={"userStatusPopup " + (currentMessageData.message_sender_data.status == "Online" ? "OnlineStatusLabelColor" : currentMessageData.message_sender_data.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : currentMessageData.message_sender_data.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{currentMessageData.message_sender_data.status}</div>
                           </div>
                           <div className="messageContainerDiv">
@@ -2441,7 +2435,7 @@ function Main() {
                     return memberDataRankA - memberDataRankB;
                   }).map((memberData: any) => (
                     <div id={memberData.username} key={memberData.username} className="membersListDiv" onClick={() => displayEditMemberScreen(memberData)}>
-                      <img src={"http://localhost:5000" + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                      <img src={API_URL + memberData.profile_picture} className={"membersListPFP " + (memberData.status == "Online" ? "OnlineBackgroundPFPColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : memberData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                       <div className={"userStatusPopup2 " + (memberData.status == "Online" ? "OnlineStatusLabelColor" : memberData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : memberData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{memberData.status}</div>
                       <div className="membersListUserNameAndDisplayDiv">
                         <div className="membersListUserNameDiv" style={{color:memberData.text_color}}>@{memberData.username}</div>
@@ -2464,7 +2458,7 @@ function Main() {
                 <div id="DirectMessagesMembersListMainContainerDiv">
                   {userData.direct_messages_data.map((directMessageData: any, index: any) => (
                     <div id={directMessageData.userData.username} key={directMessageData.userData.username} className="DirectMessagesMembersListDiv" onClick={() => ChangeUserToDirectMessage(directMessageData, userData.direct_messages_id_array[index])}>
-                      <img src={"http://localhost:5000" + directMessageData.userData.profile_picture} className={"DirectMessagesMembersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                      <img src={API_URL + directMessageData.userData.profile_picture} className={"DirectMessagesMembersListPFP " + (directMessageData.userData.status == "Online" ? "OnlineBackgroundPFPColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : directMessageData.userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                       <div className={"userStatusPopup2 " + (directMessageData.userData.status == "Online" ? "OnlineStatusLabelColor" : directMessageData.userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : directMessageData.userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.userData.status}</div>
                       <div className="DirectMessagesMembersListUserNameAndDisplayDiv">
                         <div className="DirectMessagesMembersListUserNameDiv" style={{color:directMessageData.userData.text_color}}>@{directMessageData.userData.username}</div>
@@ -2484,7 +2478,7 @@ function Main() {
                       directMessageDataArray.map((directMessageData: any) => (
                         <div key={directMessageData.id} id={directMessageData.id} className={"directMessageMainDiv " + (directMessageData.direct_messages_message.includes("@" + userData.username) ? "UserNotification " : "")}>
                           <div className="directMessagePFPContainer">
-                            <img src={"http://localhost:5000" + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).profile_picture : userData.profile_picture)} className={"directMessagePFP " + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status == "Online" ? "OnlineBackgroundPFPColor" : (directMessageUserData as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (directMessageUserData as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor" : userData.status == "Online" ? "OnlineBackgroundPFPColor" : userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
+                            <img src={API_URL + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).profile_picture : userData.profile_picture)} className={"directMessagePFP " + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status == "Online" ? "OnlineBackgroundPFPColor" : (directMessageUserData as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (directMessageUserData as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor" : userData.status == "Online" ? "OnlineBackgroundPFPColor" : userData.status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : userData.status == "Idle" ? "IdleBackgroundPFPColor" : "InvisibleBackgroundPFPColor")}></img>
                             <div className={"userStatusPopup " + (directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status == "Online" ? "OnlineStatusLabelColor" : (directMessageUserData as any).status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : (directMessageUserData as any).status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor" : userData.status == "Online" ? "OnlineStatusLabelColor" : userData.status == "Do Not Disturb" ? "DoNotDisturbStatusLabelColor" : userData.status == "Idle" ? "IdleStatusLabelColor" : "InvisibleStatusLabelColor")}>{directMessageData.direct_messages_username != userData.username ? (directMessageUserData as any).status : userData.status}</div>
                           </div>
                           <div className="directMessageContainerDiv">
@@ -2623,7 +2617,7 @@ function Main() {
                 {displayBanMemberButton() == true && (<button className="EditMemberLabelButtonClass" id="BanMemberButton" onClick={BanMemberFunction}>Ban Member</button>)}
                 <div className="EditMemberLabelClass">Profile Picture</div>
                 <div>
-                  <img id="EditMemberPFP" title="Member Profile Picture" className={(currentMemberDataToEdit as any).status == "Online" ? "OnlineBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvislbeBackgroundPFPColor"} src={"http://localhost:5000" + (currentMemberDataToEdit as any).profile_picture} alt="Profile Picture"></img>
+                  <img id="EditMemberPFP" title="Member Profile Picture" className={(currentMemberDataToEdit as any).status == "Online" ? "OnlineBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Do Not Disturb" ? "DoNotDisturbBackgroundPFPColor" : (currentMemberDataToEdit as any).status == "Idle" ? "IdleBackgroundPFPColor" : "InvislbeBackgroundPFPColor"} src={API_URL + (currentMemberDataToEdit as any).profile_picture} alt="Profile Picture"></img>
                 </div>
                 <div className="EditMemberLabelClass">Member Username</div>
                 <div id="EditMemberUsernameLabel" className="EditMemberLabelClass">{(currentMemberDataToEdit as any).username}</div>
@@ -3043,10 +3037,8 @@ function Main() {
   Return Main Div To Render Entire Screen
   ==================================================
   */
-  return (
-    <div></div>
-  );
-
+  return (<div></div>);
+  
 };
 
 /*
